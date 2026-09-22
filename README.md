@@ -1,227 +1,248 @@
-# Memora · 端侧离线私密对话智能复盘工具
+<div align="center">
 
-> 基于 **Spark-X2.5 端侧模型（4B / 1.7B，Q4_K_M 量化 GGUF）** 的离线私密对话复盘与智能纪要工具。
-> 全部推理在本机完成，**零数据上传**；默认通过本机 llama-server 子进程推理，**免编译、免 torch**，
-> 4B 量化后约 2.5GB，8GB 内存 PC 即可运行。
+<h1>🧠 Memora</h1>
+
+<p><strong>端侧离线 · 隐私优先的对话智能复盘工具</strong></p>
+
+<p>
+<img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&amp;logoColor=white">
+<img alt="Platform" src="https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&amp;logoColor=white">
+<img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
+<img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
+<img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
+<img alt="Tests" src="https://img.shields.io/badge/Tests-125%20passed-brightgreen">
+</p>
+
+<p>Spark-X2.5 端侧模型 ・ llama.cpp ・ 本地 bge-m3 + FAISS ・ FastAPI + Next.js</p>
+
+<p>
+<a href="README.en.md">English</a>
+&nbsp;|&nbsp;
+<strong>简体中文</strong>
+</p>
+
+</div>
 
 ---
 
-## 一、关键架构决策
+> 一个**完全离线、隐私优先**的对话智能复盘工具：把 **Spark-X2.5 端侧小模型 + 本地检索增强（RAG）**
+> 装进一台 **8GB 内存的普通 Windows PC**，**数据从不出本机**，即可把成百上千条工作群聊，
+> 一键凝练成**核心结论 / 待办事项 / 风险提示**结构化纪要，并支持基于全部对话的追问与溯源。
+>
+> **无需 GPU、无需 torch、无需联网** —— 一个本地文件夹，替掉「要把聊天记录上传到云端的纪要 SaaS」。
 
-| 层 | 选择 | 理由 |
-|----|------|------|
-| 智能体编排 | **LangChain** | 提示词模板、流水线编排、结构化输出，与后端解耦 |
-| 默认推理引擎 | **llama.cpp 官方 llama-server 子进程** | 免 Python 编译绑定；官方每日构建已含 Spark2_5；OpenAI 兼容接口；可整体离线分发 |
-| 可选推理引擎 | **SGLang（外部 server 模式）** | GPU 高性能分支：用户自起 server，连 OpenAI 兼容端点 |
-| 模型获取 | **ModelScope 官方 Q4_K_M GGUF，下载即用** | 单文件（4B≈2.5GB / 1.7B≈1.1GB），无需 safetensors→GGUF 转换 |
-| 后端 | **FastAPI + uvicorn** | 薄层 HTTP 适配，复用 `memora/` 全部业务逻辑 |
-| 前端 | **Next.js + React + Tailwind** | 产品级 UI，工业简洁风；模型管理页显式推荐双端侧模型 |
+---
 
-**模型来源（默认平台 ModelScope，官方命令）：**
+## ✨ 为什么是 Memora
+
+云端会议纪要工具越来越强，但工业场景里，工作群聊往往包含**客户信息、上线窗口、故障细节、责任人**——
+这些内容不适合上传第三方；而端侧 1.7B/4B 小模型又受困于**上下文长度、长文档遗忘、结构化不稳定**。
+Memora 用一套全本地的工程链路，把「小模型能不能干好严肃的长对话复盘」这件事做成可量化、可复现：
+
+- 🔒 **真离线、真隐私**：默认 `MEMORA_ENFORCE_OFFLINE=1`，模型缺失也**绝不联网**；推理只绑定 `127.0.0.1`。
+  手机 / 身份证 / 银行卡 / 邮箱 / 车牌 / 护照 / 人名在送入模型**之前**就本地占位脱敏，映射只存内存、报告后一键还原；落库记录用 Fernet 加密。
+- 📚 **超长对话不丢信息（本地 RAG）**：短对话**全量直喂、零损耗**；超长对话切分为块，用本机 **bge-m3 embedding + FAISS**
+  做「多路语义召回 + 时间线骨架」，并设**硬上下文预算**保证永不撑爆模型窗口——而不是简单砍掉最旧的消息。纯 CPU、无 torch。
+- 🧾 **结构化复盘 + 可溯源问答**：输出固定四段（核心结论 / 待办 / 风险 / 关键信息），并把散落在纪要里的
+  **会议时间、地点、安排确定性归位**到结论段；问答基于全部对话检索，回答附**原文引用**，未提及即明说「未讨论」。
+- 💬 **真实多平台解析**：微信（txt，含 GBK）、钉钉（csv）、飞书（html）导出记录自动嗅探编码与格式，附 10 份真实解析样本库。
+- ⚡ **产品级体验**：SSE **逐 token 流式**输出、Next.js 单页应用、单端口同源部署（最终用户**无需 Node.js**）、Markdown/PDF 导出、批量复盘。
+- 🧩 **模型一键管理**：首页与模型页显式推荐 **Spark-X2.5-4B / 1.7B**，自动检测本地是否已安装，缺失时弹窗确认后经
+  **ModelScope `snapshot_download` 自动下载**官方 Q4_K_M GGUF，下载即用、无需手工转换。
+
+## 📊 评测与消融（数据说话）
+
+内置 50 例合成对话评测集（30 短 + 20 超长，含 346 条探针式问答），贪心解码（`MEMORA_TEMP=0`）结果可复现，
+指标覆盖**待办 / 风险 / 决定的召回与精确率、风险全文完整度、问答证据命中率、幻觉率**，一键生成单文件 HTML 报告。
+
+**主榜（Spark-X2.5-4B，Q4_K_M）**
+
+| 场景 | 待办召回 | 风险召回 | 决定召回 | 风险完整度 | QA 证据命中 | 幻觉率 |
+|---|---|---|---|---|---|---|
+| 短对话 · 全量直喂（n=30） | 0.928 | 0.967 | **0.900** | 0.983 | 1.000 | **0** |
+| 超长对话 · 本地 RAG（n=20） | 0.900 | 0.942 | **0.908** | 0.958 | 1.000 | **0** |
+
+**超长上下文策略消融（n=6/组）**
+
+| 策略 | 待办 / 风险召回 | QA 证据命中 | 结论 |
+|---|---|---|---|
+| 4B 全量直喂（超出上下文窗口） | 0.250 / 0.250 | 0.000 | 崩溃、约 639s，不可用 |
+| 4B 规则时间线压缩 | 0.944 / 0.917 | 1.000 | 无 embedding 时的降级方案 |
+| **4B 本地 RAG（bge-m3 + FAISS）** | **0.900 / 0.942** | **1.000** | **召回与可用性兼得，默认方案** |
+| 1.7B 本地 RAG（极低资源兜底） | 0.694 / 0.611 | 0.333 | 4GB 内存可跑，问答能力弱 |
+
+> 结论：本地 RAG 把超长对话从「全量直喂崩溃（召回 0.25、问答 0）」拉回到 **0.90+ 召回、问答证据命中 1.0、零幻觉**。
+> 完整结果见 `evals/results/final/report.html`。
+
+## 🖥️ 功能页面
+
+| 页面 | 路径 | 说明 |
+|---|---|---|
+| 对话复盘（首页） | `/` | 粘贴 / 上传聊天记录 → PII 预览 → 流式生成结构化报告，一键导出 |
+| 智能问答 | `/qa/` | 基于全部对话追问，回答带原文引用 |
+| 模型管理 | `/models/` | 双模型推荐、本地状态检测、ModelScope 一键下载、在线切换 |
+| 批量复盘 | `/batch/` | 多份记录批量处理与汇总 |
+| 语音纪要（可选） | `/voice/` | 接入本地 whisper.cpp 转写后复盘 |
+| 历史记录 | `/history/` | 本地加密存储的复盘历史 |
+
+## 🚀 快速开始
+
+**环境要求**：Windows 10/11（64 位）、Python 3.10–3.12（推荐 3.12）；4B 模型建议 8GB 内存、1.7B 约 4GB；磁盘约 3GB。
+仅当需要**修改前端**时才需要 Node.js 18+，纯使用无需安装。
+
+```bash
+# 1) 获取代码并安装依赖（默认链路无 torch、无需编译）
+git clone https://gitee.com/FreeBlank/memora.git
+cd Memora
+python -m venv .venv && .venv\Scripts\activate
+pip install -r requirements.txt
+
+# 2) 环境自检：依赖 / 推理引擎 / 模型 / 磁盘逐项检查并给出修复建议
+python scripts/doctor.py
+
+# 3) 一键启动（自动自检 → 起后端；有静态前端时单端口直达）
+scripts\start.bat
+#   随后浏览器访问 http://127.0.0.1:8000
+```
+
+**准备推理引擎（llama.cpp）**：下载 [llama.cpp 官方每日构建](https://github.com/ggml-org/llama.cpp/releases)
+中 **2026-09-07 之后、含 Spark2_5 架构**的 Windows CPU 版（如 `llama-b11046-bin-win-cpu-x64.zip`），
+解压到 `tools/llamacpp/bin/`；或设置环境变量 `MEMORA_LLAMASERVER_PATH` 指向 `llama-server.exe`。
+
+**准备模型（安装阶段需要网络）**：二选一——
+
+- 界面：启动后进入「模型管理」，在推荐卡片上点「下载此模型」→ 弹窗确认，系统自动经 ModelScope 拉取官方 Q4_K_M GGUF；
+- 命令行（安装阶段先 `set MEMORA_ENFORCE_OFFLINE=0`）：
+
+```bash
+python scripts/prepare_model.py                                  # 默认 4B
+python scripts/prepare_model.py --model XHToken/Spark-X2.5-1.7B  # 轻量 1.7B
+```
+
+对应的官方 ModelScope 命令（只拉取 Q4_K_M 单文件）：
 
 ```python
 from modelscope import snapshot_download
-snapshot_download('XHToken/Spark-X2.5-4B-GGUF',   allow_file_pattern=['*Q4_K_M*'])  # ≈2.5GB
-snapshot_download('XHToken/Spark-X2.5-1.7B-GGUF', allow_file_pattern=['*Q4_K_M*'])  # ≈1.1GB
+snapshot_download('XHToken/Spark-X2.5-4B-GGUF',   allow_file_pattern=['*Q4_K_M*'])  # ≈2.5GB，8GB+ 内存
+snapshot_download('XHToken/Spark-X2.5-1.7B-GGUF', allow_file_pattern=['*Q4_K_M*'])  # ≈1.1GB，4GB+ 内存
+snapshot_download('gpustack/bge-m3-GGUF',         allow_file_pattern=['*Q4_K_M*'])  # 本地 RAG 向量模型，≈438MB
 ```
 
-> 历史坑：Spark2_5 架构 2026-09-06 才合入 llama.cpp，PyPI 上的 llama-cpp-python
-> 发布版内置 llama.cpp 可能滞后（加载报 `unknown model architecture: 'spark2_5'`）。
-> 因此默认后端不依赖 Python 绑定，直接使用 llama.cpp 官方每日构建的 llama-server。
+> **离线红线**：默认 `MEMORA_ENFORCE_OFFLINE=1`，应用绝不联网，模型缺失只报错并给出命令。
+> 断网演示时保持默认即可；也可在联网机下载后，把 `root/models/models/XHToken--Spark-X2.5-*-GGUF` 整个目录拷到目标机同位置。
 
----
+## 📦 完全离线部署（交付到断网机器）
 
-## 二、目录结构
+在一台**有网络**的同架构打包机（64 位 Windows + Python 3.10–3.12）上执行一次：
 
+```powershell
+# 构建应用 + 静态前端 + 本地 wheelhouse（约 70 余个 wheel，含 faiss/numpy 等二进制包）
+powershell -ExecutionPolicy Bypass -File scripts/build_offline.ps1
+# 若要连模型一起打入（约 4GB），加 -IncludeModels
 ```
+
+产物为 `release/Memora/`，整体拷贝到**完全断网**的 Windows 机器后：
+
+```bat
+install_offline.bat   :: 从本地 wheelhouse 纯离线安装依赖（pip --no-index）
+start.bat             :: 启动，浏览器访问 http://127.0.0.1:8000
+```
+
+**断网验收清单**：`python scripts/doctor.py` 全绿 → 物理断网 → 完成一次超长对话复盘与追问。
+仓库内置 `scripts/e2e_offline_check.py`（24 项端到端检查：静态托管、PII 脱敏与还原、SSE 流式、短/超长上下文自动切换、推理期零外联）。
+
+## 🏗️ 系统架构
+
+后端是薄层 FastAPI，业务逻辑全部内聚在 `memora/`；默认后端在首次推理时于本机随机端口拉起
+`llama-server`（仅绑定 127.0.0.1），通过 OpenAI 兼容协议通信，退出 / 切换模型时终止子进程。
+
+```text
+聊天记录(txt/csv/html)
+        │  编码嗅探 · 多平台解析（微信/钉钉/飞书）
+        ▼
+   PII 本地脱敏（映射仅存内存，可一键还原）
+        │
+        ├── 短对话 ──► 全量直喂（零损耗）
+        └── 超长对话 ─► bge-m3 embedding + FAISS 多路召回 + 时间线骨架（硬上下文预算）
+        ▼
+  llama-server · Spark-X2.5 GGUF（OpenAI 兼容，纯 CPU / 可选 GPU）
+        ▼
+ 结构化报告（结论/待办/风险/关键信息 + 会议决定归位）── SSE 逐 token ──► Next.js 前端
+        │                                              问答：同一检索上下文 + 原文引用
+        ▼
+ Fernet 加密落库（data/vault） · Markdown / PDF 导出
+```
+
+**目录结构**
+
+```text
 Memora/
-├── .env.example              # 配置模板（复制为 .env 使用）
-├── requirements.txt          # 依赖清单（默认链路无 torch、无 llama-cpp-python）
-├── README.md
-├── start.bat（在 scripts/）   # Windows 一键启动后端+前端
-├── tools/
-│   └── llamacpp/bin/         # 随包 llama.cpp 官方二进制（llama-server 等，免编译）
-├── memora/                   # 核心业务逻辑（被 FastAPI 后端复用）
-│   ├── config.py             # 集中配置（.env 加载、路径/后端/参数、模型缓存布局解析）
-│   ├── log.py                # 中文日志（控制台 + 文件）
-│   ├── exporter.py           # 报告导出（Markdown 零依赖 + PDF 工业简洁风）
-│   ├── batch.py              # 批量复盘
-│   ├── model_fetch.py        # 模型获取状态机（官方 GGUF 下载 + safetensors 转换兜底）
-│   ├── backend/
-│   │   ├── base.py           # 后端抽象 + Spark 官方对话模板 + 思考链清洗
-│   │   ├── llamacpp_backend.py  # 默认：拉起/管理本机 llama-server 子进程
-│   │   └── sglang_backend.py    # 可选：连接外部 OpenAI 兼容 server
-│   ├── parsers/              # 微信/钉钉/飞书 解析，自动嗅探
-│   ├── prompts/              # 提示词模板
-│   ├── agent/                # LangChain 复盘智能体（复盘/问答/语音纪要三链）
-│   ├── whisper/              # 本地 Whisper.cpp 转写封装（可选）
-│   └── storage/              # Fernet 本地加密存储
-├── server/                   # FastAPI 后端
-│   ├── main.py / deps.py / session.py / schemas.py
-│   └── routes/               # health/review/qa/voice/records/export/models
-├── web/                      # Next.js 前端
-│   ├── app/                  # 页面：复盘(首页)/模型管理/批量/问答/语音/历史
-│   ├── components/           # Sidebar、ReportCard、StatusBadge、EmptyState
-│   └── lib/api.ts            # API 客户端
-├── scripts/
-│   ├── prepare_model.py      # 命令行备模（默认拉官方 Q4 GGUF；--from-safetensors 走转换）
-│   ├── doctor.py             # 环境自检（依赖/引擎/模型/磁盘/可选项）
-│   └── start.bat             # Windows 一键启动
-├── tests/                    # pytest 单元测试（47 用例，不加载模型、不联网）
-└── data/                     # 运行时生成（settings.json、vault 加密记录、logs、exports）
+├── memora/                 # 核心业务逻辑（被 FastAPI 复用）
+│   ├── parsers/            #   微信 / 钉钉 / 飞书解析 + 编码嗅探
+│   ├── pii/                #   PII 脱敏与还原
+│   ├── retrieval/          #   bge-m3 + FAISS 本地 RAG、上下文预算与时间线骨架
+│   ├── agent/              #   LangChain 复盘 / 问答 / 语音三链、流式
+│   ├── report/             #   报告结构化与「会议决定归位」（评测与产品同一口径）
+│   ├── prompts/            #   提示词模板
+│   ├── backend/            #   llama-server 子进程后端 + 可选 SGLang 后端
+│   ├── storage/            #   Fernet 本地加密
+│   ├── whisper/            #   本地语音转写（可选）
+│   ├── model_fetch.py      #   模型获取状态机（官方 GGUF 下载 + safetensors 转换兜底）
+│   ├── exporter.py         #   Markdown / PDF 导出
+│   └── batch.py            #   批量复盘
+├── server/                 # FastAPI：单端口 8000，web/out 同源托管
+│   └── routes/             #   review / qa / models / records / export / voice / health
+├── web/                    # Next.js + React + Tailwind（app 页面 + out 静态产物）
+├── evals/                  # 评测集、指标、worker/runner、单文件 HTML 报告
+├── samples/                # 微信/钉钉/飞书真实解析样本库
+├── scripts/                # doctor / prepare_model / start.bat / build_offline.ps1 / e2e
+├── tests/                  # 125 项 pytest（不加载模型、不联网）
+├── tools/llamacpp/bin/     # llama.cpp 官方二进制（自行下载放置，不入库）
+├── requirements.txt        # 完整依赖（开发 / 打包）
+└── requirements-runtime.txt# 运行时依赖（离线安装用）
 ```
 
----
+## ⚙️ 主要配置（`.env` / 环境变量）
 
-## 三、安装与准备
-
-### 1. 安装 Python 依赖
-
-```bash
-pip install -r requirements.txt
-```
-
-默认链路**不需要** torch、不需要编译 llama.cpp。
-
-### 2. 准备 llama-server 推理引擎（三选一）
-
-- **方式一（推荐，离线包已内置）**：把 llama.cpp 官方每日构建 zip
-  （如 `llama-b11046-bin-win-cpu-x64.zip`，需 2026-09-07 之后、含 Spark2_5）
-  解压到 `Memora/tools/llamacpp/bin/`（仓库随包已放好一份）。
-- **方式二**：设置环境变量 `MEMORA_LLAMASERVER_PATH` 指向 llama-server 可执行文件。
-- **方式三**：在项目同级放 `../llama.cpp/build/bin/llama-server`（自行编译最新 master）。
-
-### 3. 下载模型（两种方式）
-
-- **界面方式**：启动应用 → 左侧「模型管理」→ 在推荐卡片上点「下载此模型」→
-  弹窗确认「是，开始下载」，系统经 ModelScope 自动下载官方 Q4_K_M GGUF，
-  完成后状态变「已就绪」，点「使用此模型」即可切换。
-- **命令行方式**：
-
-```bash
-# 默认 4B；安装阶段如需联网下载，先设置 MEMORA_ENFORCE_OFFLINE=0
-python scripts/prepare_model.py
-python scripts/prepare_model.py --model XHToken/Spark-X2.5-1.7B
-```
-
-> 离线红线：默认 `MEMORA_ENFORCE_OFFLINE=1`，应用绝不联网。
-> 安装阶段设 `MEMORA_ENFORCE_OFFLINE=0` 下载模型；比赛演示时保持默认即可断网运行。
-> 离线机器也可在联网机下载后，把 `root/models/models/XHToken--Spark-X2.5-xB-GGUF`
-> 整个目录拷贝到目标机器同位置。
-
-**兜底（仅当你拿到的是 safetensors 原始仓库）**：备好含 Spark2_5 的 llama.cpp 后
-
-```bash
-python scripts/prepare_model.py --from-safetensors --llamacpp ../llama.cpp
-```
-
-### 4. 自检与启动
-
-```bash
-python scripts/doctor.py          # 检查依赖/引擎/模型/磁盘，给出修复建议
-# Windows 一键启动（后端 8000 + 前端 3000）
-scripts\start.bat
-```
-
-或手动启动：
-
-```bash
-# 终端 1
-python -m uvicorn server.main:app --host 127.0.0.1 --port 8000
-# 终端 2
-cd web && npm install && npm run dev
-# 浏览器打开 http://localhost:3000
-```
-
-首次推理时后端会自动在随机本机端口拉起 llama-server 并加载当前模型，
-切换模型时自动关闭旧进程；日志见 `data/logs/llama-server.log`。
-
----
-
-## 四、模型管理页交互（用户需求闭环）
-
-1. 首页与「模型管理」页**显式推荐 Spark-X2.5-4B / Spark-X2.5-1.7B**；
-   首页在当前模型未就绪时显示黄色引导横幅，一键跳转模型管理页。
-2. 每张模型卡片实时显示本地状态：`已就绪（GGUF，可直接使用）/ 仅有 safetensors / 本地未安装`。
-3. 未安装时点「下载此模型」→ 弹窗「本地未检测到 XX，是否从 ModelScope 下载到本地？」
-   → 点「是，开始下载」自动下载官方 Q4_K_M GGUF（仅单文件），页面 2.5s 轮询进度。
-4. 离线模式下下载请求返回 409，并给出可在联网机执行的官方命令。
-5. 下载完成点「使用此模型」即持久化选择（`data/settings.json`）并重建推理链。
-
-后端接口：`GET /api/models/config`、`GET /api/models`、
-`POST /api/models/download|convert|select`、`GET /api/models/status`。
-
----
-
-## 五、可选：SGLang server 模式（GPU）
-
-```bash
-pip install sglang
-python -m sglang.launch_server --model-path XHToken/Spark-X2.5-4B \
-    --host 127.0.0.1 --port 30000 --context-length 1000000
-```
-
-设置 `MEMORA_BACKEND=sglang`（及 `MEMORA_SGLANG_URL` / `MEMORA_SGLANG_MODEL`）后启动后端。
-
----
-
-## 六、语音模块（可选）
-
-需自行编译 whisper.cpp，二进制放到 `whisper.cpp/build/bin/whisper-cli.exe`；
-首次使用自动下载 `ggml-base.bin`（仅安装阶段用网）；非 wav 音频需系统装有 ffmpeg。
-
----
-
-## 七、主要配置项（.env / 环境变量）
+复制 `.env.example` 为 `.env` 按需修改；所有项均可被同名环境变量覆盖。
 
 | 键 | 默认值 | 说明 |
-|----|--------|------|
+|---|---|---|
 | `MEMORA_MODELS_ROOT` | `../root/models` | 模型根目录（ModelScope 缓存） |
-| `MEMORA_MODEL_ID` | 4B | 当前模型（一般由模型管理页写入 settings.json） |
-| `MEMORA_BACKEND` | `llamacpp` | `llamacpp`（本机 server）/ `sglang`（外部 server） |
-| `MEMORA_LLAMASERVER_PATH` | 空 | 显式指定 llama-server 路径 |
-| `MEMORA_LLAMASERVER_PORT` | `0` | server 端口，0=自动选空闲端口 |
-| `MEMORA_N_CTX` | `32768` | 上下文窗口（8GB 机器建议 ≤32768） |
-| `MEMORA_N_GPU` | `0` | 上 GPU 的层数，0=全 CPU，-1=全部上 GPU |
-| `MEMORA_THREADS` | `0` | CPU 线程数，0=自动 |
-| `MEMORA_KV_QUANT` | `q8_0` | KV cache 量化（q8_0/q4_0/f16） |
-| `MEMORA_TEMP` | `0.3` | 温度 |
-| `MEMORA_MAX_REVIEW` / `MEMORA_MAX_QA` | `4096` / `1024` | 复盘 / 问答最大生成长度 |
-| `MEMORA_ENFORCE_OFFLINE` | `1` | 离线红线：1=禁止一切下载 |
-| `MEMORA_SGLANG_URL` / `MEMORA_SGLANG_KEY` / `MEMORA_SGLANG_MODEL` | `http://127.0.0.1:30000/v1` / `EMPTY` / 空 | 外部 server 配置 |
+| `MEMORA_MODEL_ID` | 4B | 当前模型（一般由模型管理页写入 `data/settings.json`） |
+| `MEMORA_BACKEND` | `llamacpp` | `llamacpp`（本机子进程）/ `sglang`（外部 GPU server） |
+| `MEMORA_ENFORCE_OFFLINE` | `1` | 离线红线：1 = 禁止一切下载，模型缺失只报错 |
+| `MEMORA_N_CTX` / `MEMORA_KV_QUANT` | `32768` / `q8_0` | 上下文窗口 / KV 量化（8GB 友好，约占 3.5GB） |
+| `MEMORA_N_GPU` | `0` | GPU 卸载层数，0 = 全 CPU，-1 = 全部上 GPU |
+| `MEMORA_RAG_ENABLE` | `1` | 超长对话本地 RAG 开关；无 embedding 时自动降级为规则压缩 |
+| `MEMORA_PII_REDACT` | `1` | PII 脱敏开关（含人名角色化） |
+| `MEMORA_TEMP` / `MEMORA_MAX_REVIEW` / `MEMORA_MAX_QA` | `0.3` / `4096` / `1024` | 解码温度与最大生成长度 |
 
----
-
-## 八、比赛演示流程
-
-1. `python scripts/doctor.py` 确认全绿；断开网络证明纯离线。
-2. 导入一份工作群聊天记录（txt/csv/html），首页一键复盘 → 结构化报告（结论/待办/风险）。
-3. 自然语言提问，基于全部对话问答。
-4. 模型管理页展示双端侧模型与本地状态，现场切换 4B/1.7B 对比速度。
-5. 【加分】导入会议录音，本地转写并生成纪要。
-6. 数据全部在本机 `data/`，加密存储，一键清空可彻底删除。
-
----
-
-## 九、单元测试
+## 🧪 测试与评测复现
 
 ```bash
-python -m pytest tests/ -q
+python -m pytest tests/ -q                          # 125 项单测：不加载模型、不联网
+# 真机离线端到端（需已放置模型，24 项）
+set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
+# 全量评测与消融（需模型，耗时较长，贪心解码可复现，断点续跑）
+cd evals && python runner.py
 ```
 
-覆盖解析器（微信/钉钉/飞书/嗅探/兜底）、配置与模型缓存布局、加密存储、智能体报告切片、
-导出、批量汇总、模型获取状态机（官方 GGUF 仓库布局/优先级/离线红线）、Spark 模板与思考链清洗、
-llama-server 发现与启动参数构造，共 47 个用例，不依赖模型加载、不联网。
+## 🗺️ 路线图
 
----
+- [x] 多平台解析、PII 脱敏、本地 RAG、SSE 流式、模型一键下载、离线发布包、评测与消融
+- [ ] whisper.cpp / ffmpeg 语音链路随包分发（当前为可选实验）
+- [ ] PyInstaller / WebView 桌面 EXE 一键安装包
+- [ ] 更多 IM / 会议平台导出格式解析
+- [ ] 8GB / 16GB、Intel / AMD、有无独显的配置矩阵实测
 
-## 十、架构说明与消融支持
+## 🙏 致谢
 
-后端是薄层，只做 HTTP 适配；业务逻辑（解析、推理、加密、导出）都在 `memora/`。
-默认后端在首次推理时于本机随机端口拉起 llama-server（仅绑定 127.0.0.1），
-通过 OpenAI 兼容协议通信，退出/切换模型时终止子进程。
-未来打包桌面应用时，FastAPI 与 llama-server 作为子进程随 EXE 分发，
-Next.js 静态导出后由 webview 或 FastAPI StaticFiles 托管。
+Memora 站在开源社区的肩膀上：[Spark-X2.5](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF) 端侧模型、
+[llama.cpp](https://github.com/ggml-org/llama.cpp)、[bge-m3](https://modelscope.cn/models/gpustack/bge-m3-GGUF)、
+ModelScope、LangChain、FastAPI、Next.js。各模型与第三方组件遵循其各自许可证。
 
-**消融实验**：对照组①全量上下文直接分析；对照组②调小 `MEMORA_N_CTX` + 长文本分片模拟 RAG。
-评价指标（待办准确率/关键信息召回/风险完整度）可在 `memora/agent` 外层评估脚本接入。
+## 📄 许可证
+
+本仓库当前**尚未声明开源许可证**（默认保留所有权利），仅用于学习与竞赛展示。
+如需开源，建议补充 `LICENSE`（如 MIT）并再次确认所分发模型 / 二进制的许可条款。

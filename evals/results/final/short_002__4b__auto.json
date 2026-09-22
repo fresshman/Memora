@@ -1,0 +1,97 @@
+{
+  "case_id": "short_002",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 372,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 37.0,
+  "qa_s": 12.1,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定正式上线窗口为3月18日凌晨两点。\n2. 明确预算控制标准：活动总预算不超过五万，超出五万需重新走审批，禁止先斩后奏。\n\n## 二、待办任务清单\n- [ ] 确认第三方支付接口的限流额度 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 完成新人培训材料制作（含账号申请和规范两部分） ｜ 责任人：林霞 ｜ 时间节点：下周二之前\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 负责上线值守发布（3月18日凌晨两点上线窗口） ｜ 责任人：张伟 ｜ 时间节点：3月18日凌晨两点\n- [ ] 准备上线回滚预案 ｜ 责任人：张伟 ｜ 时间节点：3月18日凌晨两点前\n\n## 三、关键信息提取\n1. **时间节点**：3月18日凌晨两点（正式上线窗口）、下周二（新人培训材料完成时间）、下周五下午六点（安全审计报告截止时间）、3月4日（对话发生日期）\n2. **金额/报价**：活动总预算控制在五万\n3. **地点**：前台（办公用品领取处、下午茶放置处）\n4. **联系人与责任人**：张伟（上线值守发布、确认第三方支付限流额度）、林霞（新人培训材料制作）、王强（预算拍板、撰写安全审计报告）\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，可能影响上线延期。",
+  "answers": [
+    {
+      "q": "上线窗口最终定在什么时候？谁值守？",
+      "answerable": true,
+      "answer": "上线窗口最终定在**3月18日凌晨两点**，由**张伟**负责值守发布。\n\n该信息来源于「李娜：那就定了，正式上线窗口放在3月18日凌晨两点，张伟负责值守发布，提前备好回滚预案」（2024-03-04 11:19:00）。",
+      "s": 10.4
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 1.7
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 5,
+      "tp_gold": 2,
+      "tp_item": 5,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "上线窗口最终定在什么时候？谁值守？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 54.9
+}

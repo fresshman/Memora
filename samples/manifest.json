@@ -1,0 +1,88 @@
+{
+  "description": "Memora 多平台解析样本 golden 标注。user_count=真人发言数（不含系统消息），system_count=群系统消息数，speakers=按首次出现顺序，must_contain=真人消息中必须还原出的关键文本（同时用于验证编码无乱码）。",
+  "samples": [
+    {
+      "path": "wechat/01_basic_group.txt",
+      "source": "wechat", "title": "项目攻坚组",
+      "user_count": 7, "system_count": 6,
+      "speakers": ["张伟", "李娜", "王强", "陈静"],
+      "first_time": "2024-03-01 09:58:02",
+      "last_time": "2024-03-02 14:20:00",
+      "must_contain": ["星河会议室", "限流", "下周三交付", "[文件]", "[图片]"]
+    },
+    {
+      "path": "wechat/02_plain_head.txt",
+      "source": "wechat", "title": "运营小组",
+      "user_count": 3, "system_count": 0,
+      "speakers": ["周杰", "吴敏"],
+      "first_time": "2024-03-05 13:30:00",
+      "last_time": "2024-03-05 13:33:42",
+      "must_contain": ["新增留存", "[语音]", "活动文案"]
+    },
+    {
+      "path": "wechat/03_gbk.txt",
+      "source": "wechat", "title": "供应链对接群",
+      "encoding": "gbk",
+      "user_count": 4, "system_count": 3,
+      "speakers": ["马俊", "宋洁"],
+      "first_time": "2024-06-10 09:12:30",
+      "last_time": "2024-06-10 09:30:05",
+      "must_contain": ["报价单", "压到预算", "交期要二十天"]
+    },
+    {
+      "path": "dingtalk/01_standard.csv",
+      "source": "dingtalk", "title": "钉钉聊天记录",
+      "user_count": 4, "system_count": 1,
+      "speakers": ["张伟", "李娜", "王强"],
+      "first_time": "2024-03-01 09:00:00",
+      "last_time": "2024-03-01 09:25:00",
+      "must_contain": ["九点半", "测试环境我来部署"]
+    },
+    {
+      "path": "dingtalk/02_with_media.csv",
+      "source": "dingtalk", "title": "钉钉聊天记录",
+      "user_count": 2, "system_count": 2,
+      "speakers": ["赵敏", "孙磊"],
+      "first_time": "2024-03-02 10:00:00",
+      "last_time": "2024-03-02 10:02:00",
+      "must_contain": ["十二万", "报销单"]
+    },
+    {
+      "path": "dingtalk/03_gbk.csv",
+      "source": "dingtalk", "title": "钉钉聊天记录",
+      "encoding": "gbk",
+      "user_count": 2, "system_count": 1,
+      "speakers": ["郭涛", "何丽"],
+      "first_time": "2024-06-11 10:00:00",
+      "last_time": "2024-06-11 10:15:00",
+      "must_contain": ["空运", "毛利"]
+    },
+    {
+      "path": "feishu/01_ts_block.html",
+      "source": "feishu", "title": "飞书聊天记录",
+      "user_count": 2, "system_count": 1,
+      "speakers": ["林晓", "赵磊"],
+      "first_time": "2024-03-01 09:00:00",
+      "last_time": "2024-03-01 09:10:00",
+      "must_contain": ["物料今天定稿", "印刷厂"]
+    },
+    {
+      "path": "feishu/02_name_first.html",
+      "source": "feishu", "title": "飞书聊天记录",
+      "user_count": 3, "system_count": 0,
+      "speakers": ["钱芳", "冯涛"],
+      "first_time": "2024-03-03 14:00:00",
+      "last_time": "2024-03-03 14:08:00",
+      "must_contain": ["盖章", "顺丰", "用印"]
+    },
+    {
+      "path": "feishu/03_ts_first.html",
+      "source": "feishu", "title": "飞书聊天记录",
+      "user_count": 2, "system_count": 1,
+      "speakers": ["周舟", "周凯"],
+      "first_time": "2024-03-04 08:31:00",
+      "last_time": "2024-03-04 08:32:00",
+      "must_contain": ["站会提前", "八点五十"]
+    }
+  ]
+}

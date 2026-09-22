@@ -1,0 +1,97 @@
+{
+  "case_id": "short_013",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 238,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 23.3,
+  "qa_s": 12.9,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 发布会时间确定为下下月十号，形式为线上直播，取消线下场地安排。\n\n## 二、待办任务清单\n- [ ] 出具压测报告 ｜ 责任人：刘洋 ｜ 时间节点：月底之前\n\n## 三、关键信息提取\n1. 时间节点：2024-03-04 10:00（季度复盘会议开始时间）、下下月十号（发布会时间）、月底（压测报告提交截止时间）\n2. 地点：三楼星河厅（季度复盘会议地点）\n3. 责任人：刘洋（压测报告负责人）\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，若卡住可能导致上线延期。",
+  "answers": [
+    {
+      "q": "压测报告谁来写？什么时候给？",
+      "answerable": true,
+      "answer": "根据对话记录，压测报告由**刘洋**来写，计划**月底之前**发给大家。\n\n具体表述为：刘洋在「2024-03-04 11:01:00」提到「那压测报告我来出，月底之前发给大家，里面会带上并发和慢接口的数据」。",
+      "s": 8.4
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 4.5
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "压测报告谁来写？什么时候给？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 42.1
+}

@@ -1,0 +1,96 @@
+{
+  "case_id": "long_013",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23669,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 101.0,
+  "qa_s": 131.9,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. **技术方案确定**：经过对比，决定放弃单体方案A，采用方案B进行微服务拆分，后期扩展性更好。\n2. **活动预算明确**：本次活动总预算控制在五万元，超过五万需重新走审批，严禁先斩后奏。\n3. **季度复盘会议安排**：会议室定在三楼星河厅，上午十点开始，主题为季度复盘。\n\n## 二、待办任务清单\n- [ ] 合同盖章 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n- [ ] 压测报告出具 ｜ 责任人：刘洋 ｜ 时间节点：月底之前\n\n## 三、关键信息提取\n1. **时间节点**：\n- 合同盖章截止：2024-03-09（下周一）\n- 压测报告发布：2024年3月底\n- 季度复盘会议时间：2024-03-08 上午10:00\n2. **金额/报价**：活动总预算控制在5万元\n3. **地点**：\n- 季度复盘会议地点：三楼星河厅\n- 办公用品领取地点：前台\n4. **联系人与责任人**：\n- 合同盖章责任人：赵敏\n- 压测报告责任人：刘洋\n\n## 四、沟通风险提示\n1. **合同延期风险**：合同盖章需在2024-03-09前完成，否则财务无法走款，存在延期风险。\n2. **测试环境故障风险**：测试环境数据库昨晚损坏，回归测试无法运行，今日可能无法搭建完成。\n3. **上线延期风险**：第三方支付接口限流额度未确认，若卡住可能导致上线延期。\n4. **资源供应风险**：生产服务器SSL证书下周到期，不续则网站无法打开；茶水间咖啡豆见底，需行政下午补上。",
+  "answers": [
+    {
+      "q": "活动预算最终定了多少？",
+      "answerable": true,
+      "answer": "对话中明确提到活动预算的确定情况：2024-03-04 15:25:00，王强表示「预算这块拍板了，这次活动总预算控制在五万，超过五万必须重新走审批，谁也不能先斩后奏」。因此，活动最终预算为**五万元**。",
+      "s": 68.0
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 63.9
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 3,
+      "tp_item": 4,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "活动预算最终定了多少？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 238.6
+}

@@ -1,0 +1,97 @@
+{
+  "case_id": "long_017",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23786,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 100.3,
+  "qa_s": 140.3,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. **正式上线窗口确定**：正式上线窗口定于3月18日凌晨两点，由张伟负责值守发布，需提前备好回滚预案。\n2. **供应商选定**：供应商确定为华东那家，单价120元，因交期最稳确定合作，合同由赵敏跟进办理。\n\n## 二、待办任务清单\n- [ ] 准备上线回滚预案 ｜ 责任人：未明确 ｜ 时间节点：3月18日前\n- [ ] 跟进供应商合同办理 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n- [ ] 设计新版宣传海报第一稿 ｜ 责任人：周婷 ｜ 时间节点：3月14日中午前\n\n## 三、关键信息提取\n1. **时间节点**：3月18日凌晨两点（正式上线窗口）、3月14日中午前（宣传海报第一稿截止）、3月18日（上线日期）\n2. **金额/报价**：120元（供应商单价）\n3. **地点**：华东（供应商所在地）\n4. **联系人与责任人**：张伟（上线值守发布）、赵敏（供应商合同办理）、周婷（宣传海报设计）\n\n## 四、沟通风险提示\n1. **第三方支付接口限流风险**：第三方支付接口的限流额度尚未确认，若卡住可能导致上线延期。\n2. **硬件交付延期风险**：供应商反馈核心物料缺货需补货，硬件交付可能推迟一周，且到货时间暂无法确定。\n3. **需求变更排期影响**：客户提出需求变更，新增报表页面后工作量需多两天，将影响排期。",
+  "answers": [
+    {
+      "q": "客户现场部署是谁去？定在什么时间？",
+      "answerable": true,
+      "answer": "根据对话记录，**客户现场部署由陈静负责**，定在**本周四上午**。\n\n具体表述为：「陈静：客户现场的部署我负责，安排在本周四上午过去，争取当天把环境跑通」（来源：2024-03-04 13:47:00）。",
+      "s": 71.9
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。\n\n整个对话内容主要围绕工作安排、日常注意事项、项目进展及风险提示等展开，如客户部署安排、电梯/门禁/保洁等日常事项提醒、项目工作量评估、上线窗口确定、供应商物料风险等，均未涉及公司明年营收目标相关内容。",
+      "s": 68.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 0,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 0.0,
+      "f1": 0.0,
+      "extracted": 0,
+      "extraction_recall": 0.0,
+      "owner_accuracy": 0.0,
+      "n_owner": 2,
+      "deadline_recall": 0.0
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "客户现场部署是谁去？定在什么时间？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 246.2
+}

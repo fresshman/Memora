@@ -1,0 +1,96 @@
+{
+  "case_id": "short_022",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 335,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 35.9,
+  "qa_s": 13.5,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 数据备份方案需重点完善异地容灾部分，本周五前完成版本输出。\n2. 活动总预算控制在五万元，超出五万需重新走审批，严禁先斩后奏。\n3. 发布会时间推迟至下下月十号，形式确定为线上直播，取消线下场地举办。\n\n## 二、待办任务清单\n- [ ] 完成数据备份方案（重点含异地容灾部分）的版本整理 ｜ 责任人：孙磊 ｜ 时间节点：本周五前\n- [ ] 跟进核心物料补货事宜，确认硬件交付到货时间 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n- [ ] 跟进楼道灯报修进度，提醒大家注意行走安全 ｜ 责任人：丙 ｜ 时间节点：未明确\n- [ ] 跟进联调工作进展，协调人员顶替请假同事 ｜ 责任人：李娜 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n1. 时间节点：本周五（数据备份方案截止）、下下月十号（发布会时间）\n2. 金额/报价：活动总预算五万元\n3. 地点：无\n4. 联系人与责任人：孙磊（数据备份方案）、赵敏（物料补货）、丙（楼道灯报修）、李娜（联调工作）\n5. 账号等：无\n\n## 四、沟通风险提示\n1. 硬件交付风险：核心物料缺货，硬件交付可能推迟一周，到货时间暂无法确定。\n2. 进度受阻风险：负责联调的同事请假三天，联调工作进度可能受阻。",
+  "answers": [
+    {
+      "q": "发布会改成什么时间、什么形式？",
+      "answerable": true,
+      "answer": "根据对话记录，发布会时间改为「下下月十号」，形式确定为「线上直播，不再办线下场地」，该信息由「林霞」在「2024-03-04 12:47:00」的发言中提及。",
+      "s": 8.7
+    },
+    {
+      "q": "这个项目最终结算的具体金额是多少钱？",
+      "answerable": false,
+      "answer": "对话记录中未提及项目最终结算的具体金额。\n\n对话中仅王强提到「这次活动总预算控制在五万，超过五万必须重新走审批，谁也不能先斩后奏」，但该内容为活动预算规定，并非最终结算金额，故无法得出项目最终结算的具体金额。",
+      "s": 4.8
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 4,
+      "tp_gold": 1,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.8571,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "发布会改成什么时间、什么形式？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "这个项目最终结算的具体金额是多少钱？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 55.0
+}

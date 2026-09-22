@@ -1,0 +1,97 @@
+{
+  "case_id": "short_017",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 246,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 27.9,
+  "qa_s": 17.5,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 活动总预算确定为五万元，超出五万需重新审批，严禁先斩后奏。\n\n## 二、待办任务清单\n- [ ] 补全对外接口文档并更新至知识库 ｜ 责任人：吴凯 ｜ 时间节点：明天下午三点前\n- [ ] 完成合同盖章事宜 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n\n## 三、关键信息提取\n1. 时间节点：明天下午三点前、下周一之前\n2. 金额/报价：活动总预算五万元\n3. 地点：知识库\n4. 联系人与责任人：李娜、吴凯、王强、丙、乙、陈静、赵敏\n\n## 四、沟通风险提示\n1. 联调进度受阻风险：负责联调的同事请假三天，联调进度可能受阻。\n2. 需求变更排期影响风险：客户新增报表页面需求，工作量增加约两天，排期将受影响。\n3. 合同盖章时效风险：合同盖章若未在下周一前完成，将影响财务走款。",
+  "answers": [
+    {
+      "q": "合同盖章由谁办理？期限是？",
+      "answerable": true,
+      "answer": "根据对话记录，合同盖章由**赵敏**办理，相关表述为「合同盖章的事我跑一趟，下周一之前务必拿到，不然财务没法走款」（赵敏，2024-03-04 11:48:00）。办理期限为**下周一之前**。",
+      "s": 8.1
+    },
+    {
+      "q": "这个项目最终结算的具体金额是多少钱？",
+      "answerable": false,
+      "answer": "对话记录中未提及项目最终结算的具体金额。\n\n对话中仅提到「王强：预算这块拍板了，这次活动总预算控制在五万，超过五万必须重新走审批，谁也不能先斩后奏」（2024-03-04 10:35:00），这是活动总预算的初步控制标准，并非最终结算金额，故无法得出最终结算具体金额。",
+      "s": 9.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "合同盖章由谁办理？期限是？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "这个项目最终结算的具体金额是多少钱？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 52.1
+}

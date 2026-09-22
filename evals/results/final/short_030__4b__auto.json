@@ -1,0 +1,97 @@
+{
+  "case_id": "short_030",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 307,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 24.7,
+  "qa_s": 9.5,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定供应商为华东供应商，单价120元，合同由赵敏负责跟进。\n\n## 二、待办任务清单\n- [ ] 完成新人培训材料制作（含账号申请和规范两部分） ｜ 责任人：林霞 ｜ 时间节点：下周二之前\n- [ ] 出具压测报告（含并发和慢接口数据） ｜ 责任人：刘洋 ｜ 时间节点：月底之前\n\n## 三、关键信息提取\n1. 时间节点：下周二之前、月底之前、2024-03-04\n2. 金额/报价：120元\n3. 责任人：林霞、刘洋、赵敏\n4. 地点：无\n5. 账号：无\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，若卡住可能导致上线延期。",
+  "answers": [
+    {
+      "q": "联调进度遇到了什么问题？",
+      "answerable": true,
+      "answer": "联调进度受阻的原因是「负责联调的同事家里有事请了三天假，这块进度可能受阻，得赶紧找人顶一下」，该情况由李娜在2024-03-04 10:08:00发言中提及。",
+      "s": 8.1
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "联调进度遇到了什么问题？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 39.8
+}

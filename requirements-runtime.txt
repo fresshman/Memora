@@ -1,0 +1,41 @@
+# Memora 运行时依赖（离线发布用）
+# 与 requirements.txt 一致，但去掉仅开发/打包用的 pyinstaller；
+# 保留 pytest 以便在断网机器上运行 tests/ 自检。
+# 联网打包机执行：pip download -r requirements-runtime.txt -d wheelhouse
+
+# ---- 核心编排（LangChain）----
+langchain-core>=1.0.0
+langchain-openai>=0.3.0
+langchain>=1.0.0
+
+# ---- 默认推理后端：本机 llama-server 子进程（无需 torch）----
+# llama-server 二进制随包在 tools/llamacpp/bin，无需 Python 编译绑定。
+
+# ---- 模型下载（ModelScope，模型管理页；安装阶段可用网）----
+modelscope>=1.20.0
+
+# ---- FastAPI 后端 ----
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.9   # 文件上传 / 表单（UploadFile 必需，fastapi 不默认安装）
+
+# ---- 本地加密存储 ----
+cryptography>=43.0.0
+
+# ---- 解析辅助 ----
+pandas>=2.2.0
+beautifulsoup4>=4.12.0
+chardet>=5.0.0
+
+# ---- RAG（纯 CPU、无 torch）----
+faiss-cpu>=1.8.0
+numpy>=1.26.0
+
+# ---- 配置管理 ----
+python-dotenv>=1.0.0
+
+# ---- 报告导出 ----
+reportlab>=4.0.0
+
+# ---- 离线自检 ----
+pytest>=8.0.0

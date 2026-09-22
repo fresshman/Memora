@@ -1,0 +1,97 @@
+{
+  "case_id": "long_005",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "full",
+  "is_long": true,
+  "char_count": 23601,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 328.6,
+  "qa_s": 296.9,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定供应商为华东供应商，单价120元，因交期稳定选定，后续由赵敏负责合同走流程。\n2. 明确合同盖章事项需在下周一之前完成，否则财务无法走款。\n\n## 二、待办任务清单\n- [ ] 合同盖章事宜 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n\n## 三、关键信息提取\n1. **时间节点**：下周一（合同盖章截止时间）、下午三点（保洁打扫工位区域时间）。\n2. **金额/报价**：供应商单价120元。\n3. **地点**：华东（供应商所在地）。\n4. **联系人与责任人**：赵敏（负责合同盖章及走流程）、黄磊（确定供应商决策人）。\n\n## 四、沟通风险提示\n1. **测试环境故障风险**：测试环境数据库昨晚损坏，回归测试无法运行，今日可能无法完成搭建。\n2. **合同时效风险**：合同盖章未在下周一前完成，将导致财务无法走款，影响后续流程。",
+  "answers": [
+    {
+      "q": "客户现场部署是谁去？定在什么时间？",
+      "answerable": true,
+      "answer": "对话记录中未提及客户现场部署的相关人员及时间信息。\n\n在整个对话记录里，没有任何内容涉及“客户现场部署”的安排，既没有明确说明执行该部署的人员，也没有确定部署的具体时间，因此无法从现有记录中获取相关答案。",
+      "s": 293.6
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 3.3
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5,
+      "owner_accuracy": 0.5,
+      "n_owner": 2,
+      "deadline_recall": 0.5
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.3333,
+      "f1": 0.5,
+      "extracted": 1,
+      "extraction_recall": 0.3333
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.3333,
+      "f1": 0.5,
+      "extracted": 1,
+      "extraction_recall": 0.3333
+    },
+    "qa": {
+      "evidence_recall": 0.0,
+      "n_answerable": 1,
+      "answerable_hit": 0,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "客户现场部署是谁去？定在什么时间？",
+          "answerable": true,
+          "hit": false
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 632.0
+}

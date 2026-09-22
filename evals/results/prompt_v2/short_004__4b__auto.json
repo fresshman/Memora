@@ -1,0 +1,96 @@
+{
+  "case_id": "short_004",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 290,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 36.1,
+  "qa_s": 17.4,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 决定本次季度复盘会议于2024年3月4日上午10点在三楼星河厅举行。\n2. 决定本次活动总预算控制在五万元，超出五万元需重新走审批，严禁先斩后奏。\n\n## 二、待办任务清单\n- [ ] 完成合同盖章事宜 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n\n## 三、关键信息提取\n- 时间点：2024-03-04 09:53:00、2024-03-04 10:12:00、2024-03-04 10:27:00、2024-03-04 10:36:00、2024-03-04 10:49:00、2024-03-04 11:01:00、2024-03-04 11:22:00、2024-03-04 11:29:00、2024-03-04 11:40:00、2024-03-04 11:48:00\n- 金额/预算：五万元\n- 地点：三楼星河厅\n- 会议主题：季度复盘\n\n## 四、沟通风险提示\n1. 核心物料缺货可能导致硬件交付推迟一周，且到货时间暂无法确定。\n2. 第三方支付接口限流额度未确认，若卡住可能影响上线延期。",
+  "answers": [
+    {
+      "q": "目前项目有什么风险？",
+      "answerable": true,
+      "answer": "目前项目存在以下风险：\n1. **核心物料缺货风险**：「供应商反馈核心物料缺货要补货，硬件交付可能推迟一周，到货时间现在给不准」（赵敏，2024-03-04 10:27:00），该情况可能导致硬件交付进度受阻。\n2. **第三方支付接口限流风险**：「有个风险得提前说，第三方支付接口的限流额度他们还没确认，真卡住可能导致上线延期」（张伟，2024-03-04 10:49:00），若限流额度问题未解决，可能影响项目上线。",
+      "s": 12.5
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 4.9
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "目前项目有什么风险？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 60.7
+}

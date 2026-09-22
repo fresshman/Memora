@@ -1,0 +1,96 @@
+{
+  "case_id": "long_001",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "full",
+  "is_long": true,
+  "char_count": 23545,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 330.7,
+  "qa_s": 291.0,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定季度复盘会议安排：会议室为三楼星河厅，上午十点开始，主题为季度复盘，由周婷负责预订。\n2. 明确安全审计报告交付要求：安全审计报告由王强撰写，截止时间为下周五下午六点前，该交付物为客户点名要求。\n3. 确认部分事项暂缓推进：相关文档补充工作因近期排期满，暂由相关人员有空时完成；部分优先级不高的事项往后安排。\n\n## 二、待办任务清单\n- [ ] 预订季度复盘会议场地（三楼星河厅，上午十点开始） ｜ 责任人：周婷 ｜ 时间节点：无明确要求\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 补充相关文档 ｜ 责任人：戊、甲 ｜ 时间节点：无明确要求\n\n## 三、关键信息提取\n1. **时间节点**：季度复盘会议时间为上午十点；安全审计报告截止时间为下周五下午六点；行政补茶水间咖啡豆时间为下午。\n2. **地点**：季度复盘会议地点为三楼星河厅；停车场侧门为施工期间开车同事的入口。\n3. **联系人与责任人**：周婷（负责预订季度复盘会议场地）；王强（负责撰写安全审计报告）；戊、甲（负责补充相关文档）。\n\n## 四、沟通风险提示\n1. **交付物时间风险**：安全审计报告需在下周五下午六点前完成，存在时间紧迫性风险，需确保按时交付。\n2. **资源排期风险**：相关文档补充工作因近期排期满，可能影响补充进度，需关注后续排期调整。\n3. **需求信息风险**：部分事项因当前信息不全，需后续细化，可能影响事项推进效率。",
+  "answers": [
+    {
+      "q": "服务器那边有什么需要尽快处理的隐患？",
+      "answerable": true,
+      "answer": "对话记录中未提及服务器相关的隐患。\n\n整个对话记录主要围绕食堂例汤口味、办公用品领取、绿植养护、保洁安排、门禁升级、电梯排队、会议室设备问题、快递柜/打印机纸箱状态、充电线借用、咖啡豆补充、安全审计报告等日常办公及生活相关事宜展开，未涉及服务器隐患相关内容。",
+      "s": 287.8
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 3.2
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 0.3333,
+      "f1": 0.4444,
+      "extracted": 1,
+      "extraction_recall": 0.3333,
+      "owner_accuracy": 0.3333,
+      "n_owner": 3,
+      "deadline_recall": 0.3333
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 0,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "extracted": 0,
+      "extraction_recall": 0.0
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 0.3333,
+      "f1": 0.4444,
+      "extracted": 1,
+      "extraction_recall": 0.3333
+    },
+    "qa": {
+      "evidence_recall": 0.0,
+      "n_answerable": 1,
+      "answerable_hit": 0,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "服务器那边有什么需要尽快处理的隐患？",
+          "answerable": true,
+          "hit": false
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 627.3
+}

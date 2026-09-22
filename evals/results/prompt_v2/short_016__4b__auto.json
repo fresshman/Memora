@@ -1,0 +1,96 @@
+{
+  "case_id": "short_016",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 262,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 32.3,
+  "qa_s": 14.2,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 决定季度复盘会议于2024年3月4日上午10点在三楼星河厅举行。\n\n## 二、待办任务清单\n- [ ] 完成客户现场部署 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n- [ ] 完成退款名单核对 ｜ 责任人：黄磊 ｜ 时间节点：今天下班前\n- [ ] 统一发布核对无误的退款名单 ｜ 责任人：黄磊 ｜ 时间节点：退款名单核对无误后\n\n## 三、关键信息提取\n- 时间点：2024-03-04 09:43、09:57、09:59、10:15、10:17、10:25、10:34、10:41、11:02、11:24\n- 地点：三楼星河厅、停车场侧门\n- 事项：生产服务器SSL证书下周到期、发布会推迟至下下月十号、楼道一层灯故障报修\n\n## 四、沟通风险提示\n1. 生产服务器SSL证书下周到期，未续将导致网站无法打开。\n2. 楼道一层灯故障，存在通行安全隐患。",
+  "answers": [
+    {
+      "q": "复盘会的会议室定在哪？几点？",
+      "answerable": true,
+      "answer": "复盘会的会议室定在三楼星河厅，上午十点开始。\n\n来源：[2024-03-04 09:43:00] 周婷：会议室订好了，三楼星河厅，上午十点开始，主题是季度复盘，大家别跑错地方。",
+      "s": 9.6
+    },
+    {
+      "q": "这个项目最终结算的具体金额是多少钱？",
+      "answerable": false,
+      "answer": "对话记录中未提及项目最终结算的具体金额。",
+      "s": 4.6
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 1,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "复盘会的会议室定在哪？几点？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "这个项目最终结算的具体金额是多少钱？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 53.5
+}

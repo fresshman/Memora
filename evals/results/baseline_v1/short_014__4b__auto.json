@@ -1,0 +1,96 @@
+{
+  "case_id": "short_014",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 272,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 31.6,
+  "qa_s": 14.1,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 新版宣传海报由周婷负责设计，周三中午前完成第一稿，供全员提意见。\n2. 供应商选定华东那家，单价120元，交期最稳，后续由赵敏负责推进合同盖章事宜。\n\n## 二、待办任务清单\n- [ ] 完成新版宣传海报第一稿设计 ｜ 责任人：周婷 ｜ 时间节点：周三中午前\n- [ ] 推进供应商合同盖章事宜 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n\n## 三、关键信息提取\n1. 时间节点：周三中午前（海报第一稿）、下周一之前（合同盖章）、2024-03-04（沟通日期）\n2. 金额/报价：120元（供应商物料单价）\n3. 地点：前台（办公用品领取处、下午茶放置处）\n4. 联系人与责任人：周婷（海报设计）、赵敏（合同盖章、供应商对接）\n\n## 四、沟通风险提示\n1. 联调进度受阻风险：负责联调的同事请假三天，联调进度可能受阻。\n2. 硬件交付延期风险：核心物料缺货需补货，硬件交付可能推迟一周，且到货时间暂无法确定。",
+  "answers": [
+    {
+      "q": "硬件采购方面有什么风险？",
+      "answerable": true,
+      "answer": "对话中关于硬件采购的风险，相关内容如下：\n「赵敏：供应商反馈核心物料缺货要补货，硬件交付可能推迟一周，到货时间现在给不准」（2024-03-04 09:53:00）。\n\n可见硬件采购存在核心物料缺货需补货、交付可能推迟一周，且到货时间无法确定的风险。",
+      "s": 9.5
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 4.6
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "硬件采购方面有什么风险？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 51.8
+}

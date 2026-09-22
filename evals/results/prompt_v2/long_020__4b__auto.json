@@ -1,0 +1,96 @@
+{
+  "case_id": "long_020",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23434,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 107.3,
+  "qa_s": 138.9,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. **活动预算拍板**：决定本次活动总预算控制在五万元，超过五万必须重新走审批，严禁先斩后奏。\n2. **安全审计报告交付**：决定由王强撰写安全审计报告，截止时间为下周五下午六点前，该报告为客户点名要求的交付物。\n3. **对外接口文档更新**：决定由吴凯补充对外接口文档，于明天下午三点前更新至知识库，供前端对接使用。\n4. **发布会安排调整**：决定将发布会推迟至下下月十号，形式确定为线上直播，不再举办线下场地。\n\n## 二、待办任务清单\n- [ ] 补充对外接口文档并更新至知识库 ｜ 责任人：吴凯 ｜ 时间节点：明天下午三点前\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n\n## 三、关键信息提取\n- **时间锚点**：2024-03-04、2024-03-05、2024-03-06、2024-03-08、2024-03-09\n- **金额/预算**：活动总预算控制在五万元\n- **交付物要求**：安全审计报告（客户点名要求）\n- **联系人**：丁、甲、乙、丙、戊、吴凯、王强、林霞、陈静、张伟\n- **地点**：前台、会议室、茶水间、食堂、停车场侧门、楼道、快递柜\n\n## 四、沟通风险提示\n1. **第三方支付接口限流风险**：第三方支付接口的限流额度尚未确认，若卡住可能导致上线延期。\n2. **需求变更排期影响**：客户新增两个报表页面，粗算工作量需多两天，将影响整体排期。",
+  "answers": [
+    {
+      "q": "发布会改成什么时间、什么形式？",
+      "answerable": true,
+      "answer": "根据对话记录，发布会的时间及形式信息如下：\n「林霞：发布会时间改了，推迟到下下月十号，形式确定为线上直播，不再办线下场地」（2024-03-04 15:08:00）。\n\n即发布会推迟至下下月十号，采用线上直播形式，不再举办线下场地活动。",
+      "s": 70.5
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 68.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 4,
+      "tp_gold": 2,
+      "tp_item": 4,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "发布会改成什么时间、什么形式？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 314.0
+}

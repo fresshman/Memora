@@ -1,0 +1,96 @@
+{
+  "case_id": "short_024",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 315,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 38.1,
+  "qa_s": 10.5,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 决定采用方案B进行微服务拆分，放弃单体方案A，以提升后期扩展性。\n\n## 二、待办任务清单\n- [ ] 恢复测试环境数据库，完成回归测试搭建 ｜ 责任人：未明确 ｜ 时间节点：今天\n- [ ] 安排客户现场部署，于本周四上午前往，争取当天跑通环境 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n- [ ] 安排联调相关同事顶替请假人员，保障联调进度 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 更换会议室投影遥控器电池 ｜ 责任人：未明确 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n- 时间点：2024-03-04 10:12:00、10:25:00、10:40:00、10:57:00、11:03:00、11:16:00、11:36:00、11:58:00、12:14:00、12:34:00、12:56:00、13:10:00\n- 地点：三楼星河厅\n- 会议安排：季度复盘会议，上午十点开始\n- 人员安排：陈静负责客户现场部署；联调同事因请假需顶替\n\n## 四、沟通风险提示\n1. 测试环境数据库损坏，导致回归测试无法运行，影响测试搭建进度。\n2. 联调同事请假三天，联调进度可能受阻。\n3. 会议室投影遥控器电池没电，影响会议使用。\n4. 雨天路滑，骑车同事存在安全风险。",
+  "answers": [
+    {
+      "q": "复盘会的会议室定在哪？几点？",
+      "answerable": true,
+      "answer": "根据对话记录，复盘会的会议室定在三楼星河厅，上午十点开始。具体表述为「周婷：会议室订好了，三楼星河厅，上午十点开始，主题是季度复盘，大家别跑错地方」（来源：2024-03-04 12:14:00）。",
+      "s": 9.1
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 4,
+      "tp_gold": 1,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.8571,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 4,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 2,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "复盘会的会议室定在哪？几点？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 55.7
+}

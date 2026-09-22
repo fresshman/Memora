@@ -1,0 +1,97 @@
+{
+  "case_id": "long_005",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "compressed",
+  "is_long": true,
+  "char_count": 23601,
+  "context_mode_review": "compressed",
+  "context_mode_qa": "compressed",
+  "review_s": 88.2,
+  "qa_s": 50.8,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 正式上线窗口确定为3月18日凌晨两点，由张伟负责值守发布，需提前备好回滚预案。\n2. 客户提出需求变更，需新增两个报表页面，粗算工作量增加两天，将影响排期。\n3. 生产服务器SSL证书下周到期，若不续期网站将无法正常访问。\n4. 供应商最终确定华东那家，单价120元，由赵敏负责推进合同流程。\n5. 合同盖章事项由赵敏负责跑办，需在3月9日（下周一）前完成，否则财务无法走款。\n\n## 二、待办任务清单\n- [ ] 客户现场部署 ｜ 责任人：陈静 ｜ 时间节点：本周四上午，争取当天跑通环境\n- [ ] 合同盖章跑办 ｜ 责任人：赵敏 ｜ 时间节点：3月9日（下周一）前\n- [ ] 合同流程推进（供应商合同） ｜ 责任人：赵敏 ｜ 时间节点：未明确\n- [ ] 相关文档补充 ｜ 责任人：丁 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n1. **时间节点**：3月18日凌晨两点（上线窗口）、本周四上午（客户现场部署）、3月9日（下周一，合同盖章截止）、下周（生产服务器SSL证书到期）。\n2. **金额/报价**：供应商单价120元。\n3. **地点**：三楼星河厅（季度复盘会议地点）、前台旁边（下午茶水果领取处）。\n4. **联系人与责任人**：陈静（客户现场部署）、赵敏（合同盖章、供应商合同推进）、张伟（上线值守发布）、丁（文档补充）。\n\n## 四、沟通风险提示\n1. 需求变更导致工作量增加两天，影响项目排期。\n2. 生产服务器SSL证书下周到期，不续期将导致网站无法访问。\n3. 测试环境数据库昨晚损坏，回归测试暂无法运行，预计当天无法完成搭建。\n4. 合同盖章若未按时完成，将影响财务走款流程。",
+  "answers": [
+    {
+      "q": "客户现场部署是谁去？定在什么时间？",
+      "answerable": true,
+      "answer": "根据对话记录，**客户现场部署由陈静负责**，定在**本周四上午**。\n\n「陈静：客户现场的部署我负责，安排在本周四上午过去，争取当天把环境跑通」（2024-03-04 15:28:00）。",
+      "s": 49.0
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.8
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 4,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.8571,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 3,
+      "tp_item": 4,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 6,
+      "tp_gold": 3,
+      "tp_item": 6,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "客户现场部署是谁去？定在什么时间？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 146.7
+}

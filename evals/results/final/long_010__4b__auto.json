@@ -1,0 +1,97 @@
+{
+  "case_id": "long_010",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23472,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 91.7,
+  "qa_s": 145.9,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 正式上线窗口确定为3月18日凌晨两点，由张伟负责值守发布，需提前备好回滚预案。\n\n## 二、待办任务清单\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 整理数据备份方案（重点为异地容灾部分） ｜ 责任人：孙磊 ｜ 时间节点：本周五前\n\n## 三、关键信息提取\n1. 时间节点：3月18日凌晨两点（正式上线窗口）、下周五下午六点（安全审计报告截止）、本周五（数据备份方案截止）、3月18日（发布会时间，线上直播形式）\n2. 地点：无\n3. 联系人与责任人：张伟（负责上线值守发布）、孙磊（负责数据备份方案）、王强（负责安全审计报告）\n4. 账号等：无\n\n## 四、沟通风险提示\n1. 硬件交付风险：供应商反馈核心物料缺货，硬件交付可能推迟一周，且到货时间暂无法确定。\n2. 项目进度风险：负责联调的同事请假三天，联调进度可能受阻，需尽快安排人员顶替。\n3. 信息同步风险：群聊消息过多，导致部分成员难以及时查看前期内容。",
+  "answers": [
+    {
+      "q": "硬件采购方面有什么风险？",
+      "answerable": true,
+      "answer": "对话中关于硬件采购风险的明确提及内容为：\n「2024-03-04 16:18:00 赵敏：供应商反馈核心物料缺货要补货，硬件交付可能推迟一周，到货时间现在给不准」（来源：赵敏，2024-03-04 16:18:00）。\n\n该内容表明，硬件采购存在**核心物料缺货需补货**的风险，可能导致**硬件交付推迟一周**，且**当前无法确定到货时间**，是硬件采购的主要风险点。",
+      "s": 74.6
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。\n\n整个对话内容主要围绕日常办公事项（如门禁升级、保洁安排、绿植养护、物资补充等）、项目进度（如安全审计报告、发布会调整、数据备份方案等）及工作协调等展开，未涉及公司明年营收目标的相关信息。",
+      "s": 71.3
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "硬件采购方面有什么风险？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 243.3
+}

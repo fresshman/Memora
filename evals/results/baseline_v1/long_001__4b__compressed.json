@@ -1,0 +1,96 @@
+{
+  "case_id": "long_001",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "compressed",
+  "is_long": true,
+  "char_count": 23545,
+  "context_mode_review": "compressed",
+  "context_mode_qa": "compressed",
+  "review_s": 81.6,
+  "qa_s": 51.8,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定正式上线窗口为3月18日凌晨两点，由张伟负责值守发布，需提前备好回滚预案。\n2. 确定供应商为华东地区，单价120元，由赵敏负责推进合同签订。\n3. 确定安全审计报告由王强撰写，截止时间为下周五下午六点前，该交付物为客户点名要求。\n4. 确定压测报告由刘洋负责出具，截止时间为月底前，报告需包含并发和慢接口数据。\n5. 确定客户现场部署由陈静负责，安排在本周四上午前往，争取当天完成环境跑通。\n\n## 二、待办任务清单\n- [ ] 推进供应商合同签订 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 出具压测报告 ｜ 责任人：刘洋 ｜ 时间节点：月底前\n- [ ] 完成客户现场环境部署 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n\n## 三、关键信息提取\n1. **时间节点**：3月18日凌晨两点（正式上线窗口）、下周五下午六点（安全审计报告截止）、月底（压测报告截止）、本周四上午（客户现场部署时间）\n2. **金额/报价**：供应商单价120元\n3. **地点**：三楼星河厅（季度复盘会议地点）\n4. **联系人与责任人**：张伟（上线值守发布）、赵敏（供应商合同推进）、王强（安全审计报告撰写）、刘洋（压测报告出具）、陈静（客户现场部署）\n\n## 四、沟通风险提示\n1. 关键人员请假导致进度受阻：负责联调的同事因家里有事请了三天假，联调进度可能受阻，需尽快安排人员顶替。",
+  "answers": [
+    {
+      "q": "服务器那边有什么需要尽快处理的隐患？",
+      "answerable": true,
+      "answer": "对话中提及服务器相关隐患为：生产服务器的SSL证书下周就到期，若不续则网站会直接打不开。该隐患由孙磊在2024-03-04 12:35:00提出，乙在2024-03-04 12:42:00表示会记录，后续需明确责任人并安排处理，避免网站无法正常访问的风险。",
+      "s": 49.9
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.9
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.8571,
+      "extracted": 3,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 3,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 5,
+      "tp_gold": 2,
+      "tp_item": 5,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "服务器那边有什么需要尽快处理的隐患？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 139.0
+}

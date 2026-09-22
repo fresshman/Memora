@@ -1,0 +1,96 @@
+{
+  "case_id": "long_002",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23690,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 108.9,
+  "qa_s": 145.1,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定正式上线窗口为3月18日凌晨两点，由张伟负责值守发布，并提前备好回滚预案。\n2. 决定放弃单体方案A，采用方案B进行微服务拆分，以提升后期扩展性。\n3. 确定供应商为华东地区某家，单价120元，由赵敏负责推进合同签订。\n\n## 二、待办任务清单\n- [ ] 设计新版宣传海报第一稿 ｜ 责任人：周婷 ｜ 时间节点：周三中午前\n- [ ] 负责客户现场部署，安排于本周四上午前往，争取当天跑通环境 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 走供应商合同流程 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n- 时间点：3月18日凌晨两点（上线窗口）、本周四上午（客户现场部署）、下周五下午六点（安全审计报告截止）\n- 金额/报价：120元（供应商单价）\n- 联系人：赵敏（负责供应商合同）、张伟（上线值守发布）\n- 地点：华东地区（供应商所在地）\n\n## 四、沟通风险提示\n1. 联调工作因负责同事请假三天面临进度受阻风险，需尽快安排人员顶替。\n2. 客户提出需求变更，新增两个报表页面，粗算工作量需增加两天，将影响排期。\n3. 需求未明确时，工作量评估存在不确定性。",
+  "answers": [
+    {
+      "q": "上线窗口最终定在什么时候？谁值守？",
+      "answerable": true,
+      "answer": "根据对话记录，上线窗口最终定在**3月18日凌晨两点**，由**张伟**负责值守发布，同时需提前备好回滚预案。\n\n该信息来源于「李娜：那就定了，正式上线窗口放在3月18日凌晨两点，张伟负责值守发布，提前备好回滚预案」（2024-03-04 13:40:00）。",
+      "s": 76.4
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 68.7
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 1.0,
+      "f1": 0.8571,
+      "extracted": 3,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 3,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "上线窗口最终定在什么时候？谁值守？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 261.1
+}

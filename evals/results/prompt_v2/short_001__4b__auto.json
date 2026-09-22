@@ -1,0 +1,96 @@
+{
+  "case_id": "short_001",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 210,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 32.2,
+  "qa_s": 11.6,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n- 决定由刘洋负责出具压测报告，并于月底前完成发送，报告需包含并发与慢接口相关数据\n- 决定季度复盘会议定于2024年3月4日上午十点在三楼星河厅举行\n\n## 二、待办任务清单\n- [ ] 出具压测报告并发送 ｜ 责任人：刘洋 ｜ 时间节点：2024年3月底前\n\n## 三、关键信息提取\n- 时间点：2024-03-04 10:04:00、2024-03-04 10:25:00、2024-03-04 10:44:00、2024-03-04 10:54:00、2024-03-04 11:10:00、2024-03-04 11:31:00、2024-03-04 11:35:00、2024-03-04 11:58:00\n- 地点：三楼星河厅\n- 会议主题：季度复盘\n\n## 四、沟通风险提示\n- 第三方支付接口限流额度未确认，若卡住可能导致上线延期",
+  "answers": [
+    {
+      "q": "复盘会的会议室定在哪？几点？",
+      "answerable": true,
+      "answer": "复盘会的会议室定在三楼星河厅，上午十点开始。该信息来源于「周婷：会议室订好了，三楼星河厅，上午十点开始，主题是季度复盘，大家别跑错地方」（2024-03-04 10:54:00）。",
+      "s": 7.5
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 4.1
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "复盘会的会议室定在哪？几点？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 50.1
+}

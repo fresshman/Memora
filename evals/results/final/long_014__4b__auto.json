@@ -1,0 +1,97 @@
+{
+  "case_id": "long_014",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23810,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 91.3,
+  "qa_s": 141.7,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 压测报告由刘洋负责，月底前完成，报告需包含并发和慢接口数据。\n2. 供应商确定为华东那家，单价120元，合同由赵敏跟进办理。\n3. 活动总预算控制在五万元，超出五万需重新走审批，严禁先斩后奏。\n4. 发布会时间推迟至下下月十号，形式确定为线上直播，不再举办线下场地。\n\n## 二、待办任务清单\n- [ ] 完成压测报告（含并发和慢接口数据） ｜ 责任人：刘洋 ｜ 时间节点：月底前\n- [ ] 办理供应商合同盖章事宜 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n- [ ] 完成新人培训材料（含账号申请和规范两部分） ｜ 责任人：林霞 ｜ 时间节点：下周二之前\n\n## 三、关键信息提取\n1. 时间节点：压测报告月底前完成；合同盖章下周一前完成；新人培训材料下周二前完成；发布会推迟至下下月十号；活动预算上限五万元。\n2. 金额/报价：供应商单价120元；活动总预算控制在五万元。\n3. 地点：华东（供应商所在地）；前台（办公用品领取处）；工位区域（保洁打扫区域）。\n4. 联系人与责任人：刘洋（压测报告）、赵敏（合同盖章）、林霞（新人培训材料）、王强（预算拍板）。\n\n## 四、沟通风险提示\n1. 测试环境数据库故障，导致回归测试无法运行，当前恢复进度不确定，可能影响测试工作。\n2. 第三方支付接口限流额度未确认，若卡住可能影响上线延期。\n3. 客户提出需求变更，新增报表页面会使工作量增加两天，影响排期。",
+  "answers": [
+    {
+      "q": "回归测试为什么卡住了？",
+      "answerable": true,
+      "answer": "对话中明确提到回归测试卡住的原因是测试环境数据库昨晚损坏了，且当前正在恢复，预计今天可能都搭不好。\n\n具体表述为「吴凯：测试环境数据库昨晚损坏了，现在回归测试跑不起来，正在恢复，今天可能都搭不好」（2024-03-04 14:42:00）。",
+      "s": 70.0
+    },
+    {
+      "q": "这个项目最终结算的具体金额是多少钱？",
+      "answerable": false,
+      "answer": "对话记录中未提及该项目的最终结算具体金额。\n\n在对话中，仅出现「王强：预算这块拍板了，这次活动总预算控制在五万，超过五万必须重新走审批，谁也不能先斩后奏」（2024-03-09 01:13:00），此内容为活动总预算的初步拍板，并非项目最终结算金额，且未明确项目与活动的对应关系，故无法确定项目最终结算的具体金额。",
+      "s": 71.7
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 3,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 3,
+      "tp_item": 4,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "回归测试为什么卡住了？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "这个项目最终结算的具体金额是多少钱？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 238.7
+}

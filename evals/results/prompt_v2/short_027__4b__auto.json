@@ -1,0 +1,96 @@
+{
+  "case_id": "short_027",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 318,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 39.1,
+  "qa_s": 11.0,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 发布会时间决定推迟至下下月十号，形式确定为线上直播，不再举办线下场地。\n\n## 二、待办任务清单\n- [ ] 更换会议室投影遥控器电池 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 处理打印机旁纸箱，将其带下去扔掉 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 客户现场部署 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n\n## 三、关键信息提取\n- 时间点：2024-03-04 09:36:00、2024-03-04 09:49:00、2024-03-04 09:54:00、2024-03-04 10:07:00、2024-03-04 10:30:00、2024-03-04 10:38:00、2024-03-04 10:41:00、2024-03-04 10:50:00、2024-03-04 10:56:00、2024-03-04 11:19:00、2024-03-04 11:44:00、2024-03-04 11:50:00\n- 地点：三楼星河厅\n- 事项：季度复盘会议（上午十点开始）\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，若卡住可能导致上线延期。",
+  "answers": [
+    {
+      "q": "发布会改成什么时间、什么形式？",
+      "answerable": true,
+      "answer": "根据对话记录，发布会时间改为下下月十号，形式确定为线上直播，不再办线下场地。该信息由「林霞：发布会时间改了，推迟到下下月十号，形式确定为线上直播，不再办线下场地」（2024-03-04 10:30:00）明确提及。",
+      "s": 9.3
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 1.7
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 3,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 2,
+      "precision": 0.3333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "发布会改成什么时间、什么形式？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 57.2
+}

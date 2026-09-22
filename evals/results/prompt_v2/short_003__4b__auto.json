@@ -1,0 +1,96 @@
+{
+  "case_id": "short_003",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 278,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 24.6,
+  "qa_s": 12.5,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n- 决定正式上线窗口为3月18日凌晨两点，由张伟负责值守发布，并提前备好回滚预案。\n\n## 二、待办任务清单\n- [ ] 客户现场部署 ｜ 责任人：陈静 ｜ 时间节点：本周四上午，争取当天跑通环境\n- [ ] 新版宣传海报设计 ｜ 责任人：周婷 ｜ 时间节点：周三中午前出第一稿\n\n## 三、关键信息提取\n- 时间点：2024-03-04、3月18日凌晨两点、周三中午前\n- 人员：陈静、张伟、周婷\n- 事项：测试环境数据库损坏、停车场入口施工\n\n## 四、沟通风险提示\n- 测试环境数据库损坏，导致回归测试无法运行，当前正在恢复，今日可能无法完成搭建。",
+  "answers": [
+    {
+      "q": "客户现场部署是谁去？定在什么时间？",
+      "answerable": true,
+      "answer": "根据对话记录，客户现场部署由**陈静**负责，定在**本周四上午**。\n\n「陈静：客户现场的部署我负责，安排在本周四上午过去，争取当天把环境跑通」（2024-03-04 10:53:00）。",
+      "s": 7.9
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 4.6
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "客户现场部署是谁去？定在什么时间？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 44.5
+}

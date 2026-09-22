@@ -1,0 +1,52 @@
+# Memora —— 端侧离线私密对话复盘工具 依赖清单
+# 默认（本地内嵌推理）只需要 [core] 部分；[sglang] 仅在可选 server 模式安装。
+# 离线部署建议：在联网机执行  pip download -r requirements.txt -d wheelhouse  备好全部 wheel。
+
+# ---- 核心编排（LangChain）----
+# 代码仅依赖 langchain-core（PromptTemplate/Runnable）与 langchain-openai（SGLang 连接），
+# 不再依赖 langchain-community（LangChain 1.x 已重构其布局）。
+langchain-core>=1.0.0
+langchain-openai>=0.3.0
+langchain>=1.0.0            # 预留：智能体扩展（create_agent 等）
+
+# ---- 默认推理后端：本机 llama-server 子进程（无需 torch、无需 Python 编译绑定）----
+# 需另行下载 llama.cpp 官方每日构建二进制（含 Spark2_5 支持，2026-09-07 之后）：
+#   https://github.com/ggml-org/llama.cpp/releases （如 llama-b11046-bin-win-cpu-x64.zip）
+# 解压到 Memora/tools/llamacpp/bin/，或设置 MEMORA_LLAMASERVER_PATH 指向 llama-server。
+# 后端通过 OpenAI 兼容协议（langchain-openai）与子进程通信。
+# 如确需进程内绑定，可自行安装含 Spark2_5 的 llama-cpp-python（需自行编译，非默认路径）：
+# llama-cpp-python>=0.3.35
+
+# ---- 模型下载（ModelScope，「模型管理」页下载功能必需）----
+modelscope>=1.20.0
+
+# ---- FastAPI 后端（Next.js 前端调用）----
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.9   # 文件上传 / 表单（UploadFile 必需）
+
+# ---- 本地加密存储 ----
+cryptography>=43.0.0
+
+# ---- 解析辅助 ----
+pandas>=2.2.0           # CSV（钉钉）解析
+beautifulsoup4>=4.12.0  # HTML（飞书）解析
+chardet>=5.0.0          # 聊天记录编码探测（微信 GBK 导出防乱码，缺失时自动回退内置探测）
+
+# ---- RAG 检索增强（超长对话，纯 CPU、无 torch 重依赖）----
+# embedding 复用本机 llama-server 跑 bge-m3 GGUF，向量索引用 faiss-cpu。
+faiss-cpu>=1.8.0        # 本地向量索引（import 名为 faiss）
+numpy>=1.26.0           # 向量归一化与相似度计算
+
+# ---- 配置管理 ----
+python-dotenv>=1.0.0    # .env 配置加载
+
+# ---- 报告导出 ----
+reportlab>=4.0.0        # PDF 导出（工业简洁风）；Markdown 导出零依赖
+
+# ---- 开发 / 打包（不必打包进 EXE）----
+pyinstaller>=6.0.0
+pytest>=8.0.0           # 单元测试
+
+# ---- 可选：SGLang server 模式（仅当手动启动外部 sglang server 时安装，不打包）----
+# sglang>=0.4.0

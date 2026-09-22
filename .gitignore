@@ -1,0 +1,68 @@
+# ================= Python =================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+
+# ================= 密钥 / 本地环境（绝不提交）=================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ================= 运行时数据（含会话内容 / PII / 向量索引 / 日志）=================
+data/
+logs/
+*.log
+
+# ================= 模型权重（数 GB，走 ModelScope 下载，不入库）=================
+models/
+root/models/
+*.gguf
+*.safetensors
+*.ggml
+*.bin
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# ================= 第三方推理二进制（按部署指南自行下载放置）=================
+tools/llamacpp/
+whisper.cpp/
+
+# ================= 离线构建产物（由 scripts/build_offline.ps1 重新生成）=================
+release/
+wheelhouse/
+
+# ================= 前端依赖与缓存（web/out 已构建静态页保留入库）=================
+web/node_modules/
+web/.next/
+web/.env.local
+web/tsconfig.tsbuildinfo
+
+# ================= 评测临时产物 =================
+evals/results/_m17test/
+evals/results/smoke/
+
+# ================= IDE / 操作系统 =================
+.idea/
+.vscode/
+.codeartsdoer/
+.codegraph/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,97 @@
+{
+  "case_id": "short_011",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 371,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 32.8,
+  "qa_s": 12.2,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定正式上线窗口为3月18日凌晨两点。\n2. 确定供应商为华东供应商，单价120元，选择该供应商因交期最稳。\n\n## 二、待办任务清单\n- [ ] 负责值守发布正式上线，并提前备好回滚预案 ｜ 责任人：张伟 ｜ 时间节点：3月18日凌晨两点\n- [ ] 负责客户现场部署，本周四上午前往，争取当天跑通环境 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n- [ ] 完成合同盖章事宜，确保下周一前拿到 ｜ 责任人：赵敏 ｜ 时间节点：下周一前\n\n## 三、关键信息提取\n1. 时间节点：3月18日凌晨两点（上线窗口）、本周四上午（客户现场部署）、下周一前（合同盖章完成）\n2. 金额/报价：120元（供应商单价）\n3. 地点：华东（供应商所在地）\n4. 联系人与责任人：张伟（值守发布）、陈静（客户现场部署）、赵敏（合同盖章）\n\n## 四、沟通风险提示\n1. 测试环境数据库损坏，回归测试无法运行，当前恢复进度可能导致测试工作延迟。",
+  "answers": [
+    {
+      "q": "供应商最终选了谁？单价多少？",
+      "answerable": true,
+      "answer": "根据对话记录，供应商最终选了**华东那家**，单价为**120元**。\n\n「黄磊：供应商就定华东那家了，单价120元，虽然不是最便宜但交期最稳，合同我让赵敏去走」（2024-03-04 12:54:00）。",
+      "s": 10.7
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.5
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 1,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "供应商最终选了谁？单价多少？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 55.6
+}

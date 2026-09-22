@@ -1,0 +1,96 @@
+{
+  "case_id": "short_010",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 303,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 33.1,
+  "qa_s": 10.6,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 活动总预算确定为五万元，超出五万需重新审批，严禁先斩后奏。\n2. 发布会时间推迟至下下月十号，形式确定为线上直播，取消线下场地。\n\n## 二、待办任务清单\n- [ ] 完成合同盖章 ｜ 责任人：赵敏 ｜ 时间节点：下周一之前\n- [ ] 设计新版宣传海报第一稿 ｜ 责任人：周婷 ｜ 时间节点：周三中午前\n- [ ] 整理数据备份方案（重点为异地容灾部分） ｜ 责任人：孙磊 ｜ 时间节点：本周五之前\n\n## 三、关键信息提取\n1. 时间节点：下下月十号（发布会时间）、下周一（合同盖章截止时间）、周三中午前（海报第一稿时间）、本周五（数据备份方案交付时间）\n2. 金额/报价：活动总预算五万元\n3. 地点：无\n4. 联系人与责任人：赵敏（合同盖章）、周婷（海报设计）、孙磊（数据备份方案）\n5. 账号等：无\n\n## 四、沟通风险提示\n1. 测试环境数据库损坏，回归测试无法开展，影响当日测试环境搭建。\n2. 客户提出需求变更，新增报表页面导致工作量增加约两天，影响排期。\n3. 合同未按时盖章，将导致财务无法走款。",
+  "answers": [
+    {
+      "q": "回归测试为什么卡住了？",
+      "answerable": true,
+      "answer": "对话中明确提到，回归测试卡住的原因是「测试环境数据库昨晚损坏了，现在回归测试跑不起来，正在恢复，今天可能都搭不好」，该内容由吴凯在「2024-03-04 10:14:00」的发言中说明。",
+      "s": 8.8
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 1.8
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 3,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 3,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 3,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "回归测试为什么卡住了？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 49.1
+}

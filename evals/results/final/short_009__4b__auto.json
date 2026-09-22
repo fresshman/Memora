@@ -1,0 +1,97 @@
+{
+  "case_id": "short_009",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 287,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 31.0,
+  "qa_s": 13.7,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定正式上线窗口为3月18日凌晨两点。\n2. 确定由张伟负责值守发布，并提前备好回滚预案。\n\n## 二、待办任务清单\n- [ ] 准备上线相关材料 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 完成新人培训材料制作（包含账号申请和规范两部分） ｜ 责任人：林霞 ｜ 时间节点：下周二之前\n\n## 三、关键信息提取\n1. 时间节点：3月18日凌晨两点（上线窗口）、上午十点（季度复盘会议）、下周二（新人培训材料完成时间）\n2. 地点：三楼星河厅（季度复盘会议地点）\n3. 联系人与责任人：张伟（值守发布）、林霞（新人培训材料负责人）\n\n## 四、沟通风险提示\n1. 需求变更风险：客户提出需求变更，增加两个报表页面，粗算工作量需多两天，将影响排期。\n2. 设施故障风险：楼下门禁升级，刷卡偶尔无反应。\n3. 物资短缺风险：茶水间咖啡豆见底，需行政下午补货。",
+  "answers": [
+    {
+      "q": "上线窗口最终定在什么时候？谁值守？",
+      "answerable": true,
+      "answer": "上线窗口最终定在**3月18日凌晨两点**，由**张伟**负责值守发布。\n\n依据对话中李娜于「2024-03-04 10:11:00」的发言：「那就定了，正式上线窗口放在3月18日凌晨两点，张伟负责值守发布，提前备好回滚预案」。",
+      "s": 10.1
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。整个对话内容主要围绕需求变更、上线安排、会议信息、培训材料及后勤注意事项等展开，未涉及明年营收目标的相关内容。",
+      "s": 3.6
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 1,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 1,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 3,
+      "tp_gold": 1,
+      "tp_item": 1,
+      "fp_item": 2,
+      "precision": 0.3333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "上线窗口最终定在什么时候？谁值守？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 50.5
+}

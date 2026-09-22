@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memora 项目体检与离线部署差距看板</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; background:#f4f4f5; color:#18181b;
+        font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; font-size:14px; line-height:1.6; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .sub { color:#71717a; margin-bottom:20px; }
+  .verdict { background:#18181b; color:#fafafa; border-radius:10px; padding:18px 22px; margin-bottom:22px; }
+  .verdict b { color:#fca5a5; }
+  .section { background:#fff; border:1px solid #e4e4e7; border-radius:10px; padding:20px 22px; margin-bottom:20px; }
+  .section h2 { font-size:17px; margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid #e4e4e7; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; }
+  .node { flex:1 1 150px; min-width:150px; border:1px solid #e4e4e7; border-radius:8px; padding:10px 12px; background:#fafafa; }
+  .node .step { font-size:12px; color:#71717a; }
+  .node .name { font-weight:600; margin:2px 0 6px; }
+  .tag { display:inline-block; font-size:12px; font-weight:600; padding:2px 8px; border-radius:20px; }
+  .tag.fail { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+  .tag.warn { background:#fffbeb; color:#d97706; border:1px solid #fde68a; }
+  .tag.ok { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+  .node .why { font-size:12px; color:#52525b; margin-top:6px; }
+  .arrow { display:flex; align-items:center; color:#a1a1aa; font-size:18px; }
+  .chart { margin-top:6px; }
+  .row { display:flex; align-items:center; gap:12px; margin:10px 0; flex-wrap:wrap; }
+  .row .label { width:210px; flex:0 0 210px; font-size:13px; }
+  .bararea { flex:1 1 300px; position:relative; height:30px; background:#f4f4f5; border:1px solid #e4e4e7; border-radius:5px; overflow:visible; }
+  .bar { height:100%; display:flex; border-radius:4px; overflow:hidden; }
+  .seg-w { background:#52525b; }
+  .seg-kv-bad { background:#dc2626; }
+  .seg-kv-warn { background:#d97706; }
+  .seg-kv-ok { background:#16a34a; }
+  .seg-c { background:#d4d4d8; }
+  .val { width:120px; flex:0 0 120px; font-size:13px; font-weight:600; }
+  .redline { position:absolute; left:80%; top:-4px; bottom:-4px; border-left:2px dashed #dc2626; z-index:2; }
+  .redline span { position:absolute; top:-20px; left:-26px; font-size:12px; color:#dc2626; font-weight:600; white-space:nowrap; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:#52525b; margin:8px 0 4px; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+  .card { border:1px solid #e4e4e7; border-radius:8px; padding:12px 14px; background:#fafafa; }
+  .card h3 { margin:0 0 6px; font-size:14px; display:flex; gap:8px; align-items:center; }
+  .card p { margin:4px 0; font-size:13px; color:#3f3f46; }
+  .pri { font-size:11px; font-weight:700; padding:1px 7px; border-radius:4px; color:#fff; }
+  .p0 { background:#dc2626; } .p1 { background:#d97706; } .p2 { background:#52525b; }
+  .cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:6px 24px; }
+  .ck { font-size:13px; padding:3px 0; }
+  .ck::before { content:"\2610"; margin-right:8px; color:#71717a; }
+  .note { font-size:12px; color:#71717a; margin-top:10px; }
+  .twocol { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:760px){ .twocol{grid-template-columns:1fr;} .row .label{flex-basis:100%;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Memora 项目体检与离线部署差距看板</h1>
+  <div class="sub">评审日期 2026-09-19 ｜ 方法：全量源码走读 + 本机实测（pytest / 依赖导入 / 模型发现 / 磁盘核查 / 公开资料核验）</div>
+
+  <div class="verdict">
+    总体判断：架构骨架与工程审美在线，前端与业务闭环已成型，但 <b>端到端推理链路当前在本机跑不通（无一次真实推理记录）</b>，
+    离线分发形态（预转 GGUF、预编译二进制、wheelhouse、一键启动/自检、桌面壳）基本为零，评测与消融数据空白。
+    修通阻断项约 2 天，补齐一等奖竞争力约 2 周。
+  </div>
+
+  <div class="section">
+    <h2>一、离线推理链路体检：8 个环节断了 6 个</h2>
+    <div class="flow">
+      <div class="node"><div class="step">① 依赖安装</div><div class="name">Python 环境</div><span class="tag warn">漂移</span>
+        <div class="why">llama_cpp / langchain_community / bs4 实测未安装；modelscope 未写进 requirements；版本全 &gt;= 不锁定，langchain 已到 1.x</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">② 模型发现</div><div class="name">本地模型定位</div><span class="tag fail">断裂</span>
+        <div class="why">代码找 XHToken/Spark-X2.5-4B，ModelScope 实落 models/XHToken--Spark-X2.5-4B/snapshots/master；7.8GB 已下载却报 missing</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">③ 格式转换</div><div class="name">safetensors→GGUF</div><span class="tag fail">缺失</span>
+        <div class="why">全磁盘无 .gguf；无 llama.cpp 仓库与 llama-quantize；Spark2_5 架构 llama.cpp 2026-09-07 才合入支持</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">④ 引擎加载</div><div class="name">llama.cpp 后端</div><span class="tag warn">待验证</span>
+        <div class="why">PyPI wheel 很可能未含新架构，或需源码编译；离线机无法编译，须在打包机预转/预编译并随包分发</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">⑤ 推理参数</div><div class="name">n_ctx / GPU / KV</div><span class="tag fail">硬伤</span>
+        <div class="why">n_gpu_layers=-1 语义写反（-1 是全上 GPU，0 才是全 CPU）；n_ctx=196608 估算占 9.7GB，8GB 机必爆；未开 KV 量化</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">⑥ 复盘/问答</div><div class="name">LLM 推理</div><span class="tag fail">未验证</span>
+        <div class="why">日志无任何推理记录；MAX_TOKENS_QA 不生效；QA 实为全量塞 prompt，无 RAG；输出靠正则切 Markdown，无格式约束</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">⑦ 语音转写</div><div class="name">whisper.cpp</div><span class="tag fail">空壳</span>
+        <div class="why">目录下只有空 models/；无 whisper-cli、无 ggml-base.bin、无 ffmpeg；路径硬编码 Windows .exe</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="step">⑧ 前端界面</div><div class="name">Next.js 5 页面</div><span class="tag ok">可用</span>
+        <div class="why">复盘/批量/问答/语音/历史页齐全，可 build；但未配 standalone/静态导出，目标机仍需 Node</div></div>
+    </div>
+    <div class="note">另有"离线红线"矛盾：ENFORCE_OFFLINE 默认开启，但模型下载代码完全不检查该开关，缺失时仍会联网。</div>
+  </div>
+
+  <div class="section">
+    <h2>二、内存预算测算："8GB 流畅运行"当前不成立</h2>
+    <div class="legend">
+      <span><span class="dot" style="background:#52525b"></span>Q4_K_M 权重 ≈2.6GB</span>
+      <span><span class="dot" style="background:#dc2626"></span>KV Cache（红=超预算）</span>
+      <span><span class="dot" style="background:#d4d4d8"></span>compute/运行时 ≈0.3GB</span>
+      <span>口径：36 层中 9 层 full attention，4 KV heads，head_dim=256，fp16 KV ≈ 36KB/token</span>
+    </div>
+    <div class="chart">
+      <div class="row">
+        <div class="label">n_ctx=196608，KV fp16（当前默认）</div>
+        <div class="bararea"><div class="redline"><span>8GB 红线</span></div><div class="bar" style="width:97%"><div class="seg-w" style="width:26.8%"></div><div class="seg-kv-bad" style="width:69.6%"></div><div class="seg-c" style="width:3.1%"></div></div></div>
+        <div class="val" style="color:#dc2626">≈9.7GB ✕</div>
+      </div>
+      <div class="row">
+        <div class="label">n_ctx=196608，KV q8 量化</div>
+        <div class="bararea"><div class="redline"><span>8GB 红线</span></div><div class="bar" style="width:63%"><div class="seg-w" style="width:41.3%"></div><div class="seg-kv-warn" style="width:53.9%"></div><div class="seg-c" style="width:4.8%"></div></div></div>
+        <div class="val" style="color:#d97706">≈6.3GB △</div>
+      </div>
+      <div class="row">
+        <div class="label">n_ctx=65536，KV fp16</div>
+        <div class="bararea"><div class="redline"><span>8GB 红线</span></div><div class="bar" style="width:52%"><div class="seg-w" style="width:50%"></div><div class="seg-kv-ok" style="width:43.3%"></div><div class="seg-c" style="width:5.8%"></div></div></div>
+        <div class="val" style="color:#16a34a">≈5.2GB ✓</div>
+      </div>
+      <div class="row">
+        <div class="label">n_ctx=32768，KV q8（建议默认）</div>
+        <div class="bararea"><div class="redline"><span>8GB 红线</span></div><div class="bar" style="width:35%"><div class="seg-w" style="width:74.3%"></div><div class="seg-kv-ok" style="width:16%"></div><div class="seg-c" style="width:8.6%"></div></div></div>
+        <div class="val" style="color:#16a34a">≈3.5GB ✓</div>
+      </div>
+    </div>
+    <div class="note">另：prompt 端硬截断 12 万字（约 15-18 万 token），叠加输出本身就超过 196608 窗口；CPU 上 19 万 token prefill 可能达数十分钟，演示不可接受。建议演示用例 1-3 万字。</div>
+  </div>
+
+  <div class="section">
+    <h2>三、差距看板（按优先级）</h2>
+    <div class="twocol">
+      <div>
+        <h3 style="color:#dc2626;font-size:15px;">P0 阻断项（不修必翻车）</h3>
+        <div class="grid" style="grid-template-columns:1fr;">
+          <div class="card"><h3><span class="pri p0">P0</span>模型路径布局不匹配</h3><p>snapshot_download 返回路径被丢弃；发现/转换/文件名三处都要改为基于真实路径。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>依赖缺失且未锁版本</h3><p>补 llama-cpp-python、langchain-community、bs4、modelscope；出 lock 文件与 check_env 自检。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>GGUF 与引擎须打包机预置</h3><p>联网机转好 Q4_K_M 并跑通一次推理；优先随包分发 llama-server.exe 走 OpenAI 兼容接口，绕开 Python 绑定编译。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>推理参数修正</h3><p>n_gpu_layers 默认 0；n_ctx 默认 32768/65536 + KV q8；截断按 token 与 n_ctx 联动。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>语音三件套随包</h3><p>whisper-cli + ggml-base.bin + ffmpeg，跨平台二进制判断。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>离线开关真正生效</h3><p>下载前检查 ENFORCE_OFFLINE；注入 HF_HUB_OFFLINE / MODELSCOPE_OFFLINE；抓包审计 import 期外联。</p></div>
+          <div class="card"><h3><span class="pri p0">P0</span>干净虚拟机断网验收</h3><p>无 Python/Node/编译器环境全流程录屏，是离线交付的唯一验收标准。</p></div>
+        </div>
+      </div>
+      <div>
+        <h3 style="color:#d97706;font-size:15px;">P1 竞赛硬核</h3>
+        <div class="grid" style="grid-template-columns:1fr;">
+          <div class="card"><h3><span class="pri p1">P1</span>真正的 RAG</h3><p>本地 bge-small-zh + faiss-cpu 分片检索、引用溯源、跨历史会话问答；对话加密持久化（sentence-transformers 已装未用）。</p></div>
+          <div class="card"><h3><span class="pri p1">P1</span>评测集 + 消融实验</h3><p>50-100 条标注样本；待办 F1 / 信息召回 / 风险召回 / 幻觉率 / CER / 延迟内存；1.7B·4B·MiniCPM 对比；长上下文 vs RAG、ctx、KV 量化消融。</p></div>
+          <div class="card"><h3><span class="pri p1">P1</span>Agent 含量</h3><p>JSON schema/grammar 结构化输出、SSE 流式、待办-风险二次校验、per-call max_tokens 打通。</p></div>
+          <div class="card"><h3><span class="pri p1">P1</span>隐私口径修正</h3><p>口令派生密钥或改称静态加密；清空覆盖 exports/logs；日志脱敏；新增 PII（手机号/证件/姓名）掩码。</p></div>
+          <div class="card"><h3><span class="pri p1">P1</span>解析器真实样本回归</h3><p>三平台真实导出脱敏样本入仓库，覆盖系统消息/撤回/引用/多格式。</p></div>
+        </div>
+        <h3 style="color:#52525b;font-size:15px;margin-top:16px;">P2 工程与材料</h3>
+        <div class="grid" style="grid-template-columns:1fr;">
+          <div class="card"><h3><span class="pri p2">P2</span>离线分发与桌面化</h3><p>PyInstaller spec 或 python-embedded；前端静态导出由后端托管；start.bat / doctor 自检；wheelhouse 与 sha256。</p></div>
+          <div class="card"><h3><span class="pri p2">P2</span>竞赛材料</h3><p>零外联自证录屏、性能配置矩阵、白皮书、答辩 PPT、演示视频、竞品（云端妙记类）对比。</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>四、离线分发包验收清单（目标机零编译、零网络）</h2>
+    <div class="cols">
+      <div class="ck">预转换 spark-x2.5-4b-Q4_K_M.gguf（~2.6GB，附 sha256，打包机实测推理通过）</div>
+      <div class="ck">llama-server.exe / llama-cpp 绑定版本确认含 Spark2_5（9 月 7 日后构建）</div>
+      <div class="ck">whisper-cli.exe + ggml-base.bin（~140MB）+ ffmpeg.exe</div>
+      <div class="ck">Python wheelhouse（win_amd64，锁定版本，含 C 扩展预编译 wheel）</div>
+      <div class="ck">前端 next 静态导出产物，FastAPI StaticFiles 托管（目标机免 Node）</div>
+      <div class="ck">start.bat 一键启动 + doctor.bat 环境体检（模型/二进制/内存/端口/磁盘）</div>
+      <div class="ck">ENFORCE_OFFLINE 强制生效 + HF/MODELSCOPE OFFLINE 环境变量注入</div>
+      <div class="ck">干净 Windows 虚拟机断网全流程录屏（导入→复盘→QA→语音→导出→清空）</div>
+      <div class="ck">.gitignore（data/、.env、vault.key、模型、node_modules）与 LICENSE</div>
+      <div class="ck">三平台脱敏样例数据 + 会议录音样例随包</div>
+    </div>
+    <div class="note">完整修复指引、代码级修改点与两周排期见同目录《Memora_差距评估与离线部署清单.md》。</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+{
+  "case_id": "long_009",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": true,
+  "char_count": 23497,
+  "context_mode_review": "rag",
+  "context_mode_qa": "rag",
+  "review_s": 101.8,
+  "qa_s": 141.6,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定客户现场部署安排：由陈静负责，于本周四上午前往客户现场，争取当天完成环境跑通。\n2. 拍板活动预算标准：本次活动总预算控制在五万元，超过五万必须重新走审批，严禁先斩后奏。\n3. 确定季度复盘会议安排：会议室定在三楼星河厅，上午十点开始，主题为季度复盘。\n\n## 二、待办任务清单\n- [ ] 落实客户现场部署环境跑通 ｜ 责任人：陈静 ｜ 时间节点：本周四上午\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 跟进联调相关工作进展并同步 ｜ 责任人：丙 ｜ 时间节点：未明确\n- [ ] 了解楼道灯故障相关情况 ｜ 责任人：乙 ｜ 时间节点：未明确\n- [ ] 了解停车场施工相关情况 ｜ 责任人：丙 ｜ 时间节点：未明确\n- [ ] 了解客户需求变更相关情况 ｜ 责任人：戊 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n- 时间点：2024-03-04（会议时间）、本周四上午（客户现场部署时间）、下周五下午六点前（安全审计报告截止时间）\n- 金额/预算：活动总预算控制在五万元\n- 地点：三楼星河厅（季度复盘会议地点）\n- 人员：陈静（客户现场部署负责人）、王强（安全审计报告撰写人）、丙（联调进展跟进人）\n\n## 四、沟通风险提示\n1. 联调工作进度受阻风险：负责联调的同事因家事请假三天，相关工作进度可能受影响，需尽快安排人员顶替。\n2. 需求变更导致排期影响风险：客户提出需求变更，增加两个报表页面，粗算工作量需多两天，将影响整体排期。\n3. 工作信息传达效率风险：群内消息较多，部分成员反映需翻阅半天才看到前期内容，影响信息获取效率。",
+  "answers": [
+    {
+      "q": "复盘会的会议室定在哪？几点？",
+      "answerable": true,
+      "answer": "根据对话记录，复盘会的会议室定在**三楼星河厅**，开始时间为**上午十点**。\n\n该信息由「周婷」在「2024-03-04 14:30:00」明确说明：「会议室订好了，三楼星河厅，上午十点开始，主题是季度复盘，大家别跑错地方」。",
+      "s": 73.3
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 68.3
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 6,
+      "tp_gold": 2,
+      "tp_item": 4,
+      "fp_item": 2,
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "复盘会的会议室定在哪？几点？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 250.5
+}

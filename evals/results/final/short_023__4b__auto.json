@@ -1,0 +1,97 @@
+{
+  "case_id": "short_023",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 333,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 34.6,
+  "qa_s": 11.6,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 确定压测报告由刘洋负责，于月底前完成并发送全员，报告需包含并发与慢接口数据。\n2. 确定安全审计报告由王强负责，需在次周五下午六点前完成，该报告为客户指定交付物。\n3. 确定活动总预算控制在五万元，超出预算需重新审批，严禁超预算先斩后奏。\n4. 确定供应商选定为华东地区某家，单价120元，合同由赵敏负责跟进。\n\n## 二、待办任务清单\n- [ ] 完成压测报告并发送全员 ｜ 责任人：刘洋 ｜ 时间节点：月底之前\n- [ ] 完成安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 跟进供应商合同 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n1. 时间节点：月底之前、下周五下午六点前、本周五之前\n2. 金额/报价：活动总预算五万元、供应商单价120元\n3. 地点：无\n4. 联系人与责任人：刘洋（压测报告）、王强（安全审计报告）、赵敏（供应商合同）\n5. 账号等：无\n\n## 四、沟通风险提示\n1. 需求变更风险：客户新增报表页面需求，导致工作量增加约两天，影响排期。\n2. 预算超支风险：活动预算若超过五万元需重新审批，存在超预算操作风险。",
+  "answers": [
+    {
+      "q": "压测报告谁来写？什么时候给？",
+      "answerable": true,
+      "answer": "压测报告由**刘洋**来写，计划**月底之前**发给大家，且报告会带上并发和慢接口的数据。\n\n来源：刘洋在「2024-03-04 10:20:00」的发言：“那压测报告我来出，月底之前发给大家，里面会带上并发和慢接口的数据”。",
+      "s": 9.9
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。",
+      "s": 1.7
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 0.6667,
+      "f1": 0.6667,
+      "extracted": 2,
+      "extraction_recall": 0.6667,
+      "owner_accuracy": 0.6667,
+      "n_owner": 3,
+      "deadline_recall": 0.6667
+    },
+    "risks": {
+      "n_gold": 1,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 4,
+      "tp_gold": 2,
+      "tp_item": 4,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "压测报告谁来写？什么时候给？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 51.8
+}

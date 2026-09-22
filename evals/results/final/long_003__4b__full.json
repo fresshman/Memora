@@ -1,0 +1,97 @@
+{
+  "case_id": "long_003",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "full",
+  "is_long": true,
+  "char_count": 23750,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 338.6,
+  "qa_s": 293.7,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 供应商选定为华东那家，单价120元，因交期最稳确定合作，合同由赵敏跟进办理。\n2. 相关事项暂不急于确定，后续再进一步讨论。\n\n## 二、待办任务清单\n- [ ] 跟进第三方支付接口限流额度确认，确保上线不延期 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 准备相关事项的材料，等待领导拍板 ｜ 责任人：未明确 ｜ 时间节点：未明确\n- [ ] 补全相关文档 ｜ 责任人：甲、丙、戊 ｜ 时间节点：未明确\n- [ ] 跟进测试环境数据库恢复工作，确保回归测试可运行 ｜ 责任人：未明确 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n1. **时间节点**：2024-03-08 20:39（测试环境数据库损坏事件发生时间）、2024-03-08 04:51（供应商确定时间）、2024-03-08 15:24（待办任务分配记录时间）\n2. **金额/报价**：120元（供应商单价）\n3. **地点**：华东（供应商所在地）\n4. **联系人与责任人**：赵敏（负责供应商合同办理）、甲、丙、戊（负责补全相关文档）\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，若卡住可能导致上线延期。\n2. 测试环境数据库昨晚损坏，回归测试暂无法运行，今日可能无法完成搭建。",
+  "answers": [
+    {
+      "q": "退款名单谁核对？什么时候完成？",
+      "answerable": true,
+      "answer": "对话记录中未提及「退款名单谁核对」以及「退款名单完成时间」的相关内容。\n\n在整个对话记录里，没有任何关于退款名单核对人员及完成时间的表述，因此无法从现有对话中获取该信息。",
+      "s": 286.1
+    },
+    {
+      "q": "公司明年的整体营收目标定了吗？是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及公司明年的整体营收目标及具体数值。\n\n整个对话记录主要围绕日常办公、生活提醒、工作事项跟进等内容展开，如门禁升级、办公用品领取、绿植养护、保洁安排等，未涉及公司营收目标相关的信息。",
+      "s": 7.6
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 3,
+      "n_items": 4,
+      "tp_gold": 0,
+      "tp_item": 2,
+      "fp_item": 2,
+      "precision": 0.5,
+      "recall": 0.0,
+      "f1": 0.0,
+      "extracted": 0,
+      "extraction_recall": 0.0,
+      "owner_accuracy": 0.0,
+      "n_owner": 3,
+      "deadline_recall": 0.0
+    },
+    "risks": {
+      "n_gold": 3,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "extracted": 2,
+      "extraction_recall": 0.6667
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 1,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6667,
+      "extracted": 1,
+      "extraction_recall": 0.5
+    },
+    "qa": {
+      "evidence_recall": 0.0,
+      "n_answerable": 1,
+      "answerable_hit": 0,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "退款名单谁核对？什么时候完成？",
+          "answerable": true,
+          "hit": false
+        },
+        {
+          "q": "公司明年的整体营收目标定了吗？是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "info",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 638.0
+}

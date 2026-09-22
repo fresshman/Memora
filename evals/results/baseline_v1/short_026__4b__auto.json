@@ -1,0 +1,96 @@
+{
+  "case_id": "short_026",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 307,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 41.5,
+  "qa_s": 11.0,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 生产服务器SSL证书下周到期，需及时续期，否则网站将无法正常访问。\n2. 活动总预算控制在五万元，超出预算必须重新走审批流程，严禁先斩后奏。\n3. 安全审计报告由王强负责撰写，截止时间为下周五下午六点前，该报告为客户点名要求的交付物。\n4. 供应商确定为华东地区某家，单价120元，合同由赵敏负责跟进办理。\n5. 对外接口文档由吴凯负责补充，更新截止时间为明天下午三点，需同步至知识库供前端对接使用。\n\n## 二、待办任务清单\n- [ ] 续期生产服务器SSL证书 ｜ 责任人：未明确 ｜ 时间节点：下周前\n- [ ] 恢复测试环境数据库 ｜ 责任人：吴凯 ｜ 时间节点：今日内\n- [ ] 跟进供应商合同办理 ｜ 责任人：赵敏 ｜ 时间节点：未明确\n- [ ] 补充对外接口文档并更新至知识库 ｜ 责任人：吴凯 ｜ 时间节点：明天下午三点前\n\n## 三、关键信息提取\n1. 时间节点：生产服务器SSL证书到期时间（下周）、安全审计报告截止时间（下周五下午六点）、接口文档更新时间（明天下午三点）、下午茶时间（当日12:00）。\n2. 金额/报价：活动总预算（五万元）、供应商单价（120元）。\n3. 地点：楼下门禁升级区域、前台（下午茶放置位置）。\n4. 联系人与责任人：王强（负责安全审计报告）、赵敏（负责供应商合同）、吴凯（负责接口文档补充）。\n\n## 四、沟通风险提示\n1. 测试环境数据库故障导致回归测试无法运行，存在测试进度延期风险。\n2. 生产服务器SSL证书即将到期，若未及时续期将影响网站正常访问，存在服务中断风险。\n3. 活动预算严格限制在五万元，超出预算需重新审批，存在预算管控不达标的潜在风险。",
+  "answers": [
+    {
+      "q": "安全审计报告谁负责？什么时候要？",
+      "answerable": true,
+      "answer": "安全审计报告由**王强**负责，截止时间为**下周五下午六点前**。\n\n依据对话中王强于「2024-03-04 10:44:00」的发言：「安全审计报告由我来写，截止下周五下午六点前，这是客户点名要的交付物」。",
+      "s": 9.6
+    },
+    {
+      "q": "客户方对接人的手机号是多少？",
+      "answerable": false,
+      "answer": "对话记录中未提及客户方对接人的手机号。",
+      "s": 1.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 4,
+      "tp_gold": 1,
+      "tp_item": 3,
+      "fp_item": 1,
+      "precision": 0.75,
+      "recall": 0.5,
+      "f1": 0.6,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 0.5,
+      "n_owner": 2,
+      "deadline_recall": 0.5
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 2,
+      "n_items": 5,
+      "tp_gold": 2,
+      "tp_item": 5,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "安全审计报告谁负责？什么时候要？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "客户方对接人的手机号是多少？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 58.1
+}

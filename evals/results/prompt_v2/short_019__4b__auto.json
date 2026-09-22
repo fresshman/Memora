@@ -1,0 +1,96 @@
+{
+  "case_id": "short_019",
+  "model": "XHToken/Spark-X2.5-4B",
+  "model_tag": "4b",
+  "mode": "auto",
+  "is_long": false,
+  "char_count": 356,
+  "context_mode_review": "full",
+  "context_mode_qa": "full",
+  "review_s": 31.2,
+  "qa_s": 11.3,
+  "error": null,
+  "report": "## 一、本次沟通核心结论\n1. 决定安全审计报告由王强撰写，交付截止时间为下周五下午六点前。\n2. 决定新版宣传海报由周婷设计，第一稿交付时间为周三中午前。\n3. 决定发布会推迟至下下月十号，形式确定为线上直播，取消线下场地举办。\n\n## 二、待办任务清单\n- [ ] 撰写安全审计报告 ｜ 责任人：王强 ｜ 时间节点：下周五下午六点前\n- [ ] 设计新版宣传海报第一稿 ｜ 责任人：周婷 ｜ 时间节点：周三中午前\n- [ ] 补全相关文档 ｜ 责任人：戊 ｜ 时间节点：未明确\n\n## 三、关键信息提取\n- 时间点：2024-03-04（沟通当日）、下周五下午六点前（审计报告截止）、周三中午前（海报第一稿截止）、下下月十号（发布会时间）\n- 事项：安全审计报告（客户点名交付物）、新版宣传海报（第一稿）、发布会（线上直播形式）\n\n## 四、沟通风险提示\n1. 第三方支付接口限流额度未确认，存在上线延期风险。\n2. 负责联调的同事请假三天，联调进度可能受阻。",
+  "answers": [
+    {
+      "q": "安全审计报告谁负责？什么时候要？",
+      "answerable": true,
+      "answer": "根据对话记录，安全审计报告由**王强**负责，截止**下周五下午六点前**要。\n\n来源：王强在「2024-03-04 09:49:00」的发言中明确提到「安全审计报告由我来写，截止下周五下午六点前，这是客户点名要的交付物」。",
+      "s": 9.9
+    },
+    {
+      "q": "这个项目最终结算的具体金额是多少钱？",
+      "answerable": false,
+      "answer": "对话记录中未提及项目最终结算的具体金额。",
+      "s": 1.4
+    }
+  ],
+  "card": {
+    "todos": {
+      "n_gold": 2,
+      "n_items": 3,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 1,
+      "precision": 0.6667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "extracted": 2,
+      "extraction_recall": 1.0,
+      "owner_accuracy": 1.0,
+      "n_owner": 2,
+      "deadline_recall": 1.0
+    },
+    "risks": {
+      "n_gold": 2,
+      "n_items": 2,
+      "tp_gold": 2,
+      "tp_item": 2,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 2,
+      "extraction_recall": 1.0
+    },
+    "decisions": {
+      "n_gold": 1,
+      "n_items": 3,
+      "tp_gold": 1,
+      "tp_item": 3,
+      "fp_item": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "extracted": 1,
+      "extraction_recall": 1.0
+    },
+    "qa": {
+      "evidence_recall": 1.0,
+      "n_answerable": 1,
+      "answerable_hit": 1,
+      "hallucination_rate": 0.0,
+      "n_unanswerable": 1,
+      "hedge_correct": 1,
+      "per_q": [
+        {
+          "q": "安全审计报告谁负责？什么时候要？",
+          "answerable": true,
+          "hit": true
+        },
+        {
+          "q": "这个项目最终结算的具体金额是多少钱？",
+          "answerable": false,
+          "hedged": true,
+          "hallucinated": false
+        }
+      ]
+    },
+    "sections_found": [
+      "decisions",
+      "risks",
+      "todos"
+    ]
+  },
+  "total_s": 109.5
+}

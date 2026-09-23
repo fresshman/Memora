@@ -168,6 +168,21 @@ class MemoraAgent:
             {"conversation": transcript.strip()}
         ).strip()
 
+    def review_transcript_stream(self, transcript: str):
+        """流式语音纪要：meta -> delta* -> done(含分段)。"""
+        log.info("流式语音纪要：转写文本长度=%d", len(transcript))
+        tpl = PromptTemplate.from_template(TRANSCRIPT_REVIEW_PROMPT)
+        prompt = tpl.format(conversation=transcript.strip())
+        yield {"type": "meta"}
+        parts: list[str] = []
+        for d in self.backend.stream_complete(
+                prompt, max_tokens=config.MAX_TOKENS_REVIEW):
+            parts.append(d)
+            yield {"type": "delta", "text": d}
+        report = "".join(parts).strip()
+        yield {"type": "done", "report": report,
+               "sections": self.split_report(report)}
+
     # ------------------------------------------------------------------
     @staticmethod
     def split_report(report: str) -> dict[str, str]:

@@ -40,13 +40,116 @@ VAULT_KEY_FILE = DATA_DIR / "vault.key"
 VAULT_INDEX = DATA_DIR / "vault_index.json"
 SETTINGS_FILE = DATA_DIR / "settings.json"   # 用户偏好（当前选中模型等）
 
-# Whisper.cpp（语音转写，可选模块）
-WHISPER_CPP_DIR = PROJECT_ROOT / "whisper.cpp"
+# ---------------------------------------------------------------------------
+# 语音链路：ffmpeg（解码 / 预处理）+ whisper.cpp（转写）+ 说话人分离
+#   全部本地离线、纯 CPU、不依赖 torch。
+# ---------------------------------------------------------------------------
+import shutil as _shutil
+
+WHISPER_CPP_DIR = PROJECT_ROOT / "whisper.cpp"          # 源码编译布局（兼容）
 _EXE_SUFFIX = ".exe" if sys.platform == "win32" else ""
-WHISPER_BIN = WHISPER_CPP_DIR / "build" / "bin" / f"whisper-cli{_EXE_SUFFIX}"
-WHISPER_MODEL_DIR = WHISPER_CPP_DIR / "models"
-# Whisper 模型的 ModelScope 仓库 ID（优先从 ModelScope 下载；失败则报错附手动指引）
-WHISPER_MODELSCOPE_ID = os.environ.get("MEMORA_WHISPER_MS_ID", "AI-ModelScope/whisper.cpp")
+
+
+def _which(name: str) -> Path | None:
+    w = _shutil.which(name)
+    return Path(w) if w else None
+
+
+# ---- ffmpeg / ffprobe：音频解码、重采样、响度归一、静音处理 ----
+FFMPEG_EXPLICIT = os.environ.get("MEMORA_FFMPEG_PATH", "")
+
+
+def find_ffmpeg() -> Path | None:
+    cands: list[Path] = []
+    if FFMPEG_EXPLICIT:
+        cands.append(Path(FFMPEG_EXPLICIT))
+    cands += [
+        PROJECT_ROOT / "tools" / "ffmpeg" / "bin" / f"ffmpeg{_EXE_SUFFIX}",
+        PROJECT_ROOT / "tools" / "ffmpeg" / f"ffmpeg{_EXE_SUFFIX}",
+        Path(sys.prefix) / "Library" / "bin" / f"ffmpeg{_EXE_SUFFIX}",
+    ]
+    for c in cands:
+        if c.exists():
+            return c
+    return _which("ffmpeg")
+
+
+def find_ffprobe() -> Path | None:
+    ff = find_ffmpeg()
+    if ff is not None:
+        p = ff.with_name(f"ffprobe{_EXE_SUFFIX}")
+        if p.exists():
+            return p
+    return _which("ffprobe")
+
+
+# ---- whisper.cpp 可执行文件（优先 tools 预编译二进制，兼容源码 build）----
+WHISPER_BIN_EXPLICIT = os.environ.get("MEMORA_WHISPER_CLI", "")
+
+
+def find_whisper_cli() -> Path | None:
+    exe = f"whisper-cli{_EXE_SUFFIX}"
+    cands: list[Path] = []
+    if WHISPER_BIN_EXPLICIT:
+        cands.append(Path(WHISPER_BIN_EXPLICIT))
+    cands += [
+        PROJECT_ROOT / "tools" / "whispercpp" / "bin" / exe,
+        PROJECT_ROOT / "tools" / "whispercpp" / exe,
+        WHISPER_CPP_DIR / "build" / "bin" / exe,
+        WHISPER_CPP_DIR / "build" / "bin" / "Release" / exe,
+    ]
+    for c in cands:
+        if c.exists():
+            return c
+    return _which("whisper-cli")
+
+
+# 向后兼容：旧代码引用 config.WHISPER_BIN
+WHISPER_BIN = find_whisper_cli() or (
+    WHISPER_CPP_DIR / "build" / "bin" / f"whisper-cli{_EXE_SUFFIX}"
+)
+
+# ---- ASR 模型目录（优先 tools/whispercpp/models，兼容源码布局）----
+WHISPER_MODEL_DIR = PROJECT_ROOT / "tools" / "whispercpp" / "models"
+WHISPER_LEGACY_MODEL_DIR = WHISPER_CPP_DIR / "models"
+# 默认 ggml-small（远场实测可用、487MB、8GB 友好）；追求质量可下 ggml-large-v3-turbo（约 1.5GB），低配 / 快速可用 ggml-base
+WHISPER_DEFAULT_MODEL = os.environ.get(
+    "MEMORA_ASR_MODEL", "ggml-small.bin"
+)
+# （已弃用）ASR ggml 官方在 HuggingFace，model_fetch 经 hf-mirror 下载；此变量仅在手动指定 ModelScope 镜像时参考
+WHISPER_MODELSCOPE_ID = os.environ.get(
+    "MEMORA_WHISPER_MS_ID", "AI-ModelScope/whisper.cpp"
+)
+
+
+def find_whisper_model(name: str | None = None) -> Path | None:
+    """在多个候选目录中查找 ASR 模型，找不到返回 None。"""
+    name = name or WHISPER_DEFAULT_MODEL
+    for d in (WHISPER_MODEL_DIR, WHISPER_LEGACY_MODEL_DIR, MODELS_ROOT):
+        p = d / name
+        if p.exists():
+            return p
+        if d.exists():
+            hits = sorted(d.rglob(name))
+            if hits:
+                return hits[0]
+    return None
+
+
+# ---- whisper.cpp 内置 VAD（默认关闭：null VAD 模型会崩溃；能量 VAD 仅统计有效语音，不门控转写）----
+WHISPER_USE_VAD = os.environ.get("MEMORA_ASR_VAD", "0").lower() in (
+    "1", "true", "yes", "on"
+)
+# ---- 说话人分离（diarization）----
+DIAR_ENABLE = os.environ.get("MEMORA_DIAR", "1").lower() in (
+    "1", "true", "yes", "on"
+)
+DIAR_MAX_SPEAKERS = int(os.environ.get("MEMORA_DIAR_MAX", "8"))
+DIAR_MFCC_N = int(os.environ.get("MEMORA_DIAR_MFCC", "20"))
+# 神经声纹嵌入（speakeronnx ONNX，纯 onnxruntime 不引 torch）
+SPEAKER_EMBED_MODEL = os.environ.get("MEMORA_SPK_EMBED", "campplus-zh-en")
+# AHC 聚类 cosine 相似度阈值（远场实测 0.6 最优；近场可降到 0.5）
+SPEAKER_SIM_THRESHOLD = float(os.environ.get("MEMORA_SPK_SIM", "0.6"))
 
 # ---------------------------------------------------------------------------
 # 推理后端选择

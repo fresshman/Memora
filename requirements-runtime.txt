@@ -31,6 +31,16 @@ chardet>=5.0.0
 faiss-cpu>=1.8.0
 numpy>=1.26.0
 
+# ---- 语音会议链路（纯 CPU、无 torch）----
+# ffmpeg 按 README 准备；pywhispercpp 自带 libwhisper；ASR 模型 ggml-*.bin
+# 经语音页从 hf-mirror 下载；speakeronnx(CAM++) 做说话人识别，缺失降级 MFCC。
+pywhispercpp>=1.5.0
+speakeronnx>=0.0.1
+onnxruntime>=1.17.0
+scipy>=1.11.0           # MFCC 降级路径的 DCT
+scikit-learn>=1.3.0     # AHC / KMeans 聚类
+soundfile>=0.12.1       # 音频读取兜底（libsndfile）
+
 # ---- 配置管理 ----
 python-dotenv>=1.0.0
 

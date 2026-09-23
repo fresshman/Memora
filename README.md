@@ -10,7 +10,7 @@
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
-<img alt="Tests" src="https://img.shields.io/badge/Tests-125%20passed-brightgreen">
+<img alt="Tests" src="https://img.shields.io/badge/Tests-150%20passed-brightgreen">
 <img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
@@ -50,6 +50,9 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 - ⚡ **产品级体验**：SSE **逐 token 流式**输出、Next.js 单页应用、单端口同源部署（最终用户**无需 Node.js**）、Markdown/PDF 导出、批量复盘。
 - 🧩 **模型一键管理**：首页与模型页显式推荐 **Spark-X2.5-4B / 1.7B**，自动检测本地是否已安装，缺失时弹窗确认后经
   **ModelScope `snapshot_download` 自动下载**官方 Q4_K_M GGUF，下载即用、无需手工转换。
+- 🎙️ **语音会议全本地复盘**：上传 mp3 / m4a / wav / flac / ogg / opus / wma 等常见录音，经 ffmpeg 降噪与响度归一，
+  本地 whisper.cpp 转写、**CAM++ 神经声纹自动识别说话人**，整理成「说话人 + 时间戳」标注记录，一键导出
+  MD/TXT/SRT/PDF，或流式提炼结构化纪要。纯 CPU、无 torch。
 
 ## 📊 评测与消融（数据说话）
 
@@ -75,6 +78,50 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 > 结论：本地 RAG 把超长对话从「全量直喂崩溃（召回 0.25、问答 0）」拉回到 **0.90+ 召回、问答证据命中 1.0、零幻觉**。
 > 完整结果见 `evals/results/final/report.html`。
 
+## 🎙️ 语音会议链路（全程本地、纯 CPU）
+
+上传会议录音，整条链路在设备内闭环，**数据不出设备**：
+
+```text
+音频（mp3/m4a/wav/flac/ogg/aac/wma/opus/amr…）
+   │ ffmpeg 解码 16kHz mono：afftdn 降噪 + dynaudnorm 响度归一（soundfile 兜底）
+   ▼
+pywhispercpp（whisper.cpp 进程内）转写，输出带时间戳句子段（简体引导）
+   │ 能量 VAD 仅统计有效语音（不门控转写）
+   ▼
+CAM++ 神经声纹 embedding（speakeronnx ONNX）+ AHC 凝聚聚类（自动定人数 / 可手填）
+   ▼
+标注会议记录（说话人 + 时间戳，同人相邻自动合并）
+   ├── 一键导出 Markdown / TXT / SRT / PDF
+   └── SSE 流式提炼结构化纪要（结论 / 待办 / 关键信息 / 风险，并引用对应说话人）
+```
+
+**说话人分离实测**（8 通道远场麦克风阵列，RTTM 金标准，frame-level DER + Hungarian 映射）
+
+| 片段 | 发言特征 | 识别说话人 | DER | 说明 |
+|---|---|---|---|---|
+| FRONT（0–3 分钟） | 轮流发言、重叠 1.8%、句间有停顿 | **7 / 7** | **0.115** | 漏分 0、混淆 .115 |
+| MID（10–13 分钟） | 语音占 93.7%、快速抢话、重叠 9.6% | 3 | 0.598 | 小孔径阵列（通道时延 ±0.12ms）无法空间分人、混响污染声纹 |
+
+> **诚实的能力边界**：Memora 的目标场景是**手机 / 电脑近场录音、在线会议平台导出的已增强音频、正常轮流会议**（落在 FRONT 的"可用"区间）。
+> 对"小孔径远场阵列 + 高重叠快速抢话"，已验证 5 种声纹模型 / 8 个通道 / 4 种前端均失效——这是硬件孔径与混响导致的研究性难题，而非算法或前端单点问题；近场、低重叠场景 DER 显著更低。
+
+**ASR 模型档位**（ggml 官方在 HuggingFace，经 hf-mirror 下载；语音页 / 模型管理一键获取）
+
+| 模型 | 大小 | 适用 |
+|---|---|---|
+| ggml-base.bin | ≈148MB | 干净近场、低配快速；远场会重复幻觉 |
+| **ggml-small.bin（默认）** | ≈488MB | **远场实测连贯可用、8GB 友好** |
+| ggml-large-v3-turbo.bin | ≈1.5GB | 质量优先、转写最准 |
+
+**⑥ 语音会议记录** —— 自动识别说话人并按时间戳着色，连贯转写，可一键导出四种格式。
+
+<p><img src="docs/images/07_voice.png" width="840"></p>
+
+**⑦ 语音会议纪要** —— 由 Spark-X2.5 基于标注记录流式提炼，四段结构并引用对应说话人。
+
+<p><img src="docs/images/09_voice_minutes.png" width="840"></p>
+
 ## 🖥️ 功能页面
 
 | 页面 | 路径 | 说明 |
@@ -83,7 +130,7 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 | 智能问答 | `/qa/` | 基于全部对话追问，回答带原文引用 |
 | 模型管理 | `/models/` | 双模型推荐、本地状态检测、ModelScope 一键下载、在线切换 |
 | 批量复盘 | `/batch/` | 多份记录批量处理与汇总 |
-| 语音纪要（可选） | `/voice/` | 接入本地 whisper.cpp 转写后复盘 |
+| 语音会议复盘 | `/voice/` | 多格式转写 + 说话人分离，标注记录一键导出或提炼纪要 |
 | 历史记录 | `/history/` | 本地加密存储的复盘历史 |
 
 ## 📸 界面预览
@@ -104,7 +151,7 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 
 <p><img src="docs/images/04_qa.png" width="720"></p>
 
-**⑤ 模型管理 / 批量复盘 / 语音纪要 / 历史记录**
+**⑤ 模型管理 / 批量复盘 / 历史记录**
 
 <table>
 <tr>
@@ -112,8 +159,8 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 <td align="center"><img src="docs/images/06_batch.png" width="350"></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/images/07_voice.png" width="350"></td>
 <td align="center"><img src="docs/images/08_history.png" width="350"></td>
+<td></td>
 </tr>
 </table>
 
@@ -160,6 +207,14 @@ snapshot_download('XHToken/Spark-X2.5-1.7B-GGUF', allow_file_pattern=['*Q4_K_M*'
 snapshot_download('gpustack/bge-m3-GGUF',         allow_file_pattern=['*Q4_K_M*'])  # 本地 RAG 向量模型，≈438MB
 ```
 
+**准备语音链路（可选）**：
+
+```bash
+conda install ffmpeg                                   # 或下载 ffmpeg 静态构建放 tools/ffmpeg
+pip install pywhispercpp speakeronnx onnxruntime       # 已含在 requirements.txt
+# 启动后进入「语音会议复盘」上传录音；缺失 ASR 模型时按提示从 hf-mirror 一键下载
+```
+
 > **离线红线**：默认 `MEMORA_ENFORCE_OFFLINE=1`，应用绝不联网，模型缺失只报错并给出命令。
 > 断网演示时保持默认即可；也可在联网机下载后，把 `root/models/models/XHToken--Spark-X2.5-*-GGUF` 整个目录拷到目标机同位置。
 
@@ -191,6 +246,9 @@ start.bat             :: 启动，浏览器访问 http://127.0.0.1:8000
 ```text
 聊天记录(txt/csv/html)
         │  编码嗅探 · 多平台解析（微信/钉钉/飞书）
+        │
+会议录音(mp3/m4a/wav…)
+        │  ffmpeg 解码/降噪·响度 → whisper 转写 → CAM++ 说话人分离
         ▼
    PII 本地脱敏（映射仅存内存，可一键还原）
         │
@@ -218,7 +276,7 @@ Memora/
 │   ├── prompts/            #   提示词模板
 │   ├── backend/            #   llama-server 子进程后端 + 可选 SGLang 后端
 │   ├── storage/            #   Fernet 本地加密
-│   ├── whisper/            #   本地语音转写（可选）
+│   ├── whisper/            #   语音：解码/转写/说话人分离/会议记录
 │   ├── model_fetch.py      #   模型获取状态机（官方 GGUF 下载 + safetensors 转换兜底）
 │   ├── exporter.py         #   Markdown / PDF 导出
 │   └── batch.py            #   批量复盘
@@ -249,6 +307,8 @@ Memora/
 | `MEMORA_RAG_ENABLE` | `1` | 超长对话本地 RAG 开关；无 embedding 时自动降级为规则压缩 |
 | `MEMORA_PII_REDACT` | `1` | PII 脱敏开关（含人名角色化） |
 | `MEMORA_TEMP` / `MEMORA_MAX_REVIEW` / `MEMORA_MAX_QA` | `0.3` / `4096` / `1024` | 解码温度与最大生成长度 |
+| `MEMORA_ASR_MODEL` / `MEMORA_ASR_VAD` | `ggml-small.bin` / `0` | ASR 模型档位 / 内置 VAD（默认关，空模型会崩溃） |
+| `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.6` | 声纹模型 / AHC 相似度阈值（近场可降到 0.5） |
 
 ## 🧪 测试与评测复现
 
@@ -263,7 +323,8 @@ cd evals && python runner.py
 ## 🗺️ 路线图
 
 - [x] 多平台解析、PII 脱敏、本地 RAG、SSE 流式、模型一键下载、离线发布包、评测与消融
-- [ ] whisper.cpp / ffmpeg 语音链路随包分发（当前为可选实验）
+- [x] 语音会议链路：多格式转写、CAM++ 说话人分离、标注记录导出与纪要（分场景 DER 实测）
+- [ ] ffmpeg / ASR / 声纹模型随离线包分发（当前按指引下载）
 - [ ] PyInstaller / WebView 桌面 EXE 一键安装包
 - [ ] 更多 IM / 会议平台导出格式解析
 - [ ] 8GB / 16GB、Intel / AMD、有无独显的配置矩阵实测
@@ -288,6 +349,10 @@ Memora 站在开源社区的肩膀上。下列**第三方开源组件、模型�
 | [python-multipart](https://github.com/Kludex/python-multipart) / [python-dotenv](https://github.com/theskumar/python-dotenv) / [reportlab](https://www.reportlab.com) | 表单 / 配置 / PDF 导出 | Apache-2.0 / BSD-3-Clause / BSD-3-Clause |
 | [Next.js](https://nextjs.org) / [React](https://react.dev) / [Tailwind CSS](https://tailwindcss.com) | 前端框架与样式 | MIT |
 | [pytest](https://github.com/pytest-dev/pytest) | 测试框架 | MIT |
+| [whisper.cpp](https://github.com/ggerganov/whisper.cpp) / [pywhispercpp](https://github.com/absadiki/pywhispercpp) | 本地语音转写引擎 / Python 绑定 | MIT |
+| [speakeronnx](https://pypi.org/project/speakeronnx/) / [onnxruntime](https://github.com/microsoft/onnxruntime) | CAM++ 说话人声纹 / ONNX 推理 | 以官方仓库为准 / MIT |
+| [SciPy](https://scipy.org) / [scikit-learn](https://scikit-learn.org) / [soundfile](https://python-soundfile.readthedocs.io) | 聚类降级 / 音频兜底 | BSD-3-Clause |
+| [ffmpeg](https://ffmpeg.org) | 音频解码 / 降噪 / 响度归一 | LGPL-2.1-or-later 或 GPL（取决于构建，动态调用） |
 
 **模型与数据（不随代码仓库分发）**
 
@@ -295,6 +360,8 @@ Memora 站在开源社区的肩膀上。下列**第三方开源组件、模型�
 |---|---|---|
 | Spark-X2.5-4B / 1.7B（含 GGUF 转换版） | XHToken（[ModelScope](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF)） | 以模型官方页面许可为准 |
 | bge-m3（GGUF） | BAAI / gpustack（[ModelScope](https://modelscope.cn/models/gpustack/bge-m3-GGUF)） | 以模型官方页面许可为准 |
+| Whisper ggml ASR 模型 | OpenAI / ggerganov（[HuggingFace](https://huggingface.co/ggerganov/whisper.cpp)） | MIT（权重以官方为准） |
+| CAM++ / ERes2Net 声纹模型 | ModelScope / speakeronnx（campplus-zh-en） | Apache-2.0（以模型卡为准） |
 
 > 本仓库**不内置、不重新分发**上述模型权重与 llama.cpp 二进制，需使用者自行从官方渠道获取；
 > 许可证信息以各项目官方 `LICENSE` 为准。若你二次分发 Memora，请自行确保同时满足所引用组件与模型的许可要求。

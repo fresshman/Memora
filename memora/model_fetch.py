@@ -457,44 +457,77 @@ def ensure_gguf(
 
 
 # ---------------------------------------------------------------------------
-# Whisper 模型获取
+# ASR（whisper.cpp）模型获取
 # ---------------------------------------------------------------------------
-def ensure_whisper_model() -> Path:
-    """确保 ggml-base.bin 存在。
+_ASR_REPO = "ggerganov/whisper.cpp"
 
-    流程：有就用 → 离线模式直接报错 → 否则从 ModelScope 下载 → 失败附手动指引。
+
+def _asr_base_url() -> str:
+    """whisper ggml 模型官方托管在 HuggingFace；国内经 HF_ENDPOINT（hf-mirror）。"""
+    import os
+    ep = os.environ.get("HF_ENDPOINT", "https://hf-mirror.com").rstrip("/")
+    return f"{ep}/{_ASR_REPO}/resolve/main"
+
+
+def _http_download(url: str, target: Path) -> None:
+    """流式下载到 .part 再原子改名，按 ~10% 打进度日志。"""
+    import urllib.request
+    tmp = target.with_name(target.name + ".part")
+    req = urllib.request.Request(url, headers={"User-Agent": "memora"})
+    with urllib.request.urlopen(req, timeout=60) as r, open(tmp, "wb") as f:
+        total = int(r.headers.get("Content-Length", 0))
+        got = 0
+        next_pct = 10
+        while True:
+            chunk = r.read(1 << 20)
+            if not chunk:
+                break
+            f.write(chunk)
+            got += len(chunk)
+            if total and 100 * got / total >= next_pct:
+                log.info("ASR 下载进度：%d%%", next_pct)
+                next_pct += 10
+    tmp.replace(target)
+
+
+def ensure_asr_model(model_name: str) -> Path:
+    """确保指定 whisper.cpp ASR 模型（ggml-*.bin）存在。
+
+    有就用 → 强制离线模式报错并给手动指引 → 否则从 hf-mirror 直接下载
+    （ggml 官方仓库在 HuggingFace；设 HF_ENDPOINT=https://hf-mirror.com 国内可达）。
     """
-    target = config.WHISPER_MODEL_DIR / "ggml-base.bin"
+    target_dir = config.WHISPER_MODEL_DIR
+    target = target_dir / model_name
     if target.exists():
-        log.debug("Whisper 模型已存在：%s", target)
+        log.debug("ASR 模型已存在：%s", target)
         return target
 
     if config.ENFORCE_OFFLINE:
         raise RuntimeError(
-            f"Whisper 模型缺失且处于强制离线模式，无法下载。\n"
-            f"请在联网环境下载 ggml-base.bin 后手动放置到：{target}\n"
-            f"备选地址：https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"
+            f"ASR 模型 {model_name} 缺失且处于强制离线模式，无法下载。\n"
+            f"请在联网环境下载后手动放置到：{target}\n"
+            f"下载地址：{_asr_base_url()}/{model_name}"
         )
 
-    log.info("Whisper 模型缺失，尝试从 ModelScope 下载...")
+    url = f"{_asr_base_url()}/{model_name}"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    log.info("ASR 模型缺失，开始下载：%s", url)
     try:
-        ms_dir = fetch_modelscope(
-            config.WHISPER_MODELSCOPE_ID, config.WHISPER_MODEL_DIR
-        )
-        candidates = [ms_dir / "ggml-base.bin", *ms_dir.glob("**/ggml-base*.bin")]
-        for cand in candidates:
-            if cand.exists():
-                if cand != target:
-                    config.WHISPER_MODEL_DIR.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(str(cand), str(target))
-                log.info("Whisper 模型已就绪：%s", target)
-                return target
-        raise RuntimeError(f"ModelScope 仓库中未找到 ggml-base.bin：{ms_dir}")
-    except OfflineDownloadError as e:
-        raise RuntimeError(str(e)) from e
-    except RuntimeError as e:
+        _http_download(url, target)
+        log.info("ASR 模型已就绪：%s", target)
+        return target
+    except Exception as e:  # noqa: BLE001
+        part = target.with_name(target.name + ".part")
+        try:
+            part.unlink()
+        except OSError:
+            pass
         raise RuntimeError(
-            f"Whisper 模型自动下载失败。\n{e}\n"
-            f"可手动下载 ggml-base.bin 放到：{target}\n"
-            f"HuggingFace 备选地址：https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"
+            f"ASR 模型自动下载失败：{url}\n错误：{e}\n"
+            f"请手动下载 {model_name} 并放置到：{target}"
         ) from e
+
+
+def ensure_whisper_model() -> Path:
+    """向后兼容：确保 ggml-base.bin。"""
+    return ensure_asr_model("ggml-base.bin")

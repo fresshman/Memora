@@ -10,7 +10,7 @@
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
-<img alt="Tests" src="https://img.shields.io/badge/Tests-125%20passed-brightgreen">
+<img alt="Tests" src="https://img.shields.io/badge/Tests-150%20passed-brightgreen">
 <img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
@@ -60,6 +60,10 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
 - 🧩 **One-click model management**: the home and model pages explicitly recommend **Spark-X2.5-4B / 1.7B**, detect whether the
   model exists locally, and — after a confirmation dialog — download the official Q4_K_M GGUF automatically via
   **ModelScope `snapshot_download`**, ready to use with no manual conversion.
+- 🎙️ **Fully local voice-meeting review**: upload mp3 / m4a / wav / flac / ogg / opus / wma and other common recordings;
+  ffmpeg denoises and normalizes loudness, local whisper.cpp transcribes, and a **CAM++ neural voiceprint automatically
+  identifies speakers**. The result is an annotated record (speaker + timestamps), exportable to MD/TXT/SRT/PDF or distilled
+  into structured minutes via streaming. Pure CPU, no torch.
 
 ## 📊 Evaluation & Ablation (measured, not claimed)
 
@@ -86,6 +90,52 @@ risk extraction completeness, Q&amp;A evidence hit rate and hallucination rate**
 > Takeaway: local RAG rescues long conversations from the full-context failure (recall 0.25, QA 0) back to
 > **0.90+ recall, QA evidence hit 1.0 and zero hallucination**. Full results: `evals/results/final/report.html`.
 
+## 🎙️ Voice Meeting Pipeline (fully on-device, pure CPU)
+
+Upload a meeting recording and the whole pipeline stays closed on the device — **data never leaves the machine**:
+
+```text
+Audio (mp3/m4a/wav/flac/ogg/aac/wma/opus/amr…)
+   │ ffmpeg decodes to 16kHz mono: afftdn denoise + dynaudnorm loudness normalization (soundfile fallback)
+   ▼
+pywhispercpp (in-process whisper.cpp) transcribes into timestamped sentence segments (Simplified-Chinese hint)
+   │ energy VAD only measures speech duration (does not gate transcription)
+   ▼
+CAM++ neural voiceprint embeddings (speakeronnx ONNX) + AHC agglomerative clustering (auto speaker count / manual)
+   ▼
+Annotated meeting record (speaker + timestamps; adjacent same-speaker segments auto-merged)
+   ├── one-click export to Markdown / TXT / SRT / PDF
+   └── SSE-streamed structured minutes (Decisions / Action items / Key info / Risks, citing the speaker)
+```
+
+**Speaker-diarization measurements** (8-channel far-field microphone array; RTTM ground truth; frame-level DER + Hungarian mapping)
+
+| Segment | Speaking pattern | Speakers found | DER | Note |
+|---|---|---|---|---|
+| FRONT (0–3 min) | Turn-taking, 1.8% overlap, inter-sentence pauses | **7 / 7** | **0.115** | 0 missed, .115 confusion |
+| MID (10–13 min) | 93.7% speech, rapid crosstalk, 9.6% overlap | 3 | 0.598 | Small-aperture array (±0.12ms inter-channel delay) cannot separate spatially; reverb contaminates voiceprints |
+
+> **Honest capability boundary**: Memora targets **near-field phone/PC recordings, already-enhanced audio exported from
+> online meeting platforms, and normal turn-taking meetings** (the "usable" FRONT range). For "small-aperture far-field arrays
+> + high-overlap rapid crosstalk", 5 voiceprint models / 8 channels / 4 front-ends all failed — a research-grade problem caused
+> by hardware aperture and reverb, not a single algorithm/frontend issue. Near-field, low-overlap scenarios have much lower DER.
+
+**ASR model tiers** (ggml officially on HuggingFace, downloaded via hf-mirror; one-click from the voice/model pages)
+
+| Model | Size | Best for |
+|---|---|---|
+| ggml-base.bin | ~148MB | Clean near-field, low-spec/fast; hallucinates on far-field |
+| **ggml-small.bin (default)** | ~488MB | **Coherent on far-field in tests, 8GB-friendly** |
+| ggml-large-v3-turbo.bin | ~1.5GB | Best quality, most accurate transcription |
+
+**⑥ Voice meeting record** — speakers are auto-identified and color-coded by timestamp; coherent transcription; one-click export in four formats.
+
+<p><img src="docs/images/07_voice.png" width="840"></p>
+
+**⑦ Voice meeting minutes** — Spark-X2.5 distills the annotated record via streaming into four sections, citing the speakers.
+
+<p><img src="docs/images/09_voice_minutes.png" width="840"></p>
+
 ## 🖥️ Pages
 
 | Page | Route | Description |
@@ -94,7 +144,7 @@ risk extraction completeness, Q&amp;A evidence hit rate and hallucination rate**
 | Q&amp;A | `/qa/` | Ask questions over the whole conversation; answers cite the original messages |
 | Model management | `/models/` | Dual-model recommendation, local status detection, one-click ModelScope download, live switching |
 | Batch review | `/batch/` | Process and summarize multiple records in bulk |
-| Voice minutes (optional) | `/voice/` | Transcribe locally with whisper.cpp, then review |
+| Voice meeting review | `/voice/` | Multi-format transcription + speaker diarization; export or distill minutes |
 | History | `/history/` | Locally encrypted review history |
 
 ## 📸 Screenshots
@@ -115,7 +165,7 @@ risk extraction completeness, Q&amp;A evidence hit rate and hallucination rate**
 
 <p><img src="docs/images/04_qa.png" width="720"></p>
 
-**⑤ Model management / Batch review / Voice minutes / History**
+**⑤ Model management / Batch review / History**
 
 <table>
 <tr>
@@ -123,8 +173,8 @@ risk extraction completeness, Q&amp;A evidence hit rate and hallucination rate**
 <td align="center"><img src="docs/images/06_batch.png" width="350"></td>
 </tr>
 <tr>
-<td align="center"><img src="docs/images/07_voice.png" width="350"></td>
 <td align="center"><img src="docs/images/08_history.png" width="350"></td>
+<td></td>
 </tr>
 </table>
 
@@ -173,6 +223,14 @@ snapshot_download('XHToken/Spark-X2.5-1.7B-GGUF', allow_file_pattern=['*Q4_K_M*'
 snapshot_download('gpustack/bge-m3-GGUF',         allow_file_pattern=['*Q4_K_M*'])  # local RAG embeddings, ~438MB
 ```
 
+**Prepare the voice pipeline (optional)**:
+
+```bash
+conda install ffmpeg                                   # or download an ffmpeg static build into tools/ffmpeg
+pip install pywhispercpp speakeronnx onnxruntime       # already included in requirements.txt
+# Then open "Voice meeting review" and upload a recording; if the ASR model is missing, download it from hf-mirror when prompted
+```
+
 > **Offline guard**: `MEMORA_ENFORCE_OFFLINE=1` by default — the app never goes online; a missing model only raises an error
 > with the exact command. Keep the default for an offline demo. You can also download on a connected machine and copy the
 > `root/models/models/XHToken--Spark-X2.5-*-GGUF` folder to the same relative location on the target machine.
@@ -207,6 +265,9 @@ subprocess on exit / model switch.
 ```text
 Chat export (txt/csv/html)
         │  encoding detection · multi-platform parsing (WeChat/DingTalk/Feishu)
+        │
+Meeting recording (mp3/m4a/wav…)
+        │  ffmpeg decode/denoise·loudness → whisper transcribe → CAM++ speaker diarization
         ▼
    On-device PII redaction (mapping in memory only; restorable)
         │
@@ -235,7 +296,7 @@ Memora/
 │   ├── prompts/            #   prompt templates
 │   ├── backend/            #   llama-server subprocess backend + optional SGLang backend
 │   ├── storage/            #   Fernet local encryption
-│   ├── whisper/            #   local transcription (optional)
+│   ├── whisper/            #   voice: decode/transcribe/diarization/meeting record
 │   ├── model_fetch.py      # model acquisition state machine (official GGUF download + safetensors conversion fallback)
 │   ├── exporter.py         # Markdown / PDF export
 │   └── batch.py            # batch review
@@ -245,7 +306,7 @@ Memora/
 ├── evals/                  # benchmark, metrics, worker/runner, single-file HTML report
 ├── samples/                # real WeChat/DingTalk/Feishu parsing samples
 ├── scripts/                # doctor / prepare_model / start.bat / build_offline.ps1 / e2e
-├── tests/                  # 125 pytest cases (no model loading, no network)
+├── tests/                  # 150 pytest cases (no model loading, no network)
 ├── tools/llamacpp/bin/     # official llama.cpp binaries (download yourself; not in git)
 ├── requirements.txt        # full dependencies (dev / packaging)
 └── requirements-runtime.txt# runtime dependencies (for offline install)
@@ -266,11 +327,13 @@ Copy `.env.example` to `.env` and adjust as needed; every key can be overridden 
 | `MEMORA_RAG_ENABLE` | `1` | Long-chat local RAG; auto-falls back to rule compression without an embedding model |
 | `MEMORA_PII_REDACT` | `1` | PII redaction toggle (including speaker name role-ization) |
 | `MEMORA_TEMP` / `MEMORA_MAX_REVIEW` / `MEMORA_MAX_QA` | `0.3` / `4096` / `1024` | Decoding temperature & max generation length |
+| `MEMORA_ASR_MODEL` / `MEMORA_ASR_VAD` | `ggml-small.bin` / `0` | ASR model tier / built-in VAD (off by default; null model crashes) |
+| `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.6` | Voiceprint model / AHC similarity threshold (lower to 0.5 near-field) |
 
 ## 🧪 Tests & Reproducing the Evaluation
 
 ```bash
-python -m pytest tests/ -q                          # 125 unit tests: no model loading, no network
+python -m pytest tests/ -q                          # 150 unit tests: no model loading, no network
 # Real-machine offline end-to-end (models required, 24 checks)
 set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
 # Full benchmark & ablation (models required, long-running; greedy & reproducible, resumable)
@@ -280,7 +343,8 @@ cd evals && python runner.py
 ## 🗺️ Roadmap
 
 - [x] Multi-platform parsing, PII redaction, local RAG, SSE streaming, one-click model download, offline package, evaluation & ablation
-- [ ] Ship the whisper.cpp / ffmpeg voice pipeline in the package (currently an optional experiment)
+- [x] Voice meeting pipeline: multi-format transcription, CAM++ speaker diarization, annotated-record export & minutes (scenario-based DER measured)
+- [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer
 - [ ] Parsers for more IM / meeting-platform exports
 - [ ] Configuration-matrix benchmarks (8GB/16GB, Intel/AMD, with/without GPU)
@@ -307,6 +371,10 @@ their licenses.
 | [python-multipart](https://github.com/Kludex/python-multipart) / [python-dotenv](https://github.com/theskumar/python-dotenv) / [reportlab](https://www.reportlab.com) | Forms / config / PDF export | Apache-2.0 / BSD-3-Clause / BSD-3-Clause |
 | [Next.js](https://nextjs.org) / [React](https://react.dev) / [Tailwind CSS](https://tailwindcss.com) | Frontend framework & styling | MIT |
 | [pytest](https://github.com/pytest-dev/pytest) | Testing framework | MIT |
+| [whisper.cpp](https://github.com/ggerganov/whisper.cpp) / [pywhispercpp](https://github.com/absadiki/pywhispercpp) | Local speech transcription engine / Python binding | MIT |
+| [speakeronnx](https://pypi.org/project/speakeronnx/) / [onnxruntime](https://github.com/microsoft/onnxruntime) | CAM++ speaker voiceprint / ONNX inference | As per official repo / MIT |
+| [SciPy](https://scipy.org) / [scikit-learn](https://scikit-learn.org) / [soundfile](https://python-soundfile.readthedocs.io) | Clustering fallback / audio fallback | BSD-3-Clause |
+| [ffmpeg](https://ffmpeg.org) | Audio decode / denoise / loudness normalization | LGPL-2.1-or-later or GPL (depends on build; dynamically linked) |
 
 **Models & data (not distributed in this repository)**
 
@@ -314,6 +382,8 @@ their licenses.
 |---|---|---|
 | Spark-X2.5-4B / 1.7B (incl. GGUF conversions) | XHToken ([ModelScope](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF)) | As stated on the official model page |
 | bge-m3 (GGUF) | BAAI / gpustack ([ModelScope](https://modelscope.cn/models/gpustack/bge-m3-GGUF)) | As stated on the official model page |
+| Whisper ggml ASR models | OpenAI / ggerganov ([HuggingFace](https://huggingface.co/ggerganov/whisper.cpp)) | MIT (weights as officially stated) |
+| CAM++ / ERes2Net voiceprint models | ModelScope / speakeronnx (campplus-zh-en) | Apache-2.0 (as per model card) |
 
 > This repository **does not bundle or redistribute** the model weights or llama.cpp binaries; you must obtain them from
 > their official sources. License information is subject to each project's official `LICENSE`. If you redistribute Memora,

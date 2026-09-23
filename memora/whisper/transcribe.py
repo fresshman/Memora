@@ -1,61 +1,104 @@
-"""本地离线语音转写（Whisper.cpp base INT8）。
+"""whisper.cpp 转写：通过 pywhispercpp 绑定（纯 CPU、本地离线）。
 
-全部在本机完成，零云端请求。需要：
-  1) 已编译的 whisper.cpp（build/bin/whisper-cli.exe，Windows）
-  2) 模型文件 ggml-base.bin（约 140MB，INT8）
-两者缺失时给出明确的本地准备指引，不 silently 失败。
+输入解码后的 16kHz float32 PCM，输出带时间戳的 Segment 列表。
+模型为官方 whisper.cpp 的 ggml 格式（默认 ggml-small，远场实测可用；
+追求质量可下 ggml-large-v3-turbo）。模型下载默认走 hf-mirror / ModelScope。
+
+为何用 pywhispercpp 而非 whisper-cli 子进程：pip 即装（自带预编译 libwhisper，
+Windows 友好），无需单独下载 CLI 二进制；同一套官方 ggml 模型，精度不变。
 """
 from __future__ import annotations
 
-import subprocess
-import urllib.request
-from pathlib import Path
+from dataclasses import dataclass
+
+import numpy as np
 
 from .. import config
-from ..log import get_logger
 
-log = get_logger(__name__)
 
-MODEL_URL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"
-MODEL_BIN = config.WHISPER_MODEL_DIR / "ggml-base.bin"
+@dataclass
+class Segment:
+    """一句话分段：起止时间（秒）与文本；speaker 在说话人分离阶段填充。"""
+    start: float
+    end: float
+    text: str
+    speaker: str = ""
+
+    def to_dict(self) -> dict:
+        return {"start": self.start, "end": self.end,
+                "text": self.text, "speaker": self.speaker}
 
 
 class WhisperNotReadyError(RuntimeError):
-    pass
+    """缺少 pywhispercpp 运行库或 ASR 模型。"""
 
 
-def ensure_model() -> Path:
-    """确保 ggml-base.bin 存在：有就用 → 没有从 ModelScope 下载 → 失败报错。"""
-    from ..model_fetch import ensure_whisper_model
+def _build_model():
     try:
-        return ensure_whisper_model()
-    except RuntimeError as e:
-        raise WhisperNotReadyError(str(e)) from e
-
-
-def transcribe(audio_path: str, *, language: str = "zh") -> str:
-    """转写音频文件，返回纯文本。非 wav 格式需要系统已安装 ffmpeg 并在 PATH。"""
-    log.info("开始语音转写：%s（语言=%s）", audio_path, language)
-    if not config.WHISPER_BIN.exists():
+        from pywhispercpp.model import Model
+    except Exception as exc:  # noqa: BLE001
         raise WhisperNotReadyError(
-            "未找到 whisper.cpp 可执行文件。\n"
-            f"期望路径：{config.WHISPER_BIN}\n"
-            "请先按 README 编译 whisper.cpp（cmake 生成 build/bin/whisper-cli.exe）。"
-        )
-    model = ensure_model()
-
-    cmd = [
-        str(config.WHISPER_BIN),
-        "-m", str(model),
-        "-f", audio_path,
-        "-l", language,
-        "-nt",   # 不输出时间戳文本行（只要文字）
-        "-np",   # 不输出进度
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
-    if proc.returncode != 0:
+            "未安装 pywhispercpp，请运行：pip install pywhispercpp"
+        ) from exc
+    model_path = config.find_whisper_model(config.WHISPER_DEFAULT_MODEL)
+    if not model_path:
         raise WhisperNotReadyError(
-            f"whisper.cpp 执行失败（code={proc.returncode}）：\n{proc.stderr[-800:]}"
+            f"未找到 ASR 模型 {config.WHISPER_DEFAULT_MODEL}，请在“语音复盘”页点击下载，"
+            f"或运行：python -m memora.model_fetch --asr"
         )
-    # whisper.cpp 默认把文字打印到 stdout
-    return proc.stdout.strip()
+    params = dict(
+        print_progress=False,
+        print_realtime=False,
+        print_timestamps=False,
+        no_context=True,
+        vad=bool(config.WHISPER_USE_VAD),
+    )
+    if int(config.LLAMACPP_N_THREADS) > 0:
+        params["n_threads"] = int(config.LLAMACPP_N_THREADS)
+    return Model(model=str(model_path), **params)
+
+
+def transcribe_segments(
+    pcm: np.ndarray,
+    sr: int = 16000,
+    language: str = "",
+) -> list["Segment"]:
+    """转写 16kHz mono float32 PCM，返回 Segment（时间戳单位：秒）。"""
+    if sr != 16000:
+        raise ValueError("whisper 需 16kHz 音频")
+    pcm = np.ascontiguousarray(pcm, dtype=np.float32)
+    model = _build_model()
+    try:
+        kw: dict = {}
+        if language:
+            kw["language"] = language
+        # whisper 默认输出繁体中文，用 initial_prompt 引导简体
+        if not language or language.startswith("zh"):
+            kw["initial_prompt"] = "以下是普通话会议录音，请用简体汉字转写。"
+        raw = model.transcribe(pcm, **kw)
+    finally:
+        try:
+            del model
+        except Exception:  # noqa: BLE001
+            pass
+    segs: list[Segment] = []
+    for s in raw:
+        text = (getattr(s, "text", "") or "").strip()
+        if not text:
+            continue
+        # t0 / t1 为 10ms（centiseconds）→ 秒
+        segs.append(Segment(round(s.t0 * 0.01, 3), round(s.t1 * 0.01, 3), text))
+    return segs
+
+
+def ensure_model(model_name: str = "") -> str:
+    """确保 ASR 模型已下载（经 model_fetch）。"""
+    from ..model_fetch import ensure_asr_model
+    return ensure_asr_model(model_name or config.WHISPER_DEFAULT_MODEL)
+
+
+def transcribe(path, language: str = "") -> list["Segment"]:
+    """便捷入口：任意常见格式音频文件 → 带时间戳分段。"""
+    from .audio import decode
+    pcm, sr = decode(str(path))
+    return transcribe_segments(pcm, sr, language=language)

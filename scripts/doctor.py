@@ -54,6 +54,12 @@ def main() -> int:
         ("faiss", "faiss-cpu"),
         ("numpy", "numpy"),
         ("chardet", "chardet"),
+        ("scipy", "scipy"),
+        ("sklearn", "scikit-learn"),
+        ("soundfile", "soundfile"),
+        ("pywhispercpp", "pywhispercpp"),
+        ("speakeronnx", "speakeronnx"),
+        ("onnxruntime", "onnxruntime"),
     ):
         try:
             m = importlib.import_module(mod)
@@ -133,12 +139,34 @@ def main() -> int:
     except OSError as e:
         check(FAIL, "本地数据目录", f"创建失败：{e}")
 
-    # 7) 语音可选项
-    whisper_ok = config.WHISPER_BIN.exists()
-    check(OK if whisper_ok else WARN, "whisper.cpp（语音，可选）",
-          str(config.WHISPER_BIN) if whisper_ok else "未安装（不影响文字复盘）")
-    ffmpeg = shutil.which("ffmpeg")
-    check(OK if ffmpeg else WARN, "ffmpeg（非 wav 音频，可选）", ffmpeg or "未安装")
+    # 7) 语音会议链路（可选；不影响文字复盘）
+    ffmpeg = config.find_ffmpeg()
+    check(OK if ffmpeg else WARN, "语音 ffmpeg（音频解码）",
+          str(ffmpeg) if ffmpeg else "未安装（非 WAV 音频无法解码）",
+          "" if ffmpeg else "下载 ffmpeg 静态构建解压到 tools/ffmpeg/bin，"
+                            "或设置 MEMORA_FFMPEG_PATH")
+    try:
+        importlib.import_module("pywhispercpp")
+        pwc = True
+    except ImportError:
+        pwc = False
+    check(OK if pwc else WARN, "语音 pywhispercpp（转写引擎）",
+          "已安装（自带 libwhisper）" if pwc else "未安装",
+          "" if pwc else "pip install pywhispercpp")
+    try:
+        importlib.import_module("speakeronnx")
+        spk = True
+    except ImportError:
+        spk = False
+    check(OK if spk else WARN, "语音 speakeronnx（说话人识别）",
+          "已安装（CAM++ 神经声纹）" if spk else "未安装（将降级 MFCC）",
+          "" if spk else "pip install speakeronnx onnxruntime")
+    asr = config.find_whisper_model(config.WHISPER_DEFAULT_MODEL)
+    check(OK if asr else WARN,
+          f"语音 ASR 模型 {config.WHISPER_DEFAULT_MODEL}",
+          str(asr) if asr else "未下载",
+          "" if asr else "语音页点下载（hf-mirror）或 python -m memora.model_fetch --asr，"
+                         "设置 MEMORA_ASR_MODEL 可切换 small/base/turbo 档位")
 
     # 8) 推理参数合理性
     note = f"n_ctx={config.LLAMACPP_N_CTX}, n_gpu={config.LLAMACPP_N_GPU_LAYERS}, KV={config.LLAMACPP_KV_QUANT}"

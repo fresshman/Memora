@@ -49,6 +49,31 @@ class VoiceResponse(BaseModel):
     report: str
 
 
+class VoiceMeetingResponse(BaseModel):
+    meta: dict
+    segments: list[dict]
+    text: str
+
+
+class VoiceStatusResponse(BaseModel):
+    ffmpeg: bool
+    asr_engine: bool
+    asr_model: bool
+    speaker: bool
+    asr_model_name: str
+    message: str = ""
+
+
+class VoiceMinutesRequest(BaseModel):
+    record_text: str
+
+
+class VoiceExportRequest(BaseModel):
+    record: dict
+    fmt: str = "md"
+    name: str | None = None
+
+
 class RecordOut(BaseModel):
     id: str
     name: str

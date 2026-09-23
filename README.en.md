@@ -11,6 +11,7 @@
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
 <img alt="Tests" src="https://img.shields.io/badge/Tests-125%20passed-brightgreen">
+<img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
 <p>Spark-X2.5 on-device LLM ・ llama.cpp ・ local bge-m3 + FAISS ・ FastAPI + Next.js</p>
@@ -95,6 +96,37 @@ risk extraction completeness, Q&amp;A evidence hit rate and hallucination rate**
 | Batch review | `/batch/` | Process and summarize multiple records in bulk |
 | Voice minutes (optional) | `/voice/` | Transcribe locally with whisper.cpp, then review |
 | History | `/history/` | Locally encrypted review history |
+
+## 📸 Screenshots
+
+**① Import a chat** — paste or upload a chat export; encoding and platform format are auto-detected.
+
+<p><img src="docs/images/01_home.png" width="720"></p>
+
+**② Local parsing & PII redaction** — speakers are role-ized as Member A/B; phone / email / names are replaced with placeholders before reaching the model. The mapping stays on-device and is restorable with one click.
+
+<p><img src="docs/images/02_pii.png" width="720"></p>
+
+**③ Structured review report** — four sections: Key Decisions / Action Items (with owner & due date) / Key Information / Risks, with meeting decisions deterministically re-homed.
+
+<p><img src="docs/images/03_report.png" width="500"></p>
+
+**④ Grounded Q&A** — retrieval-augmented over the whole conversation; answers carry verbatim citations, and unmentioned topics are explicitly reported as "not discussed".
+
+<p><img src="docs/images/04_qa.png" width="720"></p>
+
+**⑤ Model management / Batch review / Voice minutes / History**
+
+<table>
+<tr>
+<td align="center"><img src="docs/images/05_models.png" width="350"></td>
+<td align="center"><img src="docs/images/06_batch.png" width="350"></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/images/07_voice.png" width="350"></td>
+<td align="center"><img src="docs/images/08_history.png" width="350"></td>
+</tr>
+</table>
 
 ## 🚀 Quick Start
 
@@ -253,15 +285,48 @@ cd evals && python runner.py
 - [ ] Parsers for more IM / meeting-platform exports
 - [ ] Configuration-matrix benchmarks (8GB/16GB, Intel/AMD, with/without GPU)
 
-## 🙏 Acknowledgements
+## 🙏 Acknowledgements & Third-Party Notices
 
-Memora stands on the shoulders of open source: the [Spark-X2.5](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF)
-on-device model, [llama.cpp](https://github.com/ggml-org/llama.cpp),
-[bge-m3](https://modelscope.cn/models/gpustack/bge-m3-GGUF), ModelScope, LangChain, FastAPI and Next.js.
-Models and third-party components are governed by their respective licenses.
+Memora stands on the shoulders of open source. The **copyright of the following third-party open-source components, models
+and data always remains with their respective authors / rights holders**. Memora only uses them as dependencies or points you
+to their downloads; it **does not claim, transfer or redistribute** any of their rights, and you must keep complying with
+their licenses.
+
+**Open-source software dependencies**
+
+| Component | Used for | License |
+|---|---|---|
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) | On-device GGUF inference engine (llama-server) | MIT |
+| [LangChain](https://github.com/langchain-ai/langchain) / langchain-core / langchain-openai | Agent & chain orchestration | MIT |
+| [FastAPI](https://github.com/fastapi/fastapi) / [Uvicorn](https://github.com/encode/uvicorn) | Backend HTTP / ASGI | MIT / BSD-3-Clause |
+| [faiss-cpu](https://github.com/facebookresearch/faiss) / [NumPy](https://numpy.org) | Local vector retrieval / numerics | MIT / BSD-3-Clause |
+| [pandas](https://pandas.pydata.org) / [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) | Parsing helpers | BSD-3-Clause / MIT |
+| [chardet](https://github.com/chardet/chardet) | Encoding detection (dynamically linked as a library, unmodified) | LGPL-2.1-or-later |
+| [ModelScope SDK](https://github.com/modelscope/modelscope) | One-click model download | Apache-2.0 |
+| [cryptography](https://github.com/pyca/cryptography) | Fernet local encryption | Apache-2.0 OR BSD-3-Clause |
+| [python-multipart](https://github.com/Kludex/python-multipart) / [python-dotenv](https://github.com/theskumar/python-dotenv) / [reportlab](https://www.reportlab.com) | Forms / config / PDF export | Apache-2.0 / BSD-3-Clause / BSD-3-Clause |
+| [Next.js](https://nextjs.org) / [React](https://react.dev) / [Tailwind CSS](https://tailwindcss.com) | Frontend framework & styling | MIT |
+| [pytest](https://github.com/pytest-dev/pytest) | Testing framework | MIT |
+
+**Models & data (not distributed in this repository)**
+
+| Resource | Rights holder / source | License |
+|---|---|---|
+| Spark-X2.5-4B / 1.7B (incl. GGUF conversions) | XHToken ([ModelScope](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF)) | As stated on the official model page |
+| bge-m3 (GGUF) | BAAI / gpustack ([ModelScope](https://modelscope.cn/models/gpustack/bge-m3-GGUF)) | As stated on the official model page |
+
+> This repository **does not bundle or redistribute** the model weights or llama.cpp binaries; you must obtain them from
+> their official sources. License information is subject to each project's official `LICENSE`. If you redistribute Memora,
+> you are responsible for simultaneously satisfying the licenses of the referenced components and models.
 
 ## 📄 License
 
-This repository currently ships **without an open-source license** (all rights reserved by default), intended for learning
-and competition demonstration. To open-source it, add a `LICENSE` (e.g. MIT) and re-check the license terms of any bundled
-models / binaries.
+The **original source code and documentation** of Memora are released under the permissive [MIT License](LICENSE): you may
+freely use, modify, merge, publish, distribute and even use them commercially, provided the copyright and permission notices
+are retained in all copies; the software is provided "as is" without any warranty.
+
+- The MIT License **covers only the original code and documentation written by the Memora authors**; it **does not alter or
+  override** the licenses of any third-party component or model listed above.
+- It is business-friendly and **compatible** with common open-source licenses such as MIT / BSD / Apache / LGPL (dynamic
+  linking), so it does not infringe the rights of the referenced open-source projects.
+- For any questions about commercial use of the model weights, please refer to the official terms of Spark-X2.5 and bge-m3.

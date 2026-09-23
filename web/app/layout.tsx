@@ -12,9 +12,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN" className="h-full antialiased">
-      <body className="min-h-full flex bg-zinc-50 text-zinc-900">
+      <body className="flex min-h-full">
         <Sidebar />
-        <main className="flex-1 flex flex-col min-w-0">{children}</main>
+        <main className="relative z-10 flex min-w-0 flex-1 flex-col">
+          {children}
+        </main>
       </body>
     </html>
   );

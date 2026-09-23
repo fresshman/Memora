@@ -11,6 +11,7 @@
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
 <img alt="Tests" src="https://img.shields.io/badge/Tests-125%20passed-brightgreen">
+<img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
 <p>Spark-X2.5 端侧模型 ・ llama.cpp ・ 本地 bge-m3 + FAISS ・ FastAPI + Next.js</p>
@@ -84,6 +85,37 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
 | 批量复盘 | `/batch/` | 多份记录批量处理与汇总 |
 | 语音纪要（可选） | `/voice/` | 接入本地 whisper.cpp 转写后复盘 |
 | 历史记录 | `/history/` | 本地加密存储的复盘历史 |
+
+## 📸 界面预览
+
+**① 导入对话** —— 粘贴或上传聊天记录，自动嗅探编码与平台格式。
+
+<p><img src="docs/images/01_home.png" width="720"></p>
+
+**② 本地解析与 PII 脱敏** —— 发言人角色化为成员 A/B，手机 / 邮箱 / 人名在送入模型前替换为占位符，映射仅存本机、可一键还原。
+
+<p><img src="docs/images/02_pii.png" width="720"></p>
+
+**③ 结构化复盘报告** —— 核心结论 / 待办（含责任人与时间节点）/ 关键信息 / 风险提示四段，会议决定确定性归位。
+
+<p><img src="docs/images/03_report.png" width="500"></p>
+
+**④ 智能问答** —— 基于全部对话检索增强，回答附原文引用，未讨论即明说「未讨论」。
+
+<p><img src="docs/images/04_qa.png" width="720"></p>
+
+**⑤ 模型管理 / 批量复盘 / 语音纪要 / 历史记录**
+
+<table>
+<tr>
+<td align="center"><img src="docs/images/05_models.png" width="350"></td>
+<td align="center"><img src="docs/images/06_batch.png" width="350"></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/images/07_voice.png" width="350"></td>
+<td align="center"><img src="docs/images/08_history.png" width="350"></td>
+</tr>
+</table>
 
 ## 🚀 快速开始
 
@@ -236,13 +268,42 @@ cd evals && python runner.py
 - [ ] 更多 IM / 会议平台导出格式解析
 - [ ] 8GB / 16GB、Intel / AMD、有无独显的配置矩阵实测
 
-## 🙏 致谢
+## 🙏 致谢与第三方许可
 
-Memora 站在开源社区的肩膀上：[Spark-X2.5](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF) 端侧模型、
-[llama.cpp](https://github.com/ggml-org/llama.cpp)、[bge-m3](https://modelscope.cn/models/gpustack/bge-m3-GGUF)、
-ModelScope、LangChain、FastAPI、Next.js。各模型与第三方组件遵循其各自许可证。
+Memora 站在开源社区的肩膀上。下列**第三方开源组件、模型与数据的著作权始终归各自作者 / 权利人所有**，
+本项目仅以依赖调用或指引下载的方式使用它们，**不主张、不转让、不重新分发**其任何权利；使用者须继续遵守其各自许可证。
+
+**开源软件依赖**
+
+| 组件 | 用途 | 许可证 |
+|---|---|---|
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) | 端侧 GGUF 推理引擎（llama-server） | MIT |
+| [LangChain](https://github.com/langchain-ai/langchain) / langchain-core / langchain-openai | Agent 与链路编排 | MIT |
+| [FastAPI](https://github.com/fastapi/fastapi) / [Uvicorn](https://github.com/encode/uvicorn) | 后端 HTTP / ASGI | MIT / BSD-3-Clause |
+| [faiss-cpu](https://github.com/facebookresearch/faiss) / [NumPy](https://numpy.org) | 本地向量检索 / 数值计算 | MIT / BSD-3-Clause |
+| [pandas](https://pandas.pydata.org) / [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) | 解析辅助 | BSD-3-Clause / MIT |
+| [chardet](https://github.com/chardet/chardet) | 编码嗅探（以库形式动态调用、未修改） | LGPL-2.1-or-later |
+| [ModelScope SDK](https://github.com/modelscope/modelscope) | 模型一键下载 | Apache-2.0 |
+| [cryptography](https://github.com/pyca/cryptography) | Fernet 本地加密 | Apache-2.0 OR BSD-3-Clause |
+| [python-multipart](https://github.com/Kludex/python-multipart) / [python-dotenv](https://github.com/theskumar/python-dotenv) / [reportlab](https://www.reportlab.com) | 表单 / 配置 / PDF 导出 | Apache-2.0 / BSD-3-Clause / BSD-3-Clause |
+| [Next.js](https://nextjs.org) / [React](https://react.dev) / [Tailwind CSS](https://tailwindcss.com) | 前端框架与样式 | MIT |
+| [pytest](https://github.com/pytest-dev/pytest) | 测试框架 | MIT |
+
+**模型与数据（不随代码仓库分发）**
+
+| 资源 | 权利人 / 来源 | 许可 |
+|---|---|---|
+| Spark-X2.5-4B / 1.7B（含 GGUF 转换版） | XHToken（[ModelScope](https://modelscope.cn/models/XHToken/Spark-X2.5-4B-GGUF)） | 以模型官方页面许可为准 |
+| bge-m3（GGUF） | BAAI / gpustack（[ModelScope](https://modelscope.cn/models/gpustack/bge-m3-GGUF)） | 以模型官方页面许可为准 |
+
+> 本仓库**不内置、不重新分发**上述模型权重与 llama.cpp 二进制，需使用者自行从官方渠道获取；
+> 许可证信息以各项目官方 `LICENSE` 为准。若你二次分发 Memora，请自行确保同时满足所引用组件与模型的许可要求。
 
 ## 📄 许可证
 
-本仓库当前**尚未声明开源许可证**（默认保留所有权利），仅用于学习与竞赛展示。
-如需开源，建议补充 `LICENSE`（如 MIT）并再次确认所分发模型 / 二进制的许可条款。
+本项目的**原创源代码与文档**基于宽松的 [MIT 许可证](LICENSE) 发布：可自由使用、修改、合并、发表、分发乃至商用，
+唯一条件是在所有副本中保留版权声明与本许可声明；软件按“现状”提供，作者不承担任何担保责任。
+
+- MIT 许可证**仅覆盖 Memora 作者编写的原创代码与文档**，**不改变、不覆盖**上表任何第三方组件与模型的许可；
+- 这是对商业友好、且与 MIT / BSD / Apache / LGPL（动态调用）等常见开源许可**兼容**的选择，不会侵害所引用开源项目的权利；
+- 若对模型权重的商用许可有疑问，请以 Spark-X2.5、bge-m3 官方页面的授权条款为准。

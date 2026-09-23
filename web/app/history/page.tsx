@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { getJSON, del, post } from "@/lib/api";
-import { StatusBadge } from "@/components/StatusBadge";
+import { Button, Badge, PageHeader } from "@/components/ui";
+import {
+  IconHistory,
+  IconFile,
+  IconTrash,
+  IconAlert,
+  IconCheck,
+  IconEye,
+} from "@/components/icons";
 
 interface RecordItem {
   id: string;
@@ -42,6 +50,7 @@ export default function HistoryPage() {
       );
       setSelected(id);
       setContent(r.content);
+      setError("");
     } catch (err) {
       setError(String((err as Error).message));
     }
@@ -89,93 +98,104 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <header className="h-14 border-b border-zinc-200 bg-white px-6 flex items-center justify-between">
-        <h1 className="text-sm font-semibold">历史记录</h1>
-        <StatusBadge />
-      </header>
-      <div className="flex-1 overflow-auto p-6 max-w-4xl mx-auto w-full">
-        <section className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-              已保存记录
-            </h2>
-            <button
-              onClick={onWipe}
-              className="text-xs px-2.5 py-1 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
-            >
-              一键清空
-            </button>
-          </div>
+    <div className="flex-1 overflow-auto">
+      <div className="mx-auto w-full max-w-4xl px-8 py-8">
+        <PageHeader
+          title="历史记录"
+          subtitle="本地加密保存的纪要，可回看、导出或删除；密钥与数据均在本机。"
+          actions={
+            records.length > 0 ? (
+              <Button variant="outline" size="sm"
+                className="!border-red-200 !text-red-600 hover:!bg-red-50"
+                icon={<IconTrash className="h-4 w-4" />}
+                onClick={onWipe}>
+                一键清空
+              </Button>
+            ) : undefined
+          }
+        />
+
+        <section className="card overflow-hidden">
           {records.length === 0 ? (
-            <div className="border border-dashed border-zinc-200 rounded-lg py-12 text-center text-sm text-zinc-400">
-              暂无保存的记录
+            <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <IconHistory className="h-6 w-6" />
+              </span>
+              <div className="mt-3 text-sm font-medium text-slate-600">暂无保存的记录</div>
+              <div className="mt-1 text-xs text-slate-400">复盘后点「加密保存」会出现在这里</div>
             </div>
           ) : (
-            <div className="border border-zinc-200 rounded-lg bg-white divide-y divide-zinc-100">
-              {records.map((r) => (
-                <div
-                  key={r.id}
-                  className={`flex items-center px-4 py-2.5 text-sm ${
-                    selected === r.id ? "bg-zinc-50" : ""
-                  }`}
-                >
-                  <span className="flex-1 text-zinc-900">{r.name}</span>
-                  <span className="text-xs text-zinc-400 w-32">{r.created}</span>
-                  <button
-                    onClick={() => onView(r.id)}
-                    className="text-xs px-2 py-1 text-zinc-600 hover:text-zinc-900"
+            <div className="divide-y divide-slate-100">
+              {records.map((r) => {
+                const active = selected === r.id;
+                return (
+                  <div
+                    key={r.id}
+                    className={`flex items-center gap-3 px-4 py-3 transition ${
+                      active ? "bg-brand-50/60" : "hover:bg-slate-50"
+                    }`}
                   >
-                    回看
-                  </button>
-                  <button
-                    onClick={() => onDelete(r.id)}
-                    className="text-xs px-2 py-1 text-red-500 hover:text-red-700 ml-2"
-                  >
-                    删除
-                  </button>
-                </div>
-              ))}
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                      active ? "bg-brand-100 text-brand-600" : "bg-slate-100 text-slate-400"}`}>
+                      <IconFile className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
+                      {r.name}
+                    </span>
+                    {r.kind && <Badge tone="slate">{r.kind}</Badge>}
+                    <span className="hidden w-28 shrink-0 text-right text-xs text-slate-400 sm:block">
+                      {r.created}
+                    </span>
+                    <Button variant="ghost" size="sm"
+                      icon={<IconEye className="h-4 w-4" />}
+                      onClick={() => onView(r.id)}>
+                      回看
+                    </Button>
+                    <Button variant="ghost" size="sm"
+                      className="!text-red-500 hover:!bg-red-50"
+                      icon={<IconTrash className="h-4 w-4" />}
+                      onClick={() => onDelete(r.id)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
 
         {content && (
-          <section className="mb-6">
-            <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
-              记录内容
-            </h2>
-            <pre className="border border-zinc-200 rounded-lg bg-white p-4 text-sm text-zinc-700 whitespace-pre-wrap leading-relaxed">
+          <section className="card mt-6 p-5 animate-slide-up">
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">记录内容</h2>
+            <pre className="max-h-[440px] overflow-auto whitespace-pre-wrap rounded-xl bg-slate-50/70 p-4 text-sm leading-relaxed text-slate-700">
               {content}
             </pre>
-            <div className="mt-3 flex gap-3">
-              <button
-                onClick={() => onExport("md")}
-                className="text-sm px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-              >
+            <div className="mt-4 flex gap-2.5">
+              <Button variant="outline" size="sm" icon={<IconFile className="h-4 w-4" />}
+                onClick={() => onExport("md")}>
                 导出 MD
-              </button>
-              <button
-                onClick={() => onExport("pdf")}
-                className="text-sm px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-              >
+              </Button>
+              <Button variant="outline" size="sm" icon={<IconFile className="h-4 w-4" />}
+                onClick={() => onExport("pdf")}>
                 导出 PDF
-              </button>
+              </Button>
             </div>
           </section>
         )}
 
         {error && (
-          <div className="border border-red-200 bg-red-50 text-red-700 text-sm rounded-md p-3">
-            {error}
-          </div>
-        )}
-        {toast && (
-          <div className="fixed bottom-6 right-6 bg-zinc-900 text-white text-sm px-4 py-2 rounded-md shadow-sm">
-            {toast}
+          <div className="mt-6 flex items-start gap-3 rounded-card border border-red-200 bg-red-50 p-3.5 text-sm leading-relaxed text-red-700">
+            <IconAlert className="mt-0.5 h-5 w-5 shrink-0" />
+            <span className="whitespace-pre-wrap">{error}</span>
           </div>
         )}
       </div>
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm text-white shadow-pop animate-slide-up">
+          <IconCheck className="h-4 w-4 text-brand-300" />
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

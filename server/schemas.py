@@ -160,3 +160,61 @@ class RedactRestoreRequest(BaseModel):
 class RedactRestoreResponse(BaseModel):
     text: str
     restored: bool
+
+
+# ---------------------------------------------------------------------------
+# 跨会议行动项
+# ---------------------------------------------------------------------------
+class ActionItemOut(BaseModel):
+    id: str
+    title: str
+    owner: str = ""
+    contact_id: str = ""
+    due: str = ""
+    status: str
+    status_label: str = ""
+    overdue: bool = False
+    source_meeting: str = ""
+    source_kind: str = "chat"
+    source_session: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+    history: list[dict] = []
+
+
+class ActionListResponse(BaseModel):
+    items: list[ActionItemOut]
+    summary: dict
+    owners: list[str] = []
+
+
+class ActionStatusRequest(BaseModel):
+    id: str
+    status: str
+    note: str = ""
+
+
+# 跨会议进展回顾：用会话 id（复盘）或直接传会议文本
+class TrackProgressRequest(BaseModel):
+    session_id: str = ""
+    meeting_text: str = ""
+    source_meeting: str = ""
+    source_kind: str = "chat"
+
+
+class ThinkingModeRequest(BaseModel):
+    mode: str               # fast / deep
+
+
+class ThinkingModeResponse(BaseModel):
+    mode: str
+
+
+class PackageRequest(BaseModel):
+    title: str = "项目复盘包"
+    session_id: str = ""
+    report: str = ""
+    qa: list[dict] = []
+    record_text: str = ""
+    raw_text: str = ""
+    include_raw: bool = True

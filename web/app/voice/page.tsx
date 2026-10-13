@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { post, getJSON, del, postForm, postSSE } from "@/lib/api";
+import { post, getJSON, del, postForm, postSSE, downloadZip } from "@/lib/api";
 import { LiveRecorder, pcmToBase64 } from "@/lib/recorder";
 import { Button, PageHeader, StepTitle } from "@/components/ui";
 import { ReportCard } from "@/components/ReportCard";
 import {
   IconMic, IconAlert, IconCheck, IconSparkles, IconDownload, IconUsers,
   IconClock, IconFileDown, IconPencil, IconUndo, IconCheckCircle,
-  IconX, IconTrash,
+  IconX, IconTrash, IconBrain, IconPackage, IconRefresh,
 } from "@/components/icons";
 
 interface VSeg {
@@ -129,6 +129,9 @@ export default function VoicePage() {
   const [contactsOpen, setContactsOpen] = useState(false);
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
   const [contactsBusy, setContactsBusy] = useState(false);
+  const [thinking, setThinking] = useState("");
+  const [tracking, setTracking] = useState(false);
+  const [packaging, setPackaging] = useState(false);
   const originalRef = useRef<Meeting | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -148,6 +151,12 @@ export default function VoicePage() {
     fetch(BASE + "/api/voice/status")
       .then((r) => r.json())
       .then(setStatus)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getJSON<{ mode: string }>("/api/actions/thinking")
+      .then((d) => setThinking(d.mode))
       .catch(() => {});
   }, []);
 
@@ -415,6 +424,57 @@ export default function VoicePage() {
     }
   }
 
+  async function toggleThinking() {
+    const next = thinking === "deep" ? "fast" : "deep";
+    try {
+      await post("/api/actions/thinking", { mode: next });
+      setThinking(next);
+    } catch (e) {
+      setError(String((e as Error).message));
+    }
+  }
+
+  async function onTrack() {
+    if (!meeting) return;
+    setTracking(true);
+    setError("");
+    try {
+      const res = await post<{
+        checked: number;
+        updates: Array<{ changed: boolean }>;
+      }>("/api/actions/track", {
+        meeting_text: meeting.text,
+        source_kind: "voice",
+        source_meeting: meeting.meta.audio_name,
+      });
+      const changed = res.updates.filter((u) => u.changed).length;
+      showToast(`已核对 ${res.checked} 项，更新 ${changed} 项`);
+    } catch (e) {
+      setError(String((e as Error).message));
+    } finally {
+      setTracking(false);
+    }
+  }
+
+  async function onPackage() {
+    if (!meeting) return;
+    setPackaging(true);
+    try {
+      const ts = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const base = meeting.meta.audio_name;
+      await downloadZip("/api/export/package", {
+        title: base,
+        report: minutes,
+        record_text: meeting.text,
+        include_raw: false,
+      }, `${base}_复盘包_${ts}.zip`);
+    } catch (e) {
+      setError(String((e as Error).message));
+    } finally {
+      setPackaging(false);
+    }
+  }
+
   // 提交新的 segments，并重拼 text（md 导出 / 纪要都依赖 text）
   function commitSegments(newSegs: VSeg[]) {
     setMeeting((prev) => {
@@ -525,7 +585,14 @@ export default function VoicePage() {
           title="语音会议复盘"
           subtitle="上传会议录音，本地完成转写、说话人分离与会议记录整理，可一键导出或提炼结构化纪要；全程离线、数据不出设备。"
         />
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end gap-2">
+          <Button
+            variant={thinking === "deep" ? "dark" : "ghost"} size="sm"
+            icon={<IconBrain className="h-4 w-4" />}
+            onClick={toggleThinking}
+          >
+            {thinking === "deep" ? "深度思考" : "快速模式"}
+          </Button>
           <Button variant="ghost" size="sm"
             icon={<IconUsers className="h-4 w-4" />}
             onClick={openContacts}>
@@ -926,13 +993,29 @@ export default function VoicePage() {
                 点击下方按钮，基于上面的标注记录提炼结论 / 待办 / 关键信息 / 风险。
               </p>
             )}
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-2.5">
               <Button
                 icon={<IconSparkles className="h-4 w-4" />}
                 loading={minBusy}
                 onClick={() => void makeMinutes()}
               >
                 {minutes ? "重新提炼会议纪要" : "一键提炼会议纪要"}
+              </Button>
+              <Button
+                variant="secondary"
+                icon={<IconRefresh className="h-4 w-4" />}
+                loading={tracking}
+                onClick={() => void onTrack()}
+              >
+                进展回顾
+              </Button>
+              <Button
+                variant="outline"
+                icon={<IconPackage className="h-4 w-4" />}
+                loading={packaging}
+                onClick={() => void onPackage()}
+              >
+                导出复盘包
               </Button>
             </div>
           </section>

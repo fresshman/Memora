@@ -10,7 +10,7 @@
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
-<img alt="Tests" src="https://img.shields.io/badge/Tests-150%20passed-brightgreen">
+<img alt="Tests" src="https://img.shields.io/badge/Tests-189%20passed-brightgreen">
 <img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
@@ -68,6 +68,9 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
   and edit each transcript line; export and "distill minutes" use the proofed content, and all edits can be undone in one click.
 - 🧬 **Cross-session contact voiceprint library**: renaming a speaker registers their voiceprint in a local contact library (plain JSON, data never leaves the device). In later meetings, high-confidence dominant speakers are **recognized as familiar people automatically** (dominant speakers show 0.90+ cross-day similarity on real multi-party meetings); uncertain ones stay "Speaker N" for you to name once — "rather miss than misidentify". View, rename or delete contacts in the library dialog.
 - 🔴 **Live recording & streaming transcription**: watch the transcript appear as you speak. AudioWorklet captures 16kHz audio and streams it over WebSocket for incremental transcription and speaker assignment; on stop, the whole session is re-transcribed and refined into a final record, reusing proofreading / export / minutes. Fully offline, low latency.
+- ✅ **Cross-meeting action-item tracking**: after a review/minutes, to-dos are automatically extracted into **structured action items** (title / owner / due date / source meeting / status), deduplicated, merged and matched to local contacts. A one-click **progress review** over a later meeting batch-checks items and **auto-updates their status** (open / in progress / done / cancelled), dynamically flagging overdue items — turning a single record into item-level follow-through.
+- 🧠 **Spark thinking-mode switch**: exposes the **official Spark-X2.5 feature** — two modes, **Fast / Deep thinking**. Fast mode disables the reasoning chain for low-latency output; Deep mode enables it for complex reviews. Switching needs no rebuild.
+- 📦 **One-click project review package**: bundles the **review report + action-item list + meeting record + Q&A log + raw conversation** into a single zip (with an index README), always using the latest action items — handy for archiving, handover and sharing at review meetings.
 
 ## 📊 Evaluation & Ablation (measured, not claimed)
 
@@ -186,6 +189,64 @@ Most transcription tools "start from scratch every meeting" — the same person 
 
 > **Known limits and the closed loop**: (1) same-gender, genuinely acoustically-similar speakers (two female voices in train_L, CAM++ similarity 0.82) who are unregistered need one naming; (2) over-segmented small clusters from fast turn-taking and very short speakers have unstable centroids and are not forced into a match — they appear as "Speaker N" for you to **name (= register) or merge**, and the library strengthens with each correction. Cross-meeting attribution of action items/decisions is future work.
 
+## ✅ Cross-Meeting Action-Item Tracking (from "seeing" to "getting done")
+
+A review only makes one conversation clear; the real closed loop is **an owner for every item and completion on time**.
+Memora turns to-dos from every review into action items tracked across meetings, wired into the local contact library:
+
+```text
+Review / minutes generated
+   │ to-dos in the report are deterministically extracted into structured action items
+   │ (no extra model call; a failure never blocks the review)
+   ▼
+Auto-ingest (title / owner / due date / source meeting)
+   │ ① similar to-dos are deduplicated & merged, filling owner/due date
+   │ ② an owner matching the local contact library -> link contact_id
+   ▼
+A later meeting (new record)
+   │ one-click "progress review": a single LLM call batch-checks all open items
+   ▼
+Auto status updates + history (who, when, based on which sentence)
+   │ due dates are evaluated against "today" to flag overdue (data is not mutated)
+   ▼
+Action-item board (open / in progress / done / cancelled) — manual status change / complete / filter by owner
+   │
+   └── one-click "project review package" (zip, with the latest action-item list)
+```
+
+**State machine**: `open → in progress → done`; any stage may move to `cancelled`. Every change is written to
+`history` (time, previous status, new status, evidence source) for full traceability.
+
+**Progress detection**: progress judgment **forces the reasoning chain off** (faster, less compute). For each item the
+model outputs a status: "completed / delivered / passed" → done; "in progress / following up / progressing" → in_progress;
+"cancelled / no longer needed" → cancelled; unmentioned / unrecognized → **kept as-is, no guessing**.
+`MEMORA_ACTION_AUTO` controls whether updates are applied automatically (default on).
+
+**Real-machine test (1.7B fast mode; meeting 1 assigns 3 items → meeting 2 reports progress)**:
+
+| Model | Progress judgment | Note |
+|---|---|---|
+| Spark-X2.5-1.7B | Pipeline fully works; status judgment has deviations | Misjudged "completed and submitted" as in-progress and a few unmentioned items as in-progress; **4GB-RAM fallback tier** |
+| **Spark-X2.5-4B (recommended)** | More accurate status judgment | The main tier for complex progress / multi-item checks; shows the official model-tier gap |
+
+> Progress review is a single LLM call, so it is **manually triggered after a review** (click "progress review") rather
+> than fully automatic, to save CPU. Action items are stored locally in `data/action_items.json` (atomic writes, data never
+> leaves the device); the list in a review package always reflects the latest state.
+
+## 🧠 Thinking Mode & Project Review Package
+
+- **Thinking mode (official Spark feature)**: Spark-X2.5 natively supports a configurable thinking mode. Memora exposes the
+  switch on review / voice / home pages:
+  - **Fast mode (default)**: disables the reasoning chain via `chat_template_kwargs.enable_thinking=False`; streamed deltas
+    are the answer itself, low latency.
+  - **Deep mode**: enables the reasoning chain for complex/hard reviews; the `done` event auto-strips it and returns clean
+    text, and the generation-length cap is raised automatically (review 8192 / QA 4096).
+  The mode is passed per request, so switching needs no model/pipeline rebuild; persistence is controlled by `MEMORA_THINKING`.
+- **Project review package (zip)**: `POST /api/export/package` uses the stdlib `zipfile` to pack:
+  `README.md` (index + action-item overview), `01_复盘报告.md` (review report), `02_行动项清单.md` (always latest),
+  `03_会议记录.md` (voice record), `04_问答记录.md` (Q&A log), `05_原始对话.md` (optional); each is included only if it exists.
+  Pure stdlib, zero extra dependencies.
+
 ## 🖥️ Pages
 
 | Page | Route | Description |
@@ -195,6 +256,7 @@ Most transcription tools "start from scratch every meeting" — the same person 
 | Model management | `/models/` | Dual-model recommendation, local status detection, one-click ModelScope download, live switching |
 | Batch review | `/batch/` | Process and summarize multiple records in bulk |
 | Voice meeting review | `/voice/` | Upload a file or record live; transcription + diarization (rename & proofread); export or distill minutes |
+| Action-item board | `/action/` | Cross-meeting 4-status board, stats & overdue flags, filter by owner, manual status change, progress review, thinking-mode switch, export review package |
 | History | `/history/` | Locally encrypted review history |
 
 ## 📸 Screenshots
@@ -227,6 +289,10 @@ Most transcription tools "start from scratch every meeting" — the same person 
 <td></td>
 </tr>
 </table>
+
+**⑥ Action-item board** — cross-meeting items are arranged into columns (open / in progress / done / cancelled), with top stats and an overdue count; cards show the owner (linked to a contact), due date and source. Filter by owner, change status / complete in one click, run a progress review and export a review package.
+
+<p><img src="docs/images/11_action_board.png" width="840"></p>
 
 ## 🚀 Quick Start
 
@@ -342,21 +408,22 @@ Memora/
 │   ├── pii/                #   PII redaction & restoration
 │   ├── retrieval/          #   bge-m3 + FAISS local RAG, context budget & timeline skeleton
 │   ├── agent/              #   LangChain review / Q&A / voice chains, streaming
+│   ├── action_items.py     #   Cross-meeting action items: extraction / dedupe-merge / progress review / overdue
 │   ├── report/             #   report structuring & meeting-decision re-homing (single source of truth for eval & product)
 │   ├── prompts/            #   prompt templates
 │   ├── backend/            #   llama-server subprocess backend + optional SGLang backend
 │   ├── storage/            #   Fernet local encryption
 │   ├── whisper/            #   voice: decode/transcribe/diarization/meeting record
 │   ├── model_fetch.py      # model acquisition state machine (official GGUF download + safetensors conversion fallback)
-│   ├── exporter.py         # Markdown / PDF export
+│   ├── exporter.py         # Markdown / PDF export + project review package (zip)
 │   └── batch.py            # batch review
 ├── server/                 # FastAPI: single port 8000, same-origin hosting of web/out
-│   └── routes/             #   review / qa / models / records / export / voice / health
+│   └── routes/             #   review / qa / actions / models / records / export / voice / health
 ├── web/                    # Next.js + React + Tailwind (app pages + out static build)
 ├── evals/                  # benchmark, metrics, worker/runner, single-file HTML report
 ├── samples/                # real WeChat/DingTalk/Feishu parsing samples
 ├── scripts/                # doctor / prepare_model / start.bat / build_offline.ps1 / e2e
-├── tests/                  # 150 pytest cases (no model loading, no network)
+├── tests/                  # 189 pytest cases (no model loading, no network)
 ├── tools/llamacpp/bin/     # official llama.cpp binaries (download yourself; not in git)
 ├── requirements.txt        # full dependencies (dev / packaging)
 └── requirements-runtime.txt# runtime dependencies (for offline install)
@@ -380,11 +447,14 @@ Copy `.env.example` to `.env` and adjust as needed; every key can be overridden 
 | `MEMORA_ASR_MODEL` / `MEMORA_ASR_VAD` | `ggml-small.bin` / `0` | ASR model tier / built-in VAD (off by default; null model crashes) |
 | `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.5` | Voiceprint model / AHC clustering threshold (over-segment rather than chain) |
 | `MEMORA_CONTACT_THR` | `0.85` | Cross-meeting recognition threshold; lower to 0.75–0.8 near-field on the same device for recall |
+| `MEMORA_THINKING` | `fast` | Thinking mode: `fast` (quick, reasoning chain off) / `deep` (deep thinking) |
+| `MEMORA_ACTION_TRACK_MAX` | `20` | Max open items batch-checked in one progress review |
+| `MEMORA_ACTION_AUTO` | `1` | Auto-apply status updates after progress review (0 = suggestions only, no changes) |
 
 ## 🧪 Tests & Reproducing the Evaluation
 
 ```bash
-python -m pytest tests/ -q                          # 150 unit tests: no model loading, no network
+python -m pytest tests/ -q                          # 189 unit tests: no model loading, no network
 # Real-machine offline end-to-end (models required, 24 checks)
 set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
 # Full benchmark & ablation (models required, long-running; greedy & reproducible, resumable)
@@ -400,7 +470,9 @@ python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t
 - [x] Speaker renaming + transcript proofreading; export / minutes use the proofed content (end-to-end verified)
 - [x] Live recording & streaming transcription; on stop the whole session is re-transcribed and refined, reusing proofreading / export / minutes (end-to-end verified)
 - [x] Cross-session contact voiceprint library: rename = register, automatic recognition in new meetings (dominant speakers zero misidentification cross-day), contact management dialog
-- [ ] Cross-meeting attribution of action items/decisions to contacts; semantic disambiguation for acoustically-similar speakers
+- [x] Cross-meeting action-item tracking: auto-ingest / dedupe-merge / contact linking, progress review batch-check & auto status updates, overdue flags, board (real-machine verified)
+- [x] Spark thinking-mode switch (fast / deep, official feature) & one-click project review package (report + QA + record + action items zip)
+- [ ] Semantic disambiguation for acoustically-similar speakers; auto-trigger strategy for progress review after a review
 - [x] ASR CER/WER quantitative evaluation + editable domain hotword list (hotwords cut CER 37.65% to 26.45%)
 - [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer

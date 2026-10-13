@@ -10,7 +10,7 @@
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
-<img alt="Tests" src="https://img.shields.io/badge/Tests-150%20passed-brightgreen">
+<img alt="Tests" src="https://img.shields.io/badge/Tests-189%20passed-brightgreen">
 <img alt="License" src="https://img.shields.io/badge/License-MIT-2ea44f">
 </p>
 
@@ -59,6 +59,9 @@ Memora 用一套全本地的工程链路，把「小模型能不能干好严肃�
   系统会把高置信的主导者**自动认成老熟人**（真实多人会议主导者跨日相似度 0.90+），拿不准的保持「说话人N」由你一键正名，
   做到「宁漏认、不误认」；可在「联系人声纹库」弹窗查看、改名、删除。
 - 🔴 **实时录音流式转写**：麦克风边说边出字，AudioWorklet 16kHz 采集 + WebSocket 实时增量转写与说话人归并，结束后整体重转写精修为完整记录，复用校对 / 导出 / 纪要；全程离线、低时延。
+- ✅ **跨会议行动项追踪闭环**：复盘 / 纪要生成后，待办自动抽取为**结构化行动项**（标题 / 责任人 / 截止时间 / 来源会议 / 状态），自动去重归并、匹配本地联系人；后续会议一键「进展回顾」即可批量核对并**自动更新状态**（待跟进 / 进行中 / 已完成 / 已取消），动态标记逾期，把单次记录升级为事项落地追踪。
+- 🧠 **Spark 思考档位一键切换**：暴露 Spark-X2.5 **官方特色**——「快速 / 深度思考」两档。快速档关闭思维链、低时延出结果；深度档开启思维链、处理复杂复盘，切换无需重建链路。
+- 📦 **一键导出项目复盘包**：把**复盘报告 + 行动项清单 + 会议记录 + 问答记录 + 原始对话**打包成单个 zip（含索引 README），行动项始终取最新状态，便于归档、交接与复盘会分发。
 
 ## 📊 评测与消融（数据说话）
 
@@ -174,6 +177,58 @@ CAM++ 神经声纹 embedding（speakeronnx ONNX）+ AHC 凝聚聚类（自动定
 
 > **已知边界与闭环**：① 同性别、声学确实相近（train_L 两位女声，CAM++ 相似度 0.82）且未注册者，需一次正名；② 快速轮流被过分割的小簇、发言极少者质心不稳，不强行识别——这些都会以「说话人N」呈现，由你在界面**正名（即注册）或合并**，声纹库随校对不断增强。跨会议的"事项（待办/决议）归属"列为后续路线。
 
+## ✅ 跨会议行动项追踪闭环（从"看清"到"办完"）
+
+一次复盘只解决"看清这次沟通"，但工作真正的闭环是**事有人办、按时办完**。Memora 把每次复盘产生的待办，
+升级为可跨会议持续追踪的**行动项**，并与本地联系人库打通：
+
+```text
+复盘 / 纪要生成
+   │ 报告中的待办被确定性抽取为结构化行动项（不额外调用模型，失败不阻塞）
+   ▼
+自动入库（标题 / 责任人 / 截止时间 / 来源会议）
+   │ ① 相似待办去重归并、补全责任人与截止时间
+   │ ② 责任人命中本地联系人库 -> 关联 contact_id
+   ▼
+后续会议（新记录）
+   │ 一键「进展回顾」：一次 LLM 调用，批量核对全部未完成行动项
+   ▼
+自动更新状态 + 记录历史（谁、何时、依据哪句话）
+   │ 截止时间按"今天"动态判定逾期（不改动数据）
+   ▼
+行动项看板（待跟进 / 进行中 / 已完成 / 已取消）── 手动改状态 / 完成 / 按责任人筛选
+   │
+   └── 一键导出「项目复盘包」（zip，含最新行动项清单）
+```
+
+**状态机**：`待跟进（open）→ 进行中（in_progress）→ 已完成（done）`；任意阶段可 `已取消（cancelled）`。
+每次状态变更都写入 `history`（时间、原状态、新状态、依据来源），全程留痕。
+
+**进展识别规则**：进展判断**强制关闭思维链**（省算力、更快），模型对每条行动项输出状态：
+「已完成 / 已交付 / 已通过」→ done；「推进中 / 跟进中 / 有进展」→ in_progress；「已取消 / 不再需要」→ cancelled；
+未提及 / 无法识别 → **保持原状、不臆改**。再由 `MEMORA_ACTION_AUTO` 决定是否自动落库（默认开）。
+
+**真机实测（1.7B 快速档，会议1 布置 3 项 → 会议2 反馈进展）**：
+
+| 模型 | 进展判断 | 说明 |
+|---|---|---|
+| Spark-X2.5-1.7B | 链路完全打通，状态判断有偏差 | 把"已完成并提交"误判为进行中、个别未提及项误判为进行中，**4GB 内存可跑的兜底档** |
+| **Spark-X2.5-4B（推荐）** | 状态判断更准确 | 复杂进展 / 多事项核对的主力，体现官方模型档位差异 |
+
+> 进展回顾是一次 LLM 调用，故设计为**复盘后手动触发**（点「进展回顾」），而非全自动，以节省 CPU；
+> 行动项数据保存在本地 `data/action_items.json`（原子写、数据不出设备），复盘包中的行动项清单始终取最新状态。
+
+## 🧠 思考档位与项目复盘包
+
+- **思考档位（Spark 官方特色）**：Spark-X2.5 原生支持可配置的思考档位。Memora 在复盘 / 语音 / 首页均暴露切换：
+  - **快速档（fast，默认）**：经 `chat_template_kwargs.enable_thinking=False` 关闭思维链，流式增量即正文，低时延；
+  - **深度档（deep）**：开启思维链处理复杂 / 高难度复盘，`done` 事件自动剥离思维链、只返回干净正文，并自动放大生成长度上限（复盘 8192 / 问答 4096）。
+  档位在请求级透传，切换无需重建模型或链路；持久化由 `MEMORA_THINKING` 控制。
+- **项目复盘包（zip）**：`POST /api/export/package` 用标准库 `zipfile` 打包，包含：
+  `README.md`（索引 + 行动项概览）、`01_复盘报告.md`、`02_行动项清单.md`（始终最新）、
+  `03_会议记录.md`（语音）、`04_问答记录.md`（QA）、`05_原始对话.md`（可选）；
+  有则收录、无则跳过，纯标准库实现、零额外依赖。
+
 ## 🖥️ 功能页面
 
 | 页面 | 路径 | 说明 |
@@ -183,6 +238,7 @@ CAM++ 神经声纹 embedding（speakeronnx ONNX）+ AHC 凝聚聚类（自动定
 | 模型管理 | `/models/` | 双模型推荐、本地状态检测、ModelScope 一键下载、在线切换 |
 | 批量复盘 | `/batch/` | 多份记录批量处理与汇总 |
 | 语音会议复盘 | `/voice/` | 上传文件或麦克风实时录音，多格式转写 + 说话人分离（可重命名、人工校对），标注记录一键导出或提炼纪要 |
+| 行动项看板 | `/action/` | 跨会议行动项四状态看板、统计与逾期标识、按责任人筛选、手动改状态、进展回顾、思考档位切换、导出复盘包 |
 | 历史记录 | `/history/` | 本地加密存储的复盘历史 |
 
 ## 📸 界面预览
@@ -215,6 +271,10 @@ CAM++ 神经声纹 embedding（speakeronnx ONNX）+ AHC 凝聚聚类（自动定
 <td></td>
 </tr>
 </table>
+
+**⑥ 行动项看板** —— 跨会议行动项按「待跟进 / 进行中 / 已完成 / 已取消」分列，顶部统计总数与逾期，卡片含责任人（挂联系人）、截止时间与来源；支持按责任人筛选、一键改状态 / 完成、进展回顾与导出复盘包。
+
+<p><img src="docs/images/11_action_board.png" width="840"></p>
 
 ## 🚀 快速开始
 
@@ -324,21 +384,22 @@ Memora/
 │   ├── pii/                #   PII 脱敏与还原
 │   ├── retrieval/          #   bge-m3 + FAISS 本地 RAG、上下文预算与时间线骨架
 │   ├── agent/              #   LangChain 复盘 / 问答 / 语音三链、流式
+│   ├── action_items.py     #   跨会议行动项：抽取 / 去重归并 / 进展回顾 / 逾期
 │   ├── report/             #   报告结构化与「会议决定归位」（评测与产品同一口径）
 │   ├── prompts/            #   提示词模板
 │   ├── backend/            #   llama-server 子进程后端 + 可选 SGLang 后端
 │   ├── storage/            #   Fernet 本地加密
 │   ├── whisper/            #   语音：解码/转写/说话人分离/会议记录
 │   ├── model_fetch.py      #   模型获取状态机（官方 GGUF 下载 + safetensors 转换兜底）
-│   ├── exporter.py         #   Markdown / PDF 导出
+│   ├── exporter.py         #   Markdown / PDF 导出 + 项目复盘包（zip）
 │   └── batch.py            #   批量复盘
 ├── server/                 # FastAPI：单端口 8000，web/out 同源托管
-│   └── routes/             #   review / qa / models / records / export / voice / health
+│   └── routes/             #   review / qa / actions / models / records / export / voice / health
 ├── web/                    # Next.js + React + Tailwind（app 页面 + out 静态产物）
 ├── evals/                  # 评测集、指标、worker/runner、单文件 HTML 报告
 ├── samples/                # 微信/钉钉/飞书真实解析样本库
 ├── scripts/                # doctor / prepare_model / start.bat / build_offline.ps1 / e2e
-├── tests/                  # 125 项 pytest（不加载模型、不联网）
+├── tests/                  # 189 项 pytest（不加载模型、不联网）
 ├── tools/llamacpp/bin/     # llama.cpp 官方二进制（自行下载放置，不入库）
 ├── requirements.txt        # 完整依赖（开发 / 打包）
 └── requirements-runtime.txt# 运行时依赖（离线安装用）
@@ -362,11 +423,14 @@ Memora/
 | `MEMORA_ASR_MODEL` / `MEMORA_ASR_VAD` | `ggml-small.bin` / `0` | ASR 模型档位 / 内置 VAD（默认关，空模型会崩溃） |
 | `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.5` | 声纹模型 / AHC 聚类相似度阈值（宁可过分割、不连锁） |
 | `MEMORA_CONTACT_THR` | `0.85` | 跨会议认人匹配阈值；近场同设备追召回可降到 0.75～0.8 |
+| `MEMORA_THINKING` | `fast` | 思考档位：`fast`（快速、关闭思维链）/ `deep`（深度思考） |
+| `MEMORA_ACTION_TRACK_MAX` | `20` | 进展回顾一次批量核对的未完成行动项上限 |
+| `MEMORA_ACTION_AUTO` | `1` | 进展回顾后是否自动更新状态（0 = 仅给出建议、不改动） |
 
 ## 🧪 测试与评测复现
 
 ```bash
-python -m pytest tests/ -q                          # 125 项单测：不加载模型、不联网
+python -m pytest tests/ -q                          # 189 项单测：不加载模型、不联网
 # 真机离线端到端（需已放置模型，24 项）
 set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
 # 全量评测与消融（需模型，耗时较长，贪心解码可复现，断点续跑）
@@ -382,7 +446,9 @@ python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t
 - [x] 说话人重命名 + 转写人工校对，导出 / 纪要基于校对后内容（端到端真机验证）
 - [x] 实时录音流式转写：麦克风边说边出字，结束整体重转写精修，复用校对 / 导出 / 纪要（端到端真机验证）
 - [x] 跨会话联系人声纹库：重命名即注册、新会议自动认人（主导者跨日零误认），联系人管理弹窗（真机校准）
-- [ ] 跨会议"事项（待办/决议）归属"到联系人；声学相近者的语义辅助消歧
+- [x] 跨会议行动项追踪闭环：待办自动入库 / 去重归并 / 关联联系人、进展回顾批量核对并自动更新状态、逾期标记、看板（真机验证）
+- [x] Spark 思考档位切换（快速 / 深度，官方特色）与一键导出项目复盘包（报告 + QA + 记录 + 行动项 zip）
+- [ ] 声学相近者的语义辅助消歧；进展回顾在复盘后的自动触发策略
 - [x] ASR 转写 CER/WER 量化评测 + 可编辑领域热词表（热词使 CER 37.65%→26.45%）
 - [ ] ffmpeg / ASR / 声纹模型随离线包分发（当前按指引下载）
 - [ ] PyInstaller / WebView 桌面 EXE 一键安装包

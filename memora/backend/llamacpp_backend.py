@@ -186,6 +186,8 @@ class LlamaCppBackend(MemoraLLM):
         self._llm = None
         self._log_fh = None
         self._stopping = False
+        # 初始思考档位（快速 / 深度），来自配置；运行时可切换
+        self.set_thinking_enabled(config.THINKING_MODE == "deep")
 
     # ------------------------------------------------------------------
     def _build_cmd(self, exe: Path, gguf: Path, port: int) -> list[str]:
@@ -338,18 +340,24 @@ class LlamaCppBackend(MemoraLLM):
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
+        enable_thinking: bool | None = None,
     ) -> str:
         self._ensure()
         n = max_tokens or config.MAX_TOKENS_REVIEW
-        log.debug("llama-server 推理：prompt 长度=%d，max_tokens=%d", len(prompt), n)
-        llm = self._llm
-        bind: dict[str, float | int] = {}
+        thinking = (enable_thinking if enable_thinking is not None
+                    else self.thinking_enabled)
+        log.debug("llama-server 推理：prompt 长度=%d，max_tokens=%d，思考=%s",
+                  len(prompt), n, thinking)
+        # 每次请求按当前思考档位透传 chat_template_kwargs（覆盖默认 extra_body）
+        bind: dict = {
+            "extra_body": {"chat_template_kwargs":
+                           {"enable_thinking": bool(thinking)}},
+        }
         if max_tokens is not None:
             bind["max_tokens"] = max_tokens
         if temperature is not None:
             bind["temperature"] = temperature
-        if bind:
-            llm = self._llm.bind(**bind)
+        llm = self._llm.bind(**bind)
         try:
             from langchain_core.messages import HumanMessage
             msg = llm.invoke([HumanMessage(content=prompt)])
@@ -361,6 +369,7 @@ class LlamaCppBackend(MemoraLLM):
                 ) from e
             raise
         content = msg.content if isinstance(msg.content, str) else str(msg.content)
+        # 深度思考也在服务端剥离思维链，只把干净正文返回给结构化链路
         return strip_thinking(content or "")
 
     # ------------------------------------------------------------------
@@ -370,22 +379,29 @@ class LlamaCppBackend(MemoraLLM):
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
+        enable_thinking: bool | None = None,
     ):
-        """流式补全：逐 token yield 正文增量（SSE）。
+        """流式补全：逐 token yield 增量（SSE）。
 
-        服务端已通过 chat_template_kwargs 关闭思考链，增量可直接透传。
+        快速模式（服务端关闭思考链）增量即正文；
+        深度模式（开启思考链）增量先包含思维块、再到正文，原样透传给前端做
+        「思考过程」折叠展示，最终由 agent 在 done 时 strip_thinking 取干净正文。
         """
         self._ensure()
         n = max_tokens or config.MAX_TOKENS_REVIEW
-        log.debug("llama-server 流式推理：prompt 长度=%d，max_tokens=%d", len(prompt), n)
-        llm = self._llm
-        bind: dict[str, float | int] = {}
+        thinking = (enable_thinking if enable_thinking is not None
+                    else self.thinking_enabled)
+        log.debug("llama-server 流式推理：prompt 长度=%d，max_tokens=%d，思考=%s",
+                  len(prompt), n, thinking)
+        bind: dict = {
+            "extra_body": {"chat_template_kwargs":
+                           {"enable_thinking": bool(thinking)}},
+        }
         if max_tokens is not None:
             bind["max_tokens"] = max_tokens
         if temperature is not None:
             bind["temperature"] = temperature
-        if bind:
-            llm = self._llm.bind(**bind)
+        llm = self._llm.bind(**bind)
         try:
             from langchain_core.messages import HumanMessage
             stream = llm.stream([HumanMessage(content=prompt)])

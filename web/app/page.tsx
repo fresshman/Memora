@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getJSON, post, postForm, postSSE, restoreRedaction } from "@/lib/api";
+import { getJSON, post, postForm, postSSE, restoreRedaction, downloadZip } from "@/lib/api";
 import { ReportCard } from "@/components/ReportCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Button, Badge, PageHeader, StepTitle, cn } from "@/components/ui";
@@ -17,6 +17,9 @@ import {
   IconEye,
   IconLock,
   IconFile,
+  IconBrain,
+  IconPackage,
+  IconRefresh,
 } from "@/components/icons";
 
 interface ModelInfo {
@@ -54,6 +57,9 @@ export default function ReviewPage() {
   const [contextMode, setContextMode] = useState("");
   const [pii, setPii] = useState<Record<string, number> | null>(null);
   const [restoredReport, setRestoredReport] = useState("");
+  const [thinking, setThinking] = useState("");
+  const [tracking, setTracking] = useState(false);
+  const [packaging, setPackaging] = useState(false);
 
   const MODE_LABEL: Record<string, string> = {
     full: "全量上下文",
@@ -68,6 +74,12 @@ export default function ReviewPage() {
         setModelReady(!!sel && sel.local_status === "ready");
       })
       .catch(() => setModelReady(null));
+  }, []);
+
+  useEffect(() => {
+    getJSON<{ mode: string }>("/api/actions/thinking")
+      .then((d) => setThinking(d.mode))
+      .catch(() => {});
   }, []);
 
   function showToast(msg: string) {
@@ -190,6 +202,52 @@ export default function ReviewPage() {
     }
   }
 
+  async function toggleThinking() {
+    const next = thinking === "deep" ? "fast" : "deep";
+    try {
+      await post("/api/actions/thinking", { mode: next });
+      setThinking(next);
+    } catch (err) {
+      setError(String((err as Error).message));
+    }
+  }
+
+  async function onTrack() {
+    if (!sessionId) return;
+    setTracking(true);
+    setError("");
+    try {
+      const res = await post<{
+        checked: number;
+        updates: Array<{ changed: boolean }>;
+      }>("/api/actions/track", { session_id: sessionId });
+      const changed = res.updates.filter((u) => u.changed).length;
+      showToast(`已核对 ${res.checked} 项，更新 ${changed} 项`);
+    } catch (err) {
+      setError(String((err as Error).message));
+    } finally {
+      setTracking(false);
+    }
+  }
+
+  async function onPackage() {
+    if (!sessionId || !report) return;
+    setPackaging(true);
+    try {
+      const ts = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const base = name || "项目复盘";
+      await downloadZip(
+        "/api/export/package",
+        { title: base, session_id: sessionId, report },
+        `${base}_复盘包_${ts}.zip`,
+      );
+    } catch (err) {
+      setError(String((err as Error).message));
+    } finally {
+      setPackaging(false);
+    }
+  }
+
   const inputCls =
     "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20";
 
@@ -287,6 +345,14 @@ export default function ReviewPage() {
               </div>
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                variant={thinking === "deep" ? "dark" : "outline"}
+                size="sm"
+                icon={<IconBrain className="h-4 w-4" />}
+                onClick={toggleThinking}
+              >
+                {thinking === "deep" ? "深度思考" : "快速模式"}
+              </Button>
               <Button
                 size="lg"
                 icon={<IconSparkles className="h-4 w-4" />}
@@ -387,6 +453,24 @@ export default function ReviewPage() {
                   onClick={() => onExport("pdf")}
                 >
                   导出 PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<IconRefresh className="h-4 w-4" />}
+                  onClick={onTrack}
+                  loading={tracking}
+                >
+                  进展回顾
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<IconPackage className="h-4 w-4" />}
+                  onClick={onPackage}
+                  loading={packaging}
+                >
+                  复盘包
                 </Button>
               </div>
             )}

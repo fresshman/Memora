@@ -11,6 +11,7 @@ import {
   IconLayers,
   IconQA,
   IconMic,
+  IconTodo,
   IconHistory,
   IconCpu,
 } from "./icons";
@@ -20,6 +21,7 @@ const NAV = [
   { href: "/batch", label: "批量复盘", Icon: IconLayers },
   { href: "/qa", label: "对话问答", Icon: IconQA },
   { href: "/voice", label: "语音复盘", Icon: IconMic },
+  { href: "/action", label: "行动项", Icon: IconTodo },
   { href: "/history", label: "历史记录", Icon: IconHistory },
   { href: "/models", label: "模型管理", Icon: IconCpu },
 ];

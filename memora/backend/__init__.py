@@ -1,7 +1,7 @@
 """推理后端工厂。"""
 from __future__ import annotations
 
-from .base import MemoraLLM, ModelNotReadyError
+from .base import MemoraLLM, ModelNotReadyError, strip_thinking
 from .llamacpp_backend import LlamaCppBackend
 from .sglang_backend import SGLangBackend
 from .. import config
@@ -26,6 +26,7 @@ def build_backend(backend: str | None = None,
 __all__ = [
     "MemoraLLM",
     "ModelNotReadyError",
+    "strip_thinking",
     "LlamaCppBackend",
     "SGLangBackend",
     "build_backend",

@@ -67,6 +67,13 @@ class MemoraLLM(ABC):
     """统一推理接口。"""
 
     name: str = "base"
+    # 当前思考档位（False=快速，True=深度思考）。set_thinking_enabled 切换，
+    # 由构造好的 LangChain chain 动态读取，切换无需重建 chain。
+    thinking_enabled: bool = False
+
+    def set_thinking_enabled(self, enabled: bool) -> None:
+        """切换思考档位（快速 / 深度思考）。"""
+        self.thinking_enabled = bool(enabled)
 
     @abstractmethod
     def complete(
@@ -75,8 +82,12 @@ class MemoraLLM(ABC):
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
+        enable_thinking: bool | None = None,
     ) -> str:
-        """执行一次补全，返回纯文本。"""
+        """执行一次补全，返回纯文本。
+
+        enable_thinking=None 时使用当前思考档位（self.thinking_enabled）。
+        """
         raise NotImplementedError
 
     def stream_complete(
@@ -85,21 +96,28 @@ class MemoraLLM(ABC):
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
+        enable_thinking: bool | None = None,
     ) -> Iterator[str]:
         """流式补全，逐段 yield 正文增量。
 
         默认实现退化为一次性返回（不支持真流式的后端可直接复用）；
-        llama.cpp 后端覆写为基于 SSE 的真流式。依赖服务端关闭思考链
-        （chat_template_kwargs.enable_thinking=False），故增量即正文。
+        llama.cpp 后端覆写为基于 SSE 的真流式。
+        快速模式依赖服务端关闭思考链（chat_template_kwargs.enable_thinking=False），
+        故增量即正文；深度思考模式增量可能包含思考块，由调用方在结束时清洗。
         """
-        yield self.complete(prompt, max_tokens=max_tokens, temperature=temperature)
+        yield self.complete(
+            prompt, max_tokens=max_tokens, temperature=temperature,
+            enable_thinking=enable_thinking,
+        )
 
     def get_runnable(self, max_tokens: int | None = None,
-                     temperature: float | None = None):
+                     temperature: float | None = None,
+                     enable_thinking: bool | None = None):
         """返回 LangChain Runnable，输入 prompt 字符串，输出文本。
 
         max_tokens/temperature 在构造 Runnable 时绑定，便于复盘链与问答链
-        使用不同的生成长度。懒加载 langchain_core，避免未安装时拖累启动。
+        使用不同的生成长度。enable_thinking=None 时动态读取当前思考档位，
+        切换档位后已构造的 chain 也立即生效。懒加载 langchain_core，避免未安装时拖累启动。
         """
         from langchain_core.runnables import RunnableLambda
 
@@ -107,8 +125,11 @@ class MemoraLLM(ABC):
             # PromptTemplate 之后传入的是 StringPromptValue，需先转纯文本
             text = prompt_value.to_string() if hasattr(prompt_value, "to_string") \
                 else str(prompt_value)
+            thinking = (enable_thinking if enable_thinking is not None
+                        else self.thinking_enabled)
             return self.complete(
-                text, max_tokens=max_tokens, temperature=temperature
+                text, max_tokens=max_tokens, temperature=temperature,
+                enable_thinking=thinking,
             )
 
         return RunnableLambda(_invoke, name=f"{self.name}-complete")

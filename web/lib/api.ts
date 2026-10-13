@@ -91,3 +91,30 @@ export async function restoreRedaction(
 ): Promise<{ text: string; restored: boolean }> {
   return post("/api/redact/restore", { session_id: sessionId, text });
 }
+
+/**
+ * 发起 POST 并把返回的二进制（zip）保存为本地文件。
+ * 用于「导出项目复盘包」：后端 FileResponse 一个 zip，前端拿到 blob 后触发下载。
+ */
+export async function downloadZip(
+  path: string,
+  body: unknown,
+  filename: string,
+): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail || "下载失败");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

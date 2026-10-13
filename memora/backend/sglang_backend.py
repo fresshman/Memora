@@ -26,6 +26,7 @@ class SGLangBackend(MemoraLLM):
     def __init__(self, model_id: str | None = None) -> None:
         self.model_id = model_id or config.get_selected_model_id()
         self._llm = None
+        self.set_thinking_enabled(config.THINKING_MODE == "deep")
 
     def _model_name(self) -> str:
         if config.SGLANG_MODEL_NAME:
@@ -63,17 +64,22 @@ class SGLangBackend(MemoraLLM):
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
+        enable_thinking: bool | None = None,
     ) -> str:
         self._ensure()
-        log.debug("SGLang 推理：prompt 长度=%d，max_tokens=%s", len(prompt), max_tokens)
-        llm = self._llm
-        bind: dict[str, float | int] = {}
+        thinking = (enable_thinking if enable_thinking is not None
+                    else self.thinking_enabled)
+        log.debug("SGLang 推理：prompt 长度=%d，max_tokens=%s，思考=%s",
+                  len(prompt), max_tokens, thinking)
+        bind: dict = {
+            "extra_body": {"chat_template_kwargs":
+                           {"enable_thinking": bool(thinking)}},
+        }
         if max_tokens is not None:
             bind["max_tokens"] = max_tokens
         if temperature is not None:
             bind["temperature"] = temperature
-        if bind:
-            llm = self._llm.bind(**bind)
+        llm = self._llm.bind(**bind)
         msg = llm.invoke([HumanMessage(content=prompt)])
         content = msg.content if isinstance(msg.content, str) else str(msg.content)
         return strip_thinking(content or "")

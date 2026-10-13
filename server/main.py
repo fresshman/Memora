@@ -52,6 +52,7 @@ app.include_router(routes.live.router, prefix="/api", tags=["实时"])
 app.include_router(routes.records.router, prefix="/api/records", tags=["记录"])
 app.include_router(routes.export_router.router, prefix="/api", tags=["导出"])
 app.include_router(routes.models.router, prefix="/api", tags=["模型"])
+app.include_router(routes.actions.router, prefix="/api", tags=["行动项"])
 
 
 # ---------------------------------------------------------------------------

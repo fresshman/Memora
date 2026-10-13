@@ -157,6 +157,15 @@ CONTACT_MATCH_THRESHOLD = float(os.environ.get("MEMORA_CONTACT_THR", "0.85"))
 # 联系人库（姓名 + 声纹，纯本地 JSON；数据不出设备）
 CONTACTS_FILE = DATA_DIR / "contacts.json"
 
+# 跨会议行动项库（纯本地 JSON；数据不出设备）
+ACTION_ITEMS_FILE = DATA_DIR / "action_items.json"
+# 进展回顾时纳入的历史未完成待办上限（控制提示词长度与 CPU 耗时）
+ACTION_TRACK_MAX = int(os.environ.get("MEMORA_ACTION_TRACK_MAX", "20"))
+# 行动项自动改状态时，是否允许模型直接置为「已完成/已取消」（1=允许，0=仅建议）
+ACTION_AUTO_UPDATE = os.environ.get("MEMORA_ACTION_AUTO", "1").lower() in (
+    "1", "true", "yes", "on"
+)
+
 # ---------------------------------------------------------------------------
 # 推理后端选择
 #   "llamacpp" -> 默认，进程内推理，零外部依赖，匹配 8GB 内存
@@ -199,6 +208,16 @@ LLAMACPP_SERVER_PORT = int(os.environ.get("MEMORA_LLAMASERVER_PORT", "0"))
 TEMPERATURE = float(os.environ.get("MEMORA_TEMP", "0.3"))
 MAX_TOKENS_REVIEW = int(os.environ.get("MEMORA_MAX_REVIEW", "4096"))
 MAX_TOKENS_QA = int(os.environ.get("MEMORA_MAX_QA", "1024"))
+
+# Spark-X2.5 思考档位（官方特色：可配置思考）
+#   "fast" 快速模式：关闭思维链（enable_thinking=False），日常任务低时延直出；
+#   "deep" 深度思考：开启思维链（enable_thinking=True），复杂分析更充分。
+# 可由环境变量 MEMORA_THINKING=fast|deep 设默认；运行时也可在界面切换。
+THINKING_MODE = os.environ.get("MEMORA_THINKING", "fast").lower()
+# 深度思考时给模型的思考预算（总 max_tokens，含思维链 + 正文），
+# 快速模式仍用 MAX_TOKENS_REVIEW / MAX_TOKENS_QA。
+MAX_TOKENS_DEEP_REVIEW = int(os.environ.get("MEMORA_MAX_DEEP_REVIEW", "8192"))
+MAX_TOKENS_DEEP_QA = int(os.environ.get("MEMORA_MAX_DEEP_QA", "4096"))
 
 # 喂给模型的最大输入字符数。中文约 1 字 ≈ 1.2-1.5 token，按 1.35 估算，
 # 并为 prompt 模板与输出预留 (MAX_TOKENS_REVIEW + 1536) token。

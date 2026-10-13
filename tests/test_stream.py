@@ -71,7 +71,8 @@ def test_answer_stream_event_sequence():
 def test_default_stream_complete_falls_back_to_complete():
     class OnlyComplete(MemoraLLM):
         name = "one-shot"
-        def complete(self, prompt, *, max_tokens=None, temperature=None):
+        def complete(self, prompt, *, max_tokens=None, temperature=None,
+                     **kwargs):
             return "完整回答"
     out = list(OnlyComplete().stream_complete("hi"))
     assert out == ["完整回答"]

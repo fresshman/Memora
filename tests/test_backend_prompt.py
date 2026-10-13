@@ -51,7 +51,8 @@ def test_runnable_accepts_prompt_value():
 
     class FakeLLM(MemoraLLM):
         name = "fake"
-        def complete(self, prompt, *, max_tokens=None, temperature=None):
+        def complete(self, prompt, *, max_tokens=None, temperature=None,
+                     **kwargs):
             assert isinstance(prompt, str)
             return f"OK:{len(prompt)}"
 

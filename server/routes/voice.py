@@ -89,15 +89,42 @@ def _process(audio_path: str, name: str, language: str,
 
     segs = asr_mod.transcribe_segments(y, sr=sr, language=lang)
 
+    speaker_infos = []
     if config.DIAR_ENABLE and segs:
-        segs, _ = diar_mod.diarize(y, segs,
-                                   num_speakers=num_speakers, sr=sr)
+        from memora.whisper import contacts as contacts_mod
+        from memora.whisper.meeting import SpeakerInfo
+        segs, _k, E, win_labels, name_map = diar_mod.diarize_full(
+            y, segs, num_speakers=num_speakers, sr=sr)
+        if E is not None and win_labels is not None:
+            store = contacts_mod.get_store()
+            speaker_rename: dict[str, str] = {}
+            for lab, generic in name_map.items():
+                cen = contacts_mod.cluster_centroid(E, win_labels, lab)
+                contact, score = store.identify(cen)
+                if contact is not None:
+                    speaker_rename[generic] = contact.name
+                    speaker_infos.append(SpeakerInfo(
+                        name=contact.name, embedding=cen,
+                        identified=True, contact_id=contact.id,
+                        score=round(score, 3)))
+                else:
+                    speaker_infos.append(SpeakerInfo(
+                        name=generic, embedding=cen,
+                        identified=False, score=round(score, 3)))
+            if speaker_rename:
+                for seg in segs:
+                    if seg.speaker in speaker_rename:
+                        seg.speaker = speaker_rename[seg.speaker]
     else:
         for s in segs:
             if not s.speaker:
                 s.speaker = "说话人1"
 
-    return build_meeting(name, info.duration, speech_s, language, segs)
+    # diarize_full 已按 generic 合并；此处禁用再合并，避免不同 generic 被误认
+    # 为同一联系人后、相邻段被 merge_adjacent 错误并成一段。
+    mg = -1.0 if (config.DIAR_ENABLE and segs) else 0.6
+    return build_meeting(name, info.duration, speech_s, language, segs,
+                         merge_gap=mg, speaker_infos=speaker_infos)
 
 
 @router.post("/voice/transcribe", response_model=VoiceMeetingResponse)
@@ -129,7 +156,7 @@ async def voice_transcribe(
         _unlink(src)
     d = record.to_dict()
     return VoiceMeetingResponse(meta=d["meta"], segments=d["segments"],
-                                text=d["text"])
+                                text=d["text"], speakers=d.get("speakers", []))
 
 
 # ---------------------------------------------------------------------------
@@ -203,3 +230,55 @@ def voice_export(req: VoiceExportRequest):
         raise HTTPException(500, f"导出失败：{e}")
     return FileResponse(str(path), filename=path.name,
                         media_type=_MEDIA[fmt])
+
+
+# ---------------------------------------------------------------------------
+# 跨会话联系人声纹库（纯本地，数据不出设备）
+# ---------------------------------------------------------------------------
+from pydantic import BaseModel as _BM
+
+
+class _ContactRegister(_BM):
+    name: str
+    embedding: list[float]
+
+
+class _ContactRename(_BM):
+    id: str
+    name: str
+
+
+@router.post("/voice/contact/register")
+def voice_contact_register(req: _ContactRegister):
+    """重命名即注册：把说话人声纹原型存入联系人库。"""
+    from memora.whisper import contacts as contacts_mod
+    if not req.name.strip():
+        raise HTTPException(400, "联系人姓名为空")
+    if not req.embedding:
+        raise HTTPException(400, "缺少声纹 embedding")
+    c = contacts_mod.get_store().register(req.name, req.embedding)
+    return {"id": c.id, "name": c.name, "samples": len(c.embeddings)}
+
+
+@router.get("/voice/contacts")
+def voice_contacts_list():
+    from memora.whisper import contacts as contacts_mod
+    return {"contacts": contacts_mod.get_store().summary()}
+
+
+@router.post("/voice/contact/rename")
+def voice_contact_rename(req: _ContactRename):
+    from memora.whisper import contacts as contacts_mod
+    c = contacts_mod.get_store().rename(req.id, req.name)
+    if c is None:
+        raise HTTPException(404, "联系人不存在")
+    return {"id": c.id, "name": c.name}
+
+
+@router.delete("/voice/contact/{cid}")
+def voice_contact_delete(cid: str):
+    from memora.whisper import contacts as contacts_mod
+    ok = contacts_mod.get_store().delete(cid)
+    if not ok:
+        raise HTTPException(404, "联系人不存在")
+    return {"deleted": cid}

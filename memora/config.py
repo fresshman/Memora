@@ -148,8 +148,14 @@ DIAR_MAX_SPEAKERS = int(os.environ.get("MEMORA_DIAR_MAX", "8"))
 DIAR_MFCC_N = int(os.environ.get("MEMORA_DIAR_MFCC", "20"))
 # 神经声纹嵌入（speakeronnx ONNX，纯 onnxruntime 不引 torch）
 SPEAKER_EMBED_MODEL = os.environ.get("MEMORA_SPK_EMBED", "campplus-zh-en")
-# AHC 聚类 cosine 相似度阈值（远场实测 0.6 最优；近场可降到 0.5）
-SPEAKER_SIM_THRESHOLD = float(os.environ.get("MEMORA_SPK_SIM", "0.6"))
+# AHC 聚类 cosine 相似度阈值（VAD 短窗 2.5s 校准：0.5 最优、自动聚出 7 人）
+SPEAKER_SIM_THRESHOLD = float(os.environ.get("MEMORA_SPK_SIM", "0.5"))
+# 跨会议联系人识别：聚类 centroid 与已注册声纹的 cosine 匹配阈值
+# （真实多人会议校准：主导者跨会议 centroid 稳定 0.90+，声学相近未注册者约 0.82；
+# 取 0.85 零误认，拿不准保持 generic 由用户重命名；近场同设备可降到 0.75～0.8）
+CONTACT_MATCH_THRESHOLD = float(os.environ.get("MEMORA_CONTACT_THR", "0.85"))
+# 联系人库（姓名 + 声纹，纯本地 JSON；数据不出设备）
+CONTACTS_FILE = DATA_DIR / "contacts.json"
 
 # ---------------------------------------------------------------------------
 # 推理后端选择

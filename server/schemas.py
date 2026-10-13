@@ -52,6 +52,7 @@ class VoiceResponse(BaseModel):
 class VoiceMeetingResponse(BaseModel):
     meta: dict
     segments: list[dict]
+    speakers: list[dict] = []
     text: str
 
 

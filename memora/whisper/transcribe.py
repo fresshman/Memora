@@ -9,7 +9,7 @@ Windows 友好），无需单独下载 CLI 二进制；同一套官方 ggml 模�
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -18,12 +18,29 @@ from .. import config
 
 
 @dataclass
+class Token:
+    """词 / 子词级单元。
+
+    data：BPE 原始字节（中文常是半个汉字，须在段边界拼接后再 UTF-8 解码）；
+    start/end：起止时间（秒）；p：概率。
+    """
+    data: bytes
+    start: float
+    end: float
+    p: float = 0.0
+
+
+@dataclass
 class Segment:
-    """一句话分段：起止时间（秒）与文本；speaker 在说话人分离阶段填充。"""
+    """一句话分段：起止时间（秒）与文本；speaker 在说话人分离阶段填充。
+
+    tokens：该段的词级单元（用于按说话人聚类重建记录段）。
+    """
     start: float
     end: float
     text: str
     speaker: str = ""
+    tokens: list["Token"] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {"start": self.start, "end": self.end,
@@ -53,6 +70,8 @@ def _build_model():
         print_timestamps=False,
         no_context=True,
         vad=bool(config.WHISPER_USE_VAD),
+        token_timestamps=True,
+        split_on_word=True,
     )
     if int(config.LLAMACPP_N_THREADS) > 0:
         params["n_threads"] = int(config.LLAMACPP_N_THREADS)
@@ -116,6 +135,28 @@ def build_initial_prompt(language: str, hotwords: str = "") -> str:
     return prompt
 
 
+def _extract_tokens(ctx) -> list[list["Token"]]:
+    """从 whisper context 提取每个段的词级单元（须在 model 销毁前调用）。"""
+    if ctx is None:
+        return []
+    import _pywhispercpp as pw
+    result: list[list[Token]] = []
+    ns = pw.whisper_full_n_segments(ctx)
+    for i in range(ns):
+        toks: list[Token] = []
+        nt = pw.whisper_full_n_tokens(ctx, i)
+        for j in range(nt):
+            d = pw.whisper_full_get_token_data(ctx, i, j)
+            tid = int(d.id)
+            if tid >= 50257:  # 特殊 token（BEG/EOT/语言/时间戳），跳过
+                continue
+            toks.append(Token(pw.whisper_token_to_bytes(ctx, tid),
+                              round(d.t0 * 0.01, 3),
+                              round(d.t1 * 0.01, 3), float(d.p)))
+        result.append(toks)
+    return result
+
+
 def transcribe_segments(
     pcm: np.ndarray,
     sr: int = 16000,
@@ -140,18 +181,21 @@ def transcribe_segments(
         if prompt:
             kw["initial_prompt"] = prompt
         raw = model.transcribe(pcm, **kw)
+        seg_tokens = _extract_tokens(getattr(model, "_ctx", None))
     finally:
         try:
             del model
         except Exception:  # noqa: BLE001
             pass
     segs: list[Segment] = []
-    for s in raw:
+    for i, s in enumerate(raw):
+        toks = seg_tokens[i] if i < len(seg_tokens) else []
         text = (getattr(s, "text", "") or "").strip()
         if not text:
             continue
         # t0 / t1 为 10ms（centiseconds）→ 秒
-        segs.append(Segment(round(s.t0 * 0.01, 3), round(s.t1 * 0.01, 3), text))
+        segs.append(Segment(round(s.t0 * 0.01, 3), round(s.t1 * 0.01, 3),
+                            text, tokens=toks))
     return segs
 
 

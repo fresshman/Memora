@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, field, asdict, replace
 
 from .transcribe import Segment
 
@@ -23,16 +23,33 @@ class MeetingMeta:
 
 
 @dataclass
+class SpeakerInfo:
+    """说话人元信息：声纹原型（注册用）、是否从联系人库自动识别。"""
+    name: str
+    embedding: list[float] = field(default_factory=list)
+    identified: bool = False
+    contact_id: str = ""
+    score: float = 0.0
+
+    def to_dict(self) -> dict:
+        return {"name": self.name, "embedding": self.embedding,
+                "identified": self.identified,
+                "contact_id": self.contact_id, "score": self.score}
+
+
+@dataclass
 class MeetingRecord:
     meta: MeetingMeta
     segments: list[Segment]
     text: str
+    speakers: list[SpeakerInfo] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "meta": asdict(self.meta),
             "segments": [s.to_dict() for s in self.segments],
             "text": self.text,
+            "speakers": [s.to_dict() for s in self.speakers],
         }
 
 
@@ -70,7 +87,8 @@ def merge_adjacent(segments: list[Segment], max_gap: float = 0.6
 
 def build_meeting(audio_name: str, duration: float, speech_seconds: float,
                   language: str, segments: list[Segment],
-                  merge_gap: float = 0.6) -> MeetingRecord:
+                  merge_gap: float = 0.6,
+                  speaker_infos: list[SpeakerInfo] | None = None) -> MeetingRecord:
     """组装完整会议记录。"""
     merged = merge_adjacent(segments, merge_gap)
     speakers = sorted({s.speaker for s in merged if s.speaker})
@@ -95,7 +113,8 @@ def build_meeting(audio_name: str, duration: float, speech_seconds: float,
         speaker = seg.speaker or "说话人1"
         lines.append(f"[{fmt_ts(seg.start)}] {speaker}：{seg.text}")
         lines.append("")
-    return MeetingRecord(meta=meta, segments=merged, text="\n".join(lines).rstrip())
+    return MeetingRecord(meta=meta, segments=merged, text="\n".join(lines).rstrip(),
+                     speakers=speaker_infos or [])
 
 
 def to_srt(segments: list[Segment]) -> str:

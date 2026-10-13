@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { postForm, postSSE } from "@/lib/api";
+import { post, getJSON, del, postForm, postSSE } from "@/lib/api";
 import { LiveRecorder, pcmToBase64 } from "@/lib/recorder";
 import { Button, PageHeader, StepTitle } from "@/components/ui";
 import { ReportCard } from "@/components/ReportCard";
 import {
   IconMic, IconAlert, IconCheck, IconSparkles, IconDownload, IconUsers,
-  IconClock, IconFileDown, IconPencil, IconUndo,
+  IconClock, IconFileDown, IconPencil, IconUndo, IconCheckCircle,
+  IconX, IconTrash,
 } from "@/components/icons";
 
 interface VSeg {
@@ -23,10 +24,26 @@ interface VMeta {
   speech_seconds: number;
   language: string;
 }
+interface SpeakerInfo {
+  name: string;
+  embedding: number[];
+  identified: boolean;
+  contact_id?: string;
+  score?: number;
+}
+interface ContactSummary {
+  id: string;
+  name: string;
+  samples: number;
+  meetings: number;
+  created_at: string;
+  last_met: string;
+}
 interface Meeting {
   meta: VMeta;
   segments: VSeg[];
   text: string;
+  speakers?: SpeakerInfo[];
 }
 interface VStatus {
   ffmpeg: boolean;
@@ -109,6 +126,9 @@ export default function VoicePage() {
   const [colorMap, setColorMap] = useState<Record<string, number>>({});
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [contactsOpen, setContactsOpen] = useState(false);
+  const [contacts, setContacts] = useState<ContactSummary[]>([]);
+  const [contactsBusy, setContactsBusy] = useState(false);
   const originalRef = useRef<Meeting | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -442,6 +462,17 @@ export default function VoicePage() {
         s.speaker === oldLabel ? { ...s, speaker: newLabel } : s);
       commitSegments(segs);
     }
+    // 重命名即注册：声纹写入联系人库，下次会议自动认出同一人
+    const info = (meeting?.speakers || []).find((s) => s.name === oldLabel);
+    if (info) {
+      if (info.identified && info.contact_id) {
+        post("/api/voice/contact/rename",
+             { id: info.contact_id, name: newLabel }).catch(() => undefined);
+      } else if (info.embedding?.length) {
+        post("/api/voice/contact/register",
+             { name: newLabel, embedding: info.embedding }).catch(() => undefined);
+      }
+    }
     showToast(`已重命名为「${newLabel}」`);
   }
 
@@ -451,6 +482,37 @@ export default function VoicePage() {
     setColorMap({});
     setRenaming(null);
     showToast("已撤销全部校对修改");
+  }
+
+  function loadContacts() {
+    setContactsBusy(true);
+    getJSON<{ contacts: ContactSummary[] }>("/api/voice/contacts")
+      .then((d) => setContacts(d.contacts))
+      .catch(() => setContacts([]))
+      .finally(() => setContactsBusy(false));
+  }
+  function openContacts() {
+    setContactsOpen(true);
+    loadContacts();
+  }
+  function removeContact(id: string) {
+    setContactsBusy(true);
+    del("/api/voice/contact/" + id)
+      .then(() => getJSON<{ contacts: ContactSummary[] }>("/api/voice/contacts"))
+      .then((d) => setContacts(d.contacts))
+      .catch(() => undefined)
+      .finally(() => setContactsBusy(false));
+  }
+  function renameContact(id: string) {
+    const cur = contacts.find((c) => c.id === id);
+    const name = window.prompt("修改联系人姓名", cur?.name || "");
+    if (!name || !name.trim()) return;
+    setContactsBusy(true);
+    post("/api/voice/contact/rename", { id, name: name.trim() })
+      .then(() => getJSON<{ contacts: ContactSummary[] }>("/api/voice/contacts"))
+      .then((d) => setContacts(d.contacts))
+      .catch(() => undefined)
+      .finally(() => setContactsBusy(false));
   }
   const componentsReady = status
     ? status.ffmpeg && status.asr_engine && status.asr_model
@@ -463,6 +525,13 @@ export default function VoicePage() {
           title="语音会议复盘"
           subtitle="上传会议录音，本地完成转写、说话人分离与会议记录整理，可一键导出或提炼结构化纪要；全程离线、数据不出设备。"
         />
+        <div className="mb-4 flex justify-end">
+          <Button variant="ghost" size="sm"
+            icon={<IconUsers className="h-4 w-4" />}
+            onClick={openContacts}>
+            联系人声纹库
+          </Button>
+        </div>
 
         {status && !componentsReady && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800">
@@ -774,6 +843,8 @@ export default function VoicePage() {
                 const idx = colorOf(seg.speaker, colorMap);
                 const label = seg.speaker || "说话人1";
                 const isRenaming = proofMode && renaming === label;
+                const isIdentified = !!meeting.speakers?.find(
+                  (s) => s.name === label)?.identified;
                 return (
                   <div key={i} className="flex gap-3 py-2">
                     <span className={`mt-0.5 w-16 shrink-0 font-mono text-[11px] ${SPEAKER_TEXT[idx]}`}>
@@ -795,12 +866,14 @@ export default function VoicePage() {
                       <button type="button"
                         onClick={() => startRename(label)}
                         title="点击重命名该说话人"
-                        className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium transition hover:ring-2 hover:ring-brand-200 ${SPEAKER_CHIP[idx]}`}>
+                        className={`mt-0.5 inline-flex items-center gap-1 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium transition hover:ring-2 hover:ring-brand-200 ${SPEAKER_CHIP[idx]}`}>
                         {label}
+                        {isIdentified && <IconCheckCircle className="h-3 w-3" />}
                       </button>
                     ) : (
-                      <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SPEAKER_CHIP[idx]}`}>
+                      <span className={`mt-0.5 inline-flex items-center gap-1 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SPEAKER_CHIP[idx]}`}>
                         {label}
+                        {isIdentified && <IconCheckCircle className="h-3 w-3" />}
                       </span>
                     )}
                     {proofMode ? (
@@ -873,6 +946,56 @@ export default function VoicePage() {
         )}
       </div>
 
+      {contactsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          onClick={() => setContactsOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-800">联系人声纹库</h3>
+              <button type="button" onClick={() => setContactsOpen(false)}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100">
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-3 text-xs leading-relaxed text-slate-400">
+              重命名说话人时自动注册声纹；下一场会议凭声纹自动认出同一人。纯本地存储，数据不出设备。
+            </p>
+            {contactsBusy ? (
+              <div className="py-8 text-center text-sm text-slate-400">加载中…</div>
+            ) : contacts.length === 0 ? (
+              <div className="py-8 text-center text-sm text-slate-400">
+                还没有联系人。在会议记录中重命名「说话人N」即可注册。
+              </div>
+            ) : (
+              <ul className="max-h-80 divide-y divide-slate-100 overflow-auto">
+                {contacts.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-2 py-2.5">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-slate-700">{c.name}</div>
+                      <div className="text-[11px] text-slate-400">
+                        相遇 {c.meetings} 次 · {c.samples} 个声纹 · 最近 {c.last_met.slice(0, 10)}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <button type="button" title="重命名"
+                        onClick={() => renameContact(c.id)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                        <IconPencil className="h-4 w-4" />
+                      </button>
+                      <button type="button" title="删除"
+                        onClick={() => removeContact(c.id)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500">
+                        <IconTrash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm text-white shadow-pop animate-slide-up">
           <IconCheck className="h-4 w-4 text-brand-300" />

@@ -66,6 +66,7 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
   into structured minutes via streaming. Pure CPU, no torch.
 - ✏️ **Speaker renaming + transcript proofreading**: rename "Speaker N" to a real name (colors and ownership migrate automatically)
   and edit each transcript line; export and "distill minutes" use the proofed content, and all edits can be undone in one click.
+- 🧬 **Cross-session contact voiceprint library**: renaming a speaker registers their voiceprint in a local contact library (plain JSON, data never leaves the device). In later meetings, high-confidence dominant speakers are **recognized as familiar people automatically** (dominant speakers show 0.90+ cross-day similarity on real multi-party meetings); uncertain ones stay "Speaker N" for you to name once — "rather miss than misidentify". View, rename or delete contacts in the library dialog.
 - 🔴 **Live recording & streaming transcription**: watch the transcript appear as you speak. AudioWorklet captures 16kHz audio and streams it over WebSocket for incremental transcription and speaker assignment; on stop, the whole session is re-transcribed and refined into a final record, reusing proofreading / export / minutes. Fully offline, low latency.
 
 ## 📊 Evaluation & Ablation (measured, not claimed)
@@ -165,6 +166,25 @@ Besides uploading a recorded file, Memora supports **live microphone recording**
 **⑧ Live recording** — switch between "Upload audio file / Live recording" with one click; during recording see a pulsing red dot, timer, level bars and real-time text; on stop get an annotated record that reuses proofreading / export / minutes.
 
 <p><img src="docs/images/10_voice_live.png" width="840"></p>
+
+### 🧬 Cross-session Contact Voiceprint Library (rename = register)
+
+Most transcription tools "start from scratch every meeting" — the same person is repeatedly labeled "Speaker N". Memora stores **names and voiceprints** as a reusable local contact library:
+
+- **Rename = register**: changing "Speaker N" to a real name writes that cluster's CAM++ voiceprint to `data/contacts.json` (repeated naming aggregates multiple samples and gets better over time).
+- **Automatic recognition in new meetings**: after clustering a new recording, each cluster centroid is compared against the library; a match is labeled with that person and a confidence score, marked with a ✓ to distinguish it from clusters needing a name.
+- **Zero misidentification first (conservative)**: calibrated on real multi-party meetings (train_L) — dominant speakers with sufficient speech have stable cross-day centroids at **0.90+**, while an unregistered acoustically-similar speaker is around 0.82; the default threshold is **0.85**, so **anything uncertain stays "Speaker N" — rather miss than misidentify**. A miss costs one rename; a misidentification misleads the whole record.
+- **Contact management**: the "Contact voiceprint library" dialog lists all contacts (meetings count, last met), with rename and delete; everything stays in local JSON, data never leaves the device.
+
+**Real cross-meeting results (meeting 1 registered -> meeting 2 recognized):**
+
+| Type | Count | Detail |
+| --- | --- | --- |
+| Dominant speakers correctly recognized | 3 | 003 / 004 / 001, cross-day similarity 0.900 / 0.949 / 0.914 |
+| Misidentification (wrong person) | **0** | blocked by threshold 0.85 |
+| Miss (kept generic) | 3 | unregistered acoustically-similar 006 (0.82), small over-segmented clusters |
+
+> **Known limits and the closed loop**: (1) same-gender, genuinely acoustically-similar speakers (two female voices in train_L, CAM++ similarity 0.82) who are unregistered need one naming; (2) over-segmented small clusters from fast turn-taking and very short speakers have unstable centroids and are not forced into a match — they appear as "Speaker N" for you to **name (= register) or merge**, and the library strengthens with each correction. Cross-meeting attribution of action items/decisions is future work.
 
 ## 🖥️ Pages
 
@@ -358,7 +378,8 @@ Copy `.env.example` to `.env` and adjust as needed; every key can be overridden 
 | `MEMORA_PII_REDACT` | `1` | PII redaction toggle (including speaker name role-ization) |
 | `MEMORA_TEMP` / `MEMORA_MAX_REVIEW` / `MEMORA_MAX_QA` | `0.3` / `4096` / `1024` | Decoding temperature & max generation length |
 | `MEMORA_ASR_MODEL` / `MEMORA_ASR_VAD` | `ggml-small.bin` / `0` | ASR model tier / built-in VAD (off by default; null model crashes) |
-| `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.6` | Voiceprint model / AHC similarity threshold (lower to 0.5 near-field) |
+| `MEMORA_SPK_EMBED` / `MEMORA_SPK_SIM` | `campplus-zh-en` / `0.5` | Voiceprint model / AHC clustering threshold (over-segment rather than chain) |
+| `MEMORA_CONTACT_THR` | `0.85` | Cross-meeting recognition threshold; lower to 0.75–0.8 near-field on the same device for recall |
 
 ## 🧪 Tests & Reproducing the Evaluation
 
@@ -378,6 +399,8 @@ python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t
 - [x] Voice meeting pipeline: multi-format transcription, CAM++ speaker diarization, annotated-record export & minutes (scenario-based DER measured)
 - [x] Speaker renaming + transcript proofreading; export / minutes use the proofed content (end-to-end verified)
 - [x] Live recording & streaming transcription; on stop the whole session is re-transcribed and refined, reusing proofreading / export / minutes (end-to-end verified)
+- [x] Cross-session contact voiceprint library: rename = register, automatic recognition in new meetings (dominant speakers zero misidentification cross-day), contact management dialog
+- [ ] Cross-meeting attribution of action items/decisions to contacts; semantic disambiguation for acoustically-similar speakers
 - [x] ASR CER/WER quantitative evaluation + editable domain hotword list (hotwords cut CER 37.65% to 26.45%)
 - [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer

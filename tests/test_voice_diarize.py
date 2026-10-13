@@ -51,14 +51,16 @@ def test_cluster_neural_auto_single():
     assert k == 1
 
 
-# ---- diarize 端到端（mock _neural_embeddings）----
+# ---- diarize 端到端（mock VAD 短窗与 embedding）----
 def test_diarize_neural_end2end(monkeypatch):
     segs = [Segment(0, 1, "a"), Segment(1, 2, "b"),
             Segment(2, 3, "c"), Segment(3, 4, "d")]
     vA = np.array([1, 0, 0, 0], np.float32)
     vB = np.array([0, 1, 0, 0], np.float32)
-    monkeypatch.setattr(dm, "_neural_embeddings",
-                        lambda y, s, sr: np.array([vA, vB, vA, vB]))
+    wins = [(0, 1), (1, 2), (2, 3), (3, 4)]
+    monkeypatch.setattr(dm, "_spk_windows", lambda y, sr: wins)
+    monkeypatch.setattr(dm, "_embed_windows",
+                        lambda y, sr, w: np.array([vA, vB, vA, vB]))
     out, k = dm.diarize(np.zeros(64000, np.float32), segs, 0, 16000)
     assert k == 2
     assert out[0].speaker == out[2].speaker
@@ -68,8 +70,10 @@ def test_diarize_neural_end2end(monkeypatch):
 
 def test_diarize_forced(monkeypatch):
     segs = [Segment(0, 1, "a"), Segment(1, 2, "b")]
-    monkeypatch.setattr(dm, "_neural_embeddings",
-                        lambda y, s, sr: np.random.RandomState(1).randn(2, 4))
+    wins = [(0, 1), (1, 2)]
+    monkeypatch.setattr(dm, "_spk_windows", lambda y, sr: wins)
+    monkeypatch.setattr(dm, "_embed_windows",
+                        lambda y, sr, w: np.random.RandomState(1).randn(2, 4))
     out, k = dm.diarize(np.zeros(32000, np.float32), segs, 2, 16000)
     assert k == 2 and out[0].speaker != out[1].speaker
 
@@ -77,7 +81,9 @@ def test_diarize_forced(monkeypatch):
 def test_diarize_fallback_mfcc(monkeypatch):
     def boom(*a, **k):
         raise RuntimeError("no onnx")
-    monkeypatch.setattr(dm, "_neural_embeddings", boom)
+    monkeypatch.setattr(dm, "_spk_windows",
+                        lambda y, sr: [(0, 1), (1, 2)])
+    monkeypatch.setattr(dm, "_embed_windows", boom)
     y = np.concatenate([_tone(120), _tone(420)])
     segs = [Segment(0, 1, "a"), Segment(1, 2, "b")]
     out, k = dm.diarize(y, segs, 2, 16000)

@@ -64,6 +64,8 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
   ffmpeg denoises and normalizes loudness, local whisper.cpp transcribes, and a **CAM++ neural voiceprint automatically
   identifies speakers**. The result is an annotated record (speaker + timestamps), exportable to MD/TXT/SRT/PDF or distilled
   into structured minutes via streaming. Pure CPU, no torch.
+- ✏️ **Speaker renaming + transcript proofreading**: rename "Speaker N" to a real name (colors and ownership migrate automatically)
+  and edit each transcript line; export and "distill minutes" use the proofed content, and all edits can be undone in one click.
 
 ## 📊 Evaluation & Ablation (measured, not claimed)
 
@@ -104,8 +106,10 @@ pywhispercpp (in-process whisper.cpp) transcribes into timestamped sentence segm
 CAM++ neural voiceprint embeddings (speakeronnx ONNX) + AHC agglomerative clustering (auto speaker count / manual)
    ▼
 Annotated meeting record (speaker + timestamps; adjacent same-speaker segments auto-merged)
-   ├── one-click export to Markdown / TXT / SRT / PDF
-   └── SSE-streamed structured minutes (Decisions / Action items / Key info / Risks, citing the speaker)
+   ▼
+✏️ Manual proofreading (rename speakers to real names, edit transcript lines; one-click undo)
+   ├── one-click export to Markdown / TXT / SRT / PDF (uses the proofed content)
+   └── SSE-streamed structured minutes (Decisions / Action items / Key info / Risks; uses the proofed content)
 ```
 
 **Speaker-diarization measurements** (8-channel far-field microphone array; RTTM ground truth; frame-level DER + Hungarian mapping)
@@ -144,7 +148,7 @@ Annotated meeting record (speaker + timestamps; adjacent same-speaker segments a
 | Q&amp;A | `/qa/` | Ask questions over the whole conversation; answers cite the original messages |
 | Model management | `/models/` | Dual-model recommendation, local status detection, one-click ModelScope download, live switching |
 | Batch review | `/batch/` | Process and summarize multiple records in bulk |
-| Voice meeting review | `/voice/` | Multi-format transcription + speaker diarization; export or distill minutes |
+| Voice meeting review | `/voice/` | Transcription + speaker diarization; rename speakers & proofread transcript; export or distill minutes |
 | History | `/history/` | Locally encrypted review history |
 
 ## 📸 Screenshots
@@ -344,6 +348,7 @@ cd evals && python runner.py
 
 - [x] Multi-platform parsing, PII redaction, local RAG, SSE streaming, one-click model download, offline package, evaluation & ablation
 - [x] Voice meeting pipeline: multi-format transcription, CAM++ speaker diarization, annotated-record export & minutes (scenario-based DER measured)
+- [x] Speaker renaming + transcript proofreading; export / minutes use the proofed content (end-to-end verified)
 - [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer
 - [ ] Parsers for more IM / meeting-platform exports

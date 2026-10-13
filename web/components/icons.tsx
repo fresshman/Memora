@@ -276,3 +276,15 @@ export const IconClock = (p: P) => (
     <polyline points="12 6 12 12 16 14" />
   </Base>
 );
+export const IconPencil = (p: P) => (
+  <Base {...p}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </Base>
+);
+export const IconUndo = (p: P) => (
+  <Base {...p}>
+    <path d="M3 7v6h6" />
+    <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+  </Base>
+);

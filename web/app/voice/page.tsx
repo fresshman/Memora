@@ -6,7 +6,7 @@ import { Button, PageHeader, StepTitle } from "@/components/ui";
 import { ReportCard } from "@/components/ReportCard";
 import {
   IconMic, IconAlert, IconCheck, IconSparkles, IconDownload, IconUsers,
-  IconClock, IconFileDown,
+  IconClock, IconFileDown, IconPencil, IconUndo,
 } from "@/components/icons";
 
 interface VSeg {
@@ -61,6 +61,32 @@ function hms(sec: number): string {
   return [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
 }
 
+// 从 meta + segments 重新拼标注记录文本（与 memora/whisper/meeting.py 的 build_meeting 对齐）
+function buildText(m: Meeting): string {
+  const meta = m.meta;
+  const lines = [
+    "# 会议记录",
+    "",
+    `音频文件：${meta.audio_name}`,
+    `总时长：${hms(meta.duration_seconds)}　识别说话人：${meta.num_speakers} 位`
+      + `　有效语音：${hms(meta.speech_seconds)}　语言：${meta.language}`,
+    "=".repeat(48),
+    "",
+  ];
+  for (const s of m.segments) {
+    lines.push(`[${hms(s.start)}] ${s.speaker || "说话人1"}：${s.text}`);
+    lines.push("");
+  }
+  return lines.join("\n").trimEnd();
+}
+
+// 说话人颜色：重命名后按 colorMap 保持稳定，未登记则回退按末尾数字
+function colorOf(label: string | null | undefined,
+                  map: Record<string, number>): number {
+  const key = label || "说话人1";
+  return map[key] !== undefined ? map[key] : speakerIdx(label);
+}
+
 const ACCEPT =
   ".mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.wma,.opus,.amr,.aiff,.mp4,.webm";
 const BASE = process.env.NEXT_PUBLIC_API_BASE || "";
@@ -78,6 +104,11 @@ export default function VoicePage() {
   const [minutes, setMinutes] = useState("");
   const [minSections, setMinSections] = useState<Record<string, string>>({});
   const [minBusy, setMinBusy] = useState(false);
+  const [proofMode, setProofMode] = useState(false);
+  const [colorMap, setColorMap] = useState<Record<string, number>>({});
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const originalRef = useRef<Meeting | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -103,7 +134,12 @@ export default function VoicePage() {
       form.append("file", file);
       form.append("language", language);
       form.append("num_speakers", String(numSpeakers));
-      setMeeting(await postForm<Meeting>("/api/voice/transcribe", form));
+      const data = await postForm<Meeting>("/api/voice/transcribe", form);
+      originalRef.current = structuredClone(data);
+      setMeeting(data);
+      setProofMode(false);
+      setColorMap({});
+      setRenaming(null);
     } catch (e) {
       setError(String((e as Error).message));
     } finally {
@@ -188,6 +224,63 @@ export default function VoicePage() {
     }
   }
 
+  // 提交新的 segments，并重拼 text（md 导出 / 纪要都依赖 text）
+  function commitSegments(newSegs: VSeg[]) {
+    setMeeting((prev) => {
+      if (!prev) return prev;
+      const next: Meeting = { ...prev, segments: newSegs };
+      next.text = buildText(next);
+      return next;
+    });
+  }
+
+  function updateSegText(i: number, value: string) {
+    if (!meeting) return;
+    const segs = meeting.segments.slice();
+    segs[i] = { ...segs[i], text: value };
+    commitSegments(segs);
+  }
+
+  function startRename(label: string) {
+    setRenaming(label);
+    setRenameValue(label);
+  }
+
+  function cancelRename() {
+    setRenaming(null);
+  }
+
+  function confirmRename() {
+    const oldLabel = renaming;
+    const newLabel = renameValue.trim();
+    setRenaming(null);
+    if (!oldLabel || !newLabel || newLabel === oldLabel) return;
+    const used = new Set((meeting?.segments || []).map((s) => s.speaker));
+    if (used.has(newLabel)) {
+      showToast("该名字已被其他说话人使用");
+      return;
+    }
+    const idx = colorOf(oldLabel, colorMap);
+    setColorMap((prev) => {
+      const m = { ...prev, [newLabel]: idx };
+      delete m[oldLabel];
+      return m;
+    });
+    if (meeting) {
+      const segs = meeting.segments.map((s) =>
+        s.speaker === oldLabel ? { ...s, speaker: newLabel } : s);
+      commitSegments(segs);
+    }
+    showToast(`已重命名为「${newLabel}」`);
+  }
+
+  function resetEdits() {
+    if (!originalRef.current) return;
+    setMeeting(structuredClone(originalRef.current));
+    setColorMap({});
+    setRenaming(null);
+    showToast("已撤销全部校对修改");
+  }
   const componentsReady = status
     ? status.ffmpeg && status.asr_engine && status.asr_model
     : true;
@@ -315,24 +408,74 @@ export default function VoicePage() {
               </span>
             </div>
 
-            <div className="max-h-[26rem] overflow-auto rounded-xl bg-slate-50/60 px-4 py-2">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-400">
+                {proofMode
+                  ? "校对模式：点击说话人标签可重命名，直接修改每段文字"
+                  : "可校对：重命名说话人、修正转写文字，再重新提炼纪要"}
+              </span>
+              <div className="flex shrink-0 gap-2">
+                {proofMode && (
+                  <Button variant="ghost" size="sm"
+                    icon={<IconUndo className="h-4 w-4" />}
+                    onClick={resetEdits}>
+                    撤销修改
+                  </Button>
+                )}
+                <Button variant={proofMode ? "primary" : "outline"} size="sm"
+                  icon={<IconPencil className="h-4 w-4" />}
+                  onClick={() => { setProofMode((v) => !v); setRenaming(null); }}>
+                  {proofMode ? "完成校对" : "校对记录"}
+                </Button>
+              </div>
+            </div>
+
+            <div className={`max-h-[26rem] overflow-auto rounded-xl px-4 py-2 ${proofMode ? "bg-brand-50/40 ring-1 ring-brand-100" : "bg-slate-50/60"}`}>
               {meeting.segments.map((seg, i) => {
-                const idx = speakerIdx(seg.speaker);
+                const idx = colorOf(seg.speaker, colorMap);
+                const label = seg.speaker || "说话人1";
+                const isRenaming = proofMode && renaming === label;
                 return (
                   <div key={i} className="flex gap-3 py-2">
-                    <span
-                      className={`mt-0.5 w-16 shrink-0 font-mono text-[11px] ${SPEAKER_TEXT[idx]}`}
-                    >
+                    <span className={`mt-0.5 w-16 shrink-0 font-mono text-[11px] ${SPEAKER_TEXT[idx]}`}>
                       {hms(seg.start)}
                     </span>
-                    <span
-                      className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SPEAKER_CHIP[idx]}`}
-                    >
-                      {seg.speaker || "说话人1"}
-                    </span>
-                    <span className="text-sm leading-relaxed text-slate-700">
-                      {seg.text}
-                    </span>
+                    {isRenaming ? (
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") confirmRename();
+                          else if (e.key === "Escape") cancelRename();
+                        }}
+                        onBlur={confirmRename}
+                        className="mt-0.5 h-6 w-24 shrink-0 rounded-full border border-brand-300 bg-white px-2 text-[11px] font-medium text-slate-700 outline-none"
+                      />
+                    ) : proofMode ? (
+                      <button type="button"
+                        onClick={() => startRename(label)}
+                        title="点击重命名该说话人"
+                        className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium transition hover:ring-2 hover:ring-brand-200 ${SPEAKER_CHIP[idx]}`}>
+                        {label}
+                      </button>
+                    ) : (
+                      <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SPEAKER_CHIP[idx]}`}>
+                        {label}
+                      </span>
+                    )}
+                    {proofMode ? (
+                      <textarea
+                        value={seg.text}
+                        onChange={(e) => updateSegText(i, e.target.value)}
+                        rows={Math.max(1, Math.ceil(seg.text.length / 36))}
+                        className="min-h-[2rem] flex-1 resize-y rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm leading-relaxed text-slate-700 outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                      />
+                    ) : (
+                      <span className="text-sm leading-relaxed text-slate-700">
+                        {seg.text}
+                      </span>
+                    )}
                   </div>
                 );
               })}

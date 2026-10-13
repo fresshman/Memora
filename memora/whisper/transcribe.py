@@ -10,6 +10,7 @@ Windows 友好），无需单独下载 CLI 二进制；同一套官方 ggml 模�
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -69,12 +70,63 @@ def get_stream_model():
     return _STREAM_MODEL
 
 
+HOTWORDS_FILE = Path(__file__).with_name("hotwords.txt")
+
+
+def load_hotwords(path: str = "") -> str:
+    """读取热词表，返回中文逗号分隔的热词串；# 注释 / 空行忽略。文件不存在返回空串。"""
+    p = Path(path) if path else HOTWORDS_FILE
+    if not p.exists():
+        return ""
+    words: list[str] = []
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        for w in line.split(","):
+            w = w.strip()
+            if w:
+                words.append(w)
+    return "，".join(words)
+
+
+def _resolve_hotwords(hotwords) -> str:
+    """归一化热词入参：
+    None -> 自动加载内置热词表（默认开启）；
+    ""   -> 显式关闭（返回空）；
+    其他 -> 视为文件路径（存在则加载），否则当作热词字符串。
+    """
+    if hotwords is None:
+        return load_hotwords()
+    if hotwords == "":
+        return ""
+    cand = Path(hotwords)
+    if cand.exists():
+        return load_hotwords(str(cand))
+    return hotwords
+
+
+def build_initial_prompt(language: str, hotwords: str = "") -> str:
+    """简体引导 + 热词（仅中文）。"""
+    if language and not language.startswith("zh"):
+        return ""
+    prompt = "以下是普通话会议录音，请用简体汉字转写。"
+    if hotwords:
+        prompt += "涉及专有名词：" + hotwords + "。"
+    return prompt
+
+
 def transcribe_segments(
     pcm: np.ndarray,
     sr: int = 16000,
     language: str = "",
+    hotwords=None,
 ) -> list["Segment"]:
-    """转写 16kHz mono float32 PCM，返回 Segment（时间戳单位：秒）。"""
+    """转写 16kHz mono float32 PCM，返回 Segment（时间戳单位：秒）。
+
+    hotwords: None=自动加载内置热词表（默认开启）；""=关闭热词；
+              传文件路径则加载该表；传热词字符串则直接使用。
+    """
     if sr != 16000:
         raise ValueError("whisper 需 16kHz 音频")
     pcm = np.ascontiguousarray(pcm, dtype=np.float32)
@@ -83,9 +135,10 @@ def transcribe_segments(
         kw: dict = {}
         if language:
             kw["language"] = language
-        # whisper 默认输出繁体中文，用 initial_prompt 引导简体
-        if not language or language.startswith("zh"):
-            kw["initial_prompt"] = "以下是普通话会议录音，请用简体汉字转写。"
+        # initial_prompt 引导简体（whisper 默认输出繁体）并注入热词
+        prompt = build_initial_prompt(language, _resolve_hotwords(hotwords))
+        if prompt:
+            kw["initial_prompt"] = prompt
         raw = model.transcribe(pcm, **kw)
     finally:
         try:
@@ -102,6 +155,16 @@ def transcribe_segments(
     return segs
 
 
+def transcribe_segments_hotwords(
+    pcm: np.ndarray,
+    sr: int = 16000,
+    language: str = "",
+    hotwords=None,
+) -> list["Segment"]:
+    """显式指定热词（文件路径 / 热词串；None=内置表，""=关闭）。"""
+    return transcribe_segments(pcm, sr, language, hotwords=hotwords)
+
+
 def ensure_model(model_name: str = "") -> str:
     """确保 ASR 模型已下载（经 model_fetch）。"""
     from ..model_fetch import ensure_asr_model
@@ -115,14 +178,19 @@ def transcribe(path, language: str = "") -> list["Segment"]:
     return transcribe_segments(pcm, sr, language=language)
 
 def transcribe_window(pcm: np.ndarray, language: str = "",
-                      time_offset: float = 0.0) -> list["Segment"]:
-    """转写一个短窗口（复用常驻模型），段时间戳叠加 time_offset（秒）。"""
+                      time_offset: float = 0.0,
+                      hotwords=None) -> list["Segment"]:
+    """转写一个短窗口（复用常驻模型），段时间戳叠加 time_offset（秒）。
+
+    hotwords: None=自动加载内置热词表；""=关闭；路径/字符串=自定义。
+    """
     model = get_stream_model()
     kw: dict = {}
     if language:
         kw["language"] = language
-    if not language or language.startswith("zh"):
-        kw["initial_prompt"] = "以下是普通话会议录音，请用简体汉字转写。"
+    prompt = build_initial_prompt(language, _resolve_hotwords(hotwords))
+    if prompt:
+        kw["initial_prompt"] = prompt
     raw = model.transcribe(np.ascontiguousarray(pcm, dtype=np.float32), **kw)
     out: list[Segment] = []
     for s in raw:

@@ -1,0 +1,14 @@
+{
+  "clip": "data\\voice_test\\clip_8ch_30_210.wav",
+  "t0": 30.0,
+  "t1": 210.0,
+  "hotwords": "memora/whisper/hotwords.txt",
+  "segments": 22,
+  "wall_s": 39.3,
+  "cer": 0.2645,
+  "cer_edits": 196,
+  "ref_chars": 741,
+  "wer": 0.3573,
+  "wer_edits": 164,
+  "ref_words": 459
+}

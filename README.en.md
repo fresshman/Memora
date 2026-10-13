@@ -133,6 +133,18 @@ Annotated meeting record (speaker + timestamps; adjacent same-speaker segments a
 | **ggml-small.bin (default)** | ~488MB | **Coherent on far-field in tests, 8GB-friendly** |
 | ggml-large-v3-turbo.bin | ~1.5GB | Best quality, most accurate transcription |
 
+**Transcription quality (CER/WER) and domain hotwords**
+
+Using the human TextGrid transcription as ground truth, we compute the **Character Error Rate (CER)** (char-level edit distance) and **Word Error Rate (WER)** (jieba-tokenized) on the same 180s real meeting clip; text is normalized first (punctuation / silence / noise markers removed).
+
+| Configuration | CER | WER | Note |
+|---|---|---|---|
+| No hotwords | 37.65% | 46.41% | Simplified-Chinese prompt only |
+| **Domain hotwords** | **26.45%** | **35.73%** | **CER down 29.7% rel., WER down 23.0% rel.** |
+
+- The hotword list `memora/whisper/hotwords.txt` is injected as an `initial_prompt` prefix, bundling three groups of general Chinese meeting hotwords (organization/titles, meeting/procedure, venue/supplies/programs); edit freely and it takes effect on save (an empty file disables it).
+- In normal meeting context, proper terms such as "sports field, balloons, student department, planning, program, chorus, dance backup, costumes, props, owner, vice-minister" are recognized correctly. Remaining errors are concentrated in the opening roll-call numbers (e.g. "002", acoustically unusual) and a few near-homophones (New-Year gala, sponsorship, red carpet) — the capability limit of the small model on far-field audio; near-field or large-v3-turbo reduces these further.
+- Reproduce: `python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t1 210 --hotwords memora/whisper/hotwords.txt`; see `evals/results/asr_small_*.json`.
 **⑥ Voice meeting record** — speakers are auto-identified and color-coded by timestamp; coherent transcription; one-click export in four formats.
 
 <p><img src="docs/images/07_voice.png" width="840"></p>
@@ -356,6 +368,8 @@ python -m pytest tests/ -q                          # 150 unit tests: no model l
 set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
 # Full benchmark & ablation (models required, long-running; greedy & reproducible, resumable)
 cd evals && python runner.py
+# ASR CER/WER and hotword comparison (needs TextGrid ground truth + model)
+python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t1 210
 ```
 
 ## 🗺️ Roadmap
@@ -364,6 +378,7 @@ cd evals && python runner.py
 - [x] Voice meeting pipeline: multi-format transcription, CAM++ speaker diarization, annotated-record export & minutes (scenario-based DER measured)
 - [x] Speaker renaming + transcript proofreading; export / minutes use the proofed content (end-to-end verified)
 - [x] Live recording & streaming transcription; on stop the whole session is re-transcribed and refined, reusing proofreading / export / minutes (end-to-end verified)
+- [x] ASR CER/WER quantitative evaluation + editable domain hotword list (hotwords cut CER 37.65% to 26.45%)
 - [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer
 - [ ] Parsers for more IM / meeting-platform exports

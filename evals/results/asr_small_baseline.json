@@ -1,0 +1,14 @@
+{
+  "clip": "data\\voice_test\\clip_8ch_30_210.wav",
+  "t0": 30.0,
+  "t1": 210.0,
+  "hotwords": "",
+  "segments": 39,
+  "wall_s": 23.7,
+  "cer": 0.3765,
+  "cer_edits": 279,
+  "ref_chars": 741,
+  "wer": 0.4641,
+  "wer_edits": 213,
+  "ref_words": 459
+}

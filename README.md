@@ -119,6 +119,18 @@ CAM++ 神经声纹 embedding（speakeronnx ONNX）+ AHC 凝聚聚类（自动定
 | **ggml-small.bin（默认）** | ≈488MB | **远场实测连贯可用、8GB 友好** |
 | ggml-large-v3-turbo.bin | ≈1.5GB | 质量优先、转写最准 |
 
+**转写质量评测（CER/WER）与领域热词**
+
+以 TextGrid 人工转写为金标准，对同一段 180s 真实会议录音计算**字错率 CER**（逐字编辑距离）与**词错率 WER**（jieba 分词）；文本先归一化（去标点 / 静音 / 噪声标记）。
+
+| 配置 | CER | WER | 说明 |
+|---|---|---|---|
+| 无热词 | 37.65% | 46.41% | 仅简体引导 |
+| **领域热词表** | **26.45%** | **35.73%** | **CER 相对 ↓29.7%、WER 相对 ↓23.0%** |
+
+- 热词表 `memora/whisper/hotwords.txt` 在转写时作为 `initial_prompt` 前缀注入，内置**组织职务 / 会议流程 / 场地物资节目**三组通用中文会议热词；可自行增删、保存即生效，清空文件即关闭。
+- 实测：正常会议语境下「运动场、气球、学生部、策划、节目、合唱、伴舞、服装、道具、负责人、副部长」等专名被正确识别；剩余错误集中在开场连续报数的编号（如「零零二」，声学特殊）与个别近音词（元旦→元代、赞助→钻柱、红地毯→房地产），属于 small 模型 + 远场的能力边界，近场或 large-v3-turbo 会进一步降低。
+- 复现：`python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t1 210 --hotwords memora/whisper/hotwords.txt`；结果见 `evals/results/asr_small_*.json`。
 **⑥ 语音会议记录** —— 自动识别说话人并按时间戳着色，连贯转写，可一键导出四种格式。
 
 <p><img src="docs/images/07_voice.png" width="840"></p>
@@ -336,6 +348,8 @@ python -m pytest tests/ -q                          # 125 项单测：不加载�
 set MEMORA_ENFORCE_OFFLINE=1 && python scripts/e2e_offline_check.py
 # 全量评测与消融（需模型，耗时较长，贪心解码可复现，断点续跑）
 cd evals && python runner.py
+# ASR 转写 CER/WER 与热词对比（需 TextGrid 金标准 + 模型）
+python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t1 210
 ```
 
 ## 🗺️ 路线图
@@ -344,6 +358,7 @@ cd evals && python runner.py
 - [x] 语音会议链路：多格式转写、CAM++ 说话人分离、标注记录导出与纪要（分场景 DER 实测）
 - [x] 说话人重命名 + 转写人工校对，导出 / 纪要基于校对后内容（端到端真机验证）
 - [x] 实时录音流式转写：麦克风边说边出字，结束整体重转写精修，复用校对 / 导出 / 纪要（端到端真机验证）
+- [x] ASR 转写 CER/WER 量化评测 + 可编辑领域热词表（热词使 CER 37.65%→26.45%）
 - [ ] ffmpeg / ASR / 声纹模型随离线包分发（当前按指引下载）
 - [ ] PyInstaller / WebView 桌面 EXE 一键安装包
 - [ ] 更多 IM / 会议平台导出格式解析

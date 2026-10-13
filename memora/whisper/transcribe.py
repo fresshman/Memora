@@ -58,6 +58,17 @@ def _build_model():
     return Model(model=str(model_path), **params)
 
 
+_STREAM_MODEL = None
+
+
+def get_stream_model():
+    """流式专用常驻 whisper 模型（懒加载，避免每个窗口重复加载）。"""
+    global _STREAM_MODEL
+    if _STREAM_MODEL is None:
+        _STREAM_MODEL = _build_model()
+    return _STREAM_MODEL
+
+
 def transcribe_segments(
     pcm: np.ndarray,
     sr: int = 16000,
@@ -102,3 +113,22 @@ def transcribe(path, language: str = "") -> list["Segment"]:
     from .audio import decode
     pcm, sr = decode(str(path))
     return transcribe_segments(pcm, sr, language=language)
+
+def transcribe_window(pcm: np.ndarray, language: str = "",
+                      time_offset: float = 0.0) -> list["Segment"]:
+    """转写一个短窗口（复用常驻模型），段时间戳叠加 time_offset（秒）。"""
+    model = get_stream_model()
+    kw: dict = {}
+    if language:
+        kw["language"] = language
+    if not language or language.startswith("zh"):
+        kw["initial_prompt"] = "以下是普通话会议录音，请用简体汉字转写。"
+    raw = model.transcribe(np.ascontiguousarray(pcm, dtype=np.float32), **kw)
+    out: list[Segment] = []
+    for s in raw:
+        text = (getattr(s, "text", "") or "").strip()
+        if not text:
+            continue
+        out.append(Segment(round(s.t0 * 0.01 + time_offset, 3),
+                           round(s.t1 * 0.01 + time_offset, 3), text))
+    return out

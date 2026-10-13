@@ -66,6 +66,7 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
   into structured minutes via streaming. Pure CPU, no torch.
 - ✏️ **Speaker renaming + transcript proofreading**: rename "Speaker N" to a real name (colors and ownership migrate automatically)
   and edit each transcript line; export and "distill minutes" use the proofed content, and all edits can be undone in one click.
+- 🔴 **Live recording & streaming transcription**: watch the transcript appear as you speak. AudioWorklet captures 16kHz audio and streams it over WebSocket for incremental transcription and speaker assignment; on stop, the whole session is re-transcribed and refined into a final record, reusing proofreading / export / minutes. Fully offline, low latency.
 
 ## 📊 Evaluation & Ablation (measured, not claimed)
 
@@ -140,6 +141,19 @@ Annotated meeting record (speaker + timestamps; adjacent same-speaker segments a
 
 <p><img src="docs/images/09_voice_minutes.png" width="840"></p>
 
+### 🔴 Live Recording & Streaming Transcription
+
+Besides uploading a recorded file, Memora supports **live microphone recording**: the transcript appears as you speak and is turned into a complete meeting record on stop.
+
+- **Real-time (low latency)**: the browser AudioWorklet captures 16kHz audio and streams it over WebSocket roughly every second. Once about 3 seconds accumulate, the backend transcribes with a resident ASR model and assigns speakers in real time by comparing CAM++ embeddings against known speakers, pushing deltas to the UI.
+- **Final (quality)**: on "Stop & organize", the whole session is **re-transcribed in one pass and refined with global AHC diarization** (reusing the upload pipeline), producing a coherent, lossless record that can be proofread / exported / distilled — window-boundary artifacts do not affect the final result.
+- **Protocol**: WebSocket `/api/voice/stream`, messages `start / chunk / stop` ↔ `ready / delta / final / error`; audio is 16kHz mono Int16 PCM (base64).
+- The resident ASR model is a process-level lazy singleton (no re-loading per window); all CPU-heavy work runs in a thread pool without blocking the event loop.
+
+**⑧ Live recording** — switch between "Upload audio file / Live recording" with one click; during recording see a pulsing red dot, timer, level bars and real-time text; on stop get an annotated record that reuses proofreading / export / minutes.
+
+<p><img src="docs/images/10_voice_live.png" width="840"></p>
+
 ## 🖥️ Pages
 
 | Page | Route | Description |
@@ -148,7 +162,7 @@ Annotated meeting record (speaker + timestamps; adjacent same-speaker segments a
 | Q&amp;A | `/qa/` | Ask questions over the whole conversation; answers cite the original messages |
 | Model management | `/models/` | Dual-model recommendation, local status detection, one-click ModelScope download, live switching |
 | Batch review | `/batch/` | Process and summarize multiple records in bulk |
-| Voice meeting review | `/voice/` | Transcription + speaker diarization; rename speakers & proofread transcript; export or distill minutes |
+| Voice meeting review | `/voice/` | Upload a file or record live; transcription + diarization (rename & proofread); export or distill minutes |
 | History | `/history/` | Locally encrypted review history |
 
 ## 📸 Screenshots
@@ -349,6 +363,7 @@ cd evals && python runner.py
 - [x] Multi-platform parsing, PII redaction, local RAG, SSE streaming, one-click model download, offline package, evaluation & ablation
 - [x] Voice meeting pipeline: multi-format transcription, CAM++ speaker diarization, annotated-record export & minutes (scenario-based DER measured)
 - [x] Speaker renaming + transcript proofreading; export / minutes use the proofed content (end-to-end verified)
+- [x] Live recording & streaming transcription; on stop the whole session is re-transcribed and refined, reusing proofreading / export / minutes (end-to-end verified)
 - [ ] Ship ffmpeg / ASR / voiceprint models in the offline package (currently downloaded via guides)
 - [ ] PyInstaller / WebView desktop EXE installer
 - [ ] Parsers for more IM / meeting-platform exports

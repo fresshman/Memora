@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { postForm, postSSE } from "@/lib/api";
+import { LiveRecorder, pcmToBase64 } from "@/lib/recorder";
 import { Button, PageHeader, StepTitle } from "@/components/ui";
 import { ReportCard } from "@/components/ReportCard";
 import {
@@ -111,11 +112,43 @@ export default function VoicePage() {
   const originalRef = useRef<Meeting | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // —— 实时录音 ——
+  const [inputMode, setInputMode] = useState<"upload" | "live">("upload");
+  const [recording, setRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const [liveSegs, setLiveSegs] = useState<VSeg[]>([]);
+  const [level, setLevel] = useState(0);
+  const [finalizing, setFinalizing] = useState(false);
+  const recorderRef = useRef<LiveRecorder | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const liveListRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetch(BASE + "/api/voice/status")
       .then((r) => r.json())
       .then(setStatus)
       .catch(() => {});
+  }, []);
+
+  // 实时转写列表自动滚动到底
+  useEffect(() => {
+    liveListRef.current?.scrollTo({
+      top: liveListRef.current.scrollHeight,
+    });
+  }, [liveSegs]);
+
+  // 卸载时释放麦克风 / 计时器 / WS
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      try {
+        recorderRef.current?.stop();
+      } catch {
+        /* noop */
+      }
+      wsRef.current?.close();
+    };
   }, []);
 
   function showToast(m: string) {
@@ -158,6 +191,144 @@ export default function VoicePage() {
     setDragging(false);
     const f = e.dataTransfer.files?.[0];
     if (f) void handleFile(f);
+  }
+
+  function wsUrl(): string {
+    if (BASE && /^https?:\/\//.test(BASE)) {
+      const proto = BASE.startsWith("https") ? "wss:" : "ws:";
+      const host = BASE.slice(BASE.indexOf("://") + 3);
+      return proto + "//" + host + "/api/voice/stream";
+    }
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return proto + "//" + window.location.host + "/api/voice/stream";
+  }
+
+  function cleanupRecording() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setRecording(false);
+    try {
+      recorderRef.current?.stop();
+    } catch {
+      /* noop */
+    }
+    const ws = wsRef.current;
+    if (ws) {
+      ws.onmessage = null;
+      ws.onerror = null;
+      ws.onclose = null;
+      if (ws.readyState === WebSocket.OPEN ||
+          ws.readyState === WebSocket.CONNECTING)
+        ws.close();
+    }
+    recorderRef.current = null;
+    wsRef.current = null;
+    setLevel(0);
+  }
+
+  function finishLive(m: Meeting & { type: string }) {
+    const rec: Meeting = { meta: m.meta, segments: m.segments, text: m.text };
+    originalRef.current = structuredClone(rec);
+    setMeeting(rec);
+    setProofMode(false);
+    setColorMap({});
+    setRenaming(null);
+    cleanupRecording();
+    setFinalizing(false);
+  }
+
+  async function startRecording() {
+    setError("");
+    setMeeting(null);
+    setMinutes("");
+    setMinSections({});
+    setLiveSegs([]);
+    setRecSeconds(0);
+    setFinalizing(false);
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl());
+    } catch (e) {
+      setError(String((e as Error).message));
+      return;
+    }
+    wsRef.current = ws;
+    const recorder = new LiveRecorder();
+    recorderRef.current = recorder;
+
+    ws.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === "ready") {
+        recorder
+          .start(
+            (chunk) => {
+              if (ws.readyState === WebSocket.OPEN)
+                ws.send(JSON.stringify({
+                  type: "chunk",
+                  data: pcmToBase64(chunk),
+                }));
+            },
+            (lv) => setLevel(lv),
+          )
+          .then(() => {
+            setRecording(true);
+            timerRef.current = setInterval(
+              () => setRecSeconds((s) => s + 1),
+              1000,
+            );
+          })
+          .catch((e) => {
+            setError("无法访问麦克风：" + String((e as Error).message));
+            cleanupRecording();
+          });
+      } else if (m.type === "delta") {
+        setLiveSegs((prev) => prev.concat(m.segments as VSeg[]));
+      } else if (m.type === "final") {
+        finishLive(m as Meeting & { type: string });
+      } else if (m.type === "error") {
+        setError("实时转写失败：" + String(m.message));
+        cleanupRecording();
+      }
+    };
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "start", language }));
+    };
+    ws.onclose = () => {
+      setRecording(false);
+    };
+    ws.onerror = () => {
+      setError("WebSocket 连接失败，请确认后端已启动。");
+      cleanupRecording();
+    };
+  }
+
+  function stopRecording() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setRecording(false);
+    setFinalizing(true);
+    const ws = wsRef.current;
+    let rest = new Float32Array(0);
+    try {
+      rest = recorderRef.current?.stop() ?? rest;
+    } catch {
+      /* noop */
+    }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      if (rest.length)
+        ws.send(JSON.stringify({
+          type: "chunk",
+          data: pcmToBase64(rest),
+        }));
+      ws.send(JSON.stringify({ type: "stop" }));
+    } else {
+      setFinalizing(false);
+      setError("连接已中断，未能整理记录。");
+    }
   }
 
   async function exportMeeting(fmt: string) {
@@ -304,88 +475,256 @@ export default function VoicePage() {
           </div>
         )}
 
-        {/* 上传与选项 */}
+        {/* 导入 / 实时录音 */}
         <section className="card p-5">
-          <StepTitle n={1} title="上传会议录音" />
-          <label
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={onDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-11 text-center transition ${
-              dragging
-                ? "border-brand-500 bg-brand-50/60"
-                : "border-slate-300 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/40"
-            }`}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept={ACCEPT}
-              onChange={onPick}
-              className="sr-only"
-            />
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-soft">
-              <IconMic className="h-6 w-6" />
-            </span>
-            <span className="mt-3 text-sm font-medium text-slate-700">
-              点击选择，或将音频拖拽到此处
-            </span>
-            <span className="mt-1 text-xs text-slate-400">
-              MP3 / WAV / M4A / AAC / FLAC / OGG / WMA / OPUS
-            </span>
-          </label>
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <label className="flex items-center gap-2 text-xs text-slate-500">
-              语言
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <StepTitle n={1} title={inputMode === "upload" ? "上传会议录音" : "实时录音"} />
+            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => { if (!recording && !finalizing) setInputMode("upload"); }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  inputMode === "upload"
+                    ? "bg-white text-brand-700 shadow-soft"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
               >
-                <option value="zh">中文</option>
-                <option value="en">英文</option>
-                <option value="auto">自动检测</option>
-              </select>
-            </label>
-            <label className="flex items-center gap-2 text-xs text-slate-500">
-              <IconUsers className="h-4 w-4 text-slate-400" />
-              参会人数
-              <input
-                type="number"
-                min={0}
-                max={8}
-                value={numSpeakers}
-                onChange={(e) =>
-                  setNumSpeakers(Math.max(0, Number(e.target.value)))
-                }
-                className="w-16 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
-              />
-              <span className="text-[11px] text-slate-400">0 = 自动识别</span>
-            </label>
-            <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
-              自动统计有效语音（能量 VAD），无需手动设置
-            </span>
+                上传录音文件
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (!recording && !finalizing) setInputMode("live"); }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  inputMode === "live"
+                    ? "bg-white text-brand-700 shadow-soft"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                实时录音
+              </button>
+            </div>
           </div>
 
-          {busy && (
-            <div className="mt-5">
-              <p className="mb-2 text-xs text-slate-500">
-                正在本地处理：解码 → 降噪 / 响度归一 → 语音转写 →
-                说话人分离，CPU 转写需要一些时间，请耐心等待…
-              </p>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full w-1/3 rounded-full bg-brand-500"
-                  style={{
-                    animation: "indeterminate 1.2s ease-in-out infinite",
-                  }}
+          {inputMode === "upload" ? (
+            <>
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={onDrop}
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-11 text-center transition ${
+                  dragging
+                    ? "border-brand-500 bg-brand-50/60"
+                    : "border-slate-300 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/40"
+                }`}
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={ACCEPT}
+                  onChange={onPick}
+                  className="sr-only"
                 />
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-soft">
+                  <IconMic className="h-6 w-6" />
+                </span>
+                <span className="mt-3 text-sm font-medium text-slate-700">
+                  点击选择，或将音频拖拽到此处
+                </span>
+                <span className="mt-1 text-xs text-slate-400">
+                  MP3 / WAV / M4A / AAC / FLAC / OGG / WMA / OPUS
+                </span>
+              </label>
+
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <label className="flex items-center gap-2 text-xs text-slate-500">
+                  语言
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
+                  >
+                    <option value="zh">中文</option>
+                    <option value="en">英文</option>
+                    <option value="auto">自动检测</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-500">
+                  <IconUsers className="h-4 w-4 text-slate-400" />
+                  参会人数
+                  <input
+                    type="number"
+                    min={0}
+                    max={8}
+                    value={numSpeakers}
+                    onChange={(e) =>
+                      setNumSpeakers(Math.max(0, Number(e.target.value)))
+                    }
+                    className="w-16 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
+                  />
+                  <span className="text-[11px] text-slate-400">0 = 自动识别</span>
+                </label>
+                <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  自动统计有效语音（能量 VAD），无需手动设置
+                </span>
               </div>
-            </div>
+
+              {busy && (
+                <div className="mt-5">
+                  <p className="mb-2 text-xs text-slate-500">
+                    正在本地处理：解码 → 降噪 / 响度归一 → 语音转写 →
+                    说话人分离，CPU 转写需要一些时间，请耐心等待…
+                  </p>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full w-1/3 rounded-full bg-brand-500"
+                      style={{
+                        animation: "indeterminate 1.2s ease-in-out infinite",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {!recording && !finalizing && liveSegs.length === 0 && (
+                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 px-4 py-10 text-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-soft">
+                    <IconMic className="h-7 w-7" />
+                  </span>
+                  <p className="mt-3 text-sm font-medium text-slate-700">
+                    点击下方按钮，开始实时录音
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    边说边出字，全程本地离线、数据不出设备
+                  </p>
+                  <div className="mt-4">
+                    <Button
+                      icon={<IconMic className="h-4 w-4" />}
+                      onClick={() => void startRecording()}
+                    >
+                      开始录音
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {(recording || finalizing) && (
+                <div>
+                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          recording ? "animate-pulse bg-red-500" : "bg-slate-300"
+                        }`}
+                      />
+                      <span className="font-mono text-sm font-medium text-slate-700">
+                        {hms(recSeconds)}
+                      </span>
+                    </span>
+                    <span className="flex h-4 min-w-[6rem] flex-1 items-center gap-px overflow-hidden">
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-full w-1 rounded-sm ${
+                            i < Math.min(24, Math.round(level * 200))
+                              ? "bg-brand-400"
+                              : "bg-slate-200"
+                          }`}
+                        />
+                      ))}
+                    </span>
+                    {recording ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        icon={<IconCheck className="h-4 w-4" />}
+                        onClick={stopRecording}
+                      >
+                        结束并整理
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-500">
+                        正在整理完整记录…
+                      </span>
+                    )}
+                  </div>
+
+                  <div
+                    ref={liveListRef}
+                    className="mt-3 max-h-80 overflow-auto rounded-xl bg-slate-50/60 px-4 py-2"
+                  >
+                    {liveSegs.length === 0 ? (
+                      <p className="py-6 text-center text-xs text-slate-400">
+                        正在聆听，请开始说话…
+                      </p>
+                    ) : (
+                      liveSegs.map((seg, i) => {
+                        const ci = speakerIdx(seg.speaker);
+                        return (
+                          <div key={i} className="flex gap-3 py-1.5">
+                            <span
+                              className={`mt-0.5 w-16 shrink-0 font-mono text-[11px] ${SPEAKER_TEXT[ci]}`}
+                            >
+                              {hms(seg.start)}
+                            </span>
+                            <span
+                              className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SPEAKER_CHIP[ci]}`}
+                            >
+                              {seg.speaker || "说话人1"}
+                            </span>
+                            <span className="text-sm leading-relaxed text-slate-700">
+                              {seg.text}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {finalizing && (
+                    <div className="mt-3">
+                      <p className="mb-2 text-xs text-slate-500">
+                        录音结束，正在本地完成整体重转写与说话人精修，CPU
+                        处理需要一些时间…
+                      </p>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full w-1/3 rounded-full bg-brand-500"
+                          style={{
+                            animation: "indeterminate 1.2s ease-in-out infinite",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!recording && !finalizing && (
+                <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <label className="flex items-center gap-2 text-xs text-slate-500">
+                    语言
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
+                    >
+                      <option value="zh">中文</option>
+                      <option value="en">英文</option>
+                      <option value="auto">自动检测</option>
+                    </select>
+                  </label>
+                  <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <IconUsers className="h-4 w-4 text-slate-400" />
+                    说话人实时识别，结束后自动精修，无需手动设置人数
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </section>
 

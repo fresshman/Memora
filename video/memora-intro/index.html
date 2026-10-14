@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="zh-CN" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="./gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Microsoft YaHei'; src: local('Microsoft YaHei'); }
+      @font-face { font-family: 'PingFang SC'; src: local('PingFang SC'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: #070b16;
+        font-family: "Inter", "Microsoft YaHei", "PingFang SC", ui-sans-serif,
+          system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root { width: 1920px; height: 1080px; position: relative; }
+
+      /* ---------- 背景 ---------- */
+      .bg { position: absolute; inset: 0; z-index: 0; }
+      .bg .grad {
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(1100px 700px at 12% -10%, rgba(20,184,166,.20), transparent 60%),
+          radial-gradient(1000px 700px at 105% 110%, rgba(56,189,248,.16), transparent 60%),
+          linear-gradient(160deg, #0a1122 0%, #080d1a 55%, #0a1020 100%);
+      }
+      .grid-lines {
+        position: absolute; inset: 0; opacity: .35;
+        background-image:
+          linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(1200px 900px at 50% 45%, #000 40%, transparent 100%);
+      }
+      .orb {
+        position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5;
+      }
+      .orb.a { width: 420px; height: 420px; left: -120px; top: 560px;
+        background: rgba(20,184,166,.35); }
+      .orb.b { width: 460px; height: 460px; right: -140px; top: -120px;
+        background: rgba(56,189,248,.28); }
+
+      /* ---------- 顶部进度 ---------- */
+      .topbar {
+        position: absolute; top: 0; left: 0; right: 0; height: 64px; z-index: 40;
+        display: flex; align-items: center; padding: 0 64px;
+      }
+      .brand-mini { display: flex; align-items: center; gap: 14px; }
+      .logo-mark {
+        width: 40px; height: 40px; border-radius: 12px;
+        background: linear-gradient(135deg, #2dd4bf, #0ea5b7);
+        display: flex; align-items: center; justify-content: center;
+        color: #04201d; font-weight: 800; font-size: 24px;
+        box-shadow: 0 6px 20px rgba(20,184,166,.4);
+      }
+      .brand-mini .nm { color: #e2e8f0; font-weight: 700; font-size: 22px; }
+      .brand-mini .sub { color: #9fb1c7; font-size: 15px; margin-left: 4px; }
+      .progress-track {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+        background: rgba(148,163,184,.14);
+      }
+      .progress-fill {
+        position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
+        transform: scaleX(0); transform-origin: left center;
+        background: linear-gradient(90deg, #2dd4bf, #38bdf8);
+      }
+
+      /* ---------- 场景容器 ---------- */
+      .scene { position: absolute; inset: 0; z-index: 10; }
+      .scene-inner {
+        width: 100%; height: 100%;
+        display: flex; align-items: center;
+        padding: 70px 110px 80px; gap: 70px;
+      }
+      .left { flex: 0 0 620px; }
+      .right { flex: 1; display: flex; align-items: center; justify-content: center; }
+
+      .step-badge {
+        display: inline-flex; align-items: center; gap: 12px;
+        margin-bottom: 26px;
+      }
+      .step-num {
+        width: 52px; height: 52px; border-radius: 16px;
+        background: rgba(45,212,191,.12); border: 1px solid rgba(45,212,191,.4);
+        color: #2dd4bf; font-weight: 800; font-size: 26px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .step-kicker { color: #67e8d9; font-size: 20px; font-weight: 600;
+        letter-spacing: .14em; }
+      .scene-title {
+        color: #f1f5f9; font-size: 58px; font-weight: 800;
+        letter-spacing: -.02em; line-height: 1.12; margin-bottom: 24px;
+      }
+      .scene-title em {
+        font-style: normal;
+        background: linear-gradient(120deg, #2dd4bf, #38bdf8);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .scene-desc { color: #9fb1c7; font-size: 25px; line-height: 1.6;
+        margin-bottom: 30px; }
+      .feat-tags { display: flex; flex-wrap: wrap; gap: 14px; }
+      .feat-tag {
+        display: inline-flex; align-items: center; gap: 9px;
+        padding: 11px 20px; border-radius: 999px;
+        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.18);
+        color: #cbd5e1; font-size: 19px;
+      }
+      .feat-tag .dot { width: 8px; height: 8px; border-radius: 50%;
+        background: #2dd4bf; }
+
+      /* ---------- 应用窗口 ---------- */
+      .window {
+        width: 100%; max-width: 940px;
+        border-radius: 20px; overflow: hidden;
+        background: linear-gradient(180deg, #0f1a30, #0c1526);
+        border: 1px solid rgba(148,163,184,.16);
+        box-shadow: 0 40px 90px rgba(0,0,0,.55),
+          0 0 0 1px rgba(45,212,191,.06);
+      }
+      .window-bar {
+        height: 52px; display: flex; align-items: center; gap: 9px;
+        padding: 0 22px;
+        background: rgba(148,163,184,.06);
+        border-bottom: 1px solid rgba(148,163,184,.12);
+      }
+      .window-bar .tl-dot { width: 12px; height: 12px; border-radius: 50%; }
+      .window-bar .d1 { background: #f87171; }
+      .window-bar .d2 { background: #fbbf24; }
+      .window-bar .d3 { background: #34d399; }
+      .window-bar .ttl {
+        margin-left: 14px; color: #7c8da5; font-size: 16px; font-weight: 500;
+      }
+      .window-body { padding: 26px; min-height: 470px; }
+
+      /* 对话气泡 */
+      .chat-row { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
+      .avatar {
+        flex: 0 0 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: #04201d; font-weight: 700; font-size: 17px;
+      }
+      .avatar.teal { background: linear-gradient(135deg, #2dd4bf, #14b8a6); }
+      .avatar.blue { background: linear-gradient(135deg, #38bdf8, #0ea5e9); }
+      .avatar.amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #3a2a05; }
+      .bubble {
+        background: rgba(148,163,184,.09); border: 1px solid rgba(148,163,184,.13);
+        border-radius: 14px; padding: 14px 18px;
+        color: #dbe4f0; font-size: 20px; line-height: 1.5;
+      }
+      .bubble .who { color: #67e8d9; font-weight: 700; margin-right: 10px; }
+      .drop-hint {
+        margin-top: 6px; border: 1.5px dashed rgba(45,212,191,.4);
+        border-radius: 14px; padding: 16px; text-align: center;
+        color: #7c8da5; font-size: 18px;
+      }
+
+      /* PII */
+      .pii-line {
+        background: rgba(148,163,184,.07); border-radius: 14px;
+        padding: 16px 20px; margin-bottom: 16px;
+        color: #d7e0ec; font-size: 20px; line-height: 1.7;
+      }
+      .mask {
+        display: inline-block; border-radius: 7px; padding: 1px 9px;
+        background: linear-gradient(135deg, rgba(248,113,113,.30), rgba(248,113,113,.16));
+        border: 1px solid rgba(248,113,113,.45);
+        color: #fecaca; font-weight: 700; letter-spacing: 1px;
+      }
+      .scan {
+        position: absolute; top: 20px; left: 0; right: 0; height: 3px; opacity: 0;
+        background: linear-gradient(90deg, transparent, #2dd4bf, transparent);
+        box-shadow: 0 0 18px rgba(45,212,191,.8);
+      }
+      .pii-wrap { position: relative; }
+      .pii-counter {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 14px; padding: 14px 18px; border-radius: 12px;
+        background: rgba(45,212,191,.10); border: 1px solid rgba(45,212,191,.28);
+      }
+      .pii-counter .lab { color: #9fb1c7; font-size: 18px; }
+      .pii-counter .val { color: #2dd4bf; font-weight: 800; font-size: 26px; }
+      .switch-pill {
+        display: inline-flex; border-radius: 999px; overflow: hidden;
+        border: 1px solid rgba(148,163,184,.2);
+      }
+      .switch-pill span {
+        padding: 9px 18px; font-size: 16px; color: #9fb1c7;
+        background: rgba(148,163,184,.07);
+      }
+      .switch-pill span.on { background: rgba(45,212,191,.22); color: #67e8d9; font-weight: 700; }
+
+      /* 报告 */
+      .mode-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+      .mode-pill {
+        display: inline-flex; gap: 6px; border-radius: 999px; padding: 5px;
+        background: rgba(148,163,184,.09); border: 1px solid rgba(148,163,184,.18);
+      }
+      .mode-pill span { padding: 8px 18px; border-radius: 999px; font-size: 17px; color: #9fb1c7; }
+      .mode-pill span.on { background: linear-gradient(135deg, #2dd4bf, #14b8a6); color: #04201d; font-weight: 700; }
+      .report-sec {
+        border-radius: 13px; margin-bottom: 14px; overflow: hidden;
+        border: 1px solid rgba(148,163,184,.12);
+      }
+      .report-sec .sec-head {
+        display: flex; align-items: center; gap: 10px;
+        padding: 11px 16px; font-size: 18px; font-weight: 700;
+      }
+      .report-sec .sec-body { padding: 4px 16px 13px; color: #c3d0e0; font-size: 17px; line-height: 1.55; }
+      .report-sec .sec-body .li { display: flex; gap: 9px; margin-bottom: 6px; }
+      .report-sec .sec-body .li .ic { color: #2dd4bf; }
+      .sec-todo .sec-head { background: rgba(45,212,191,.12); color: #67e8d9; }
+      .sec-risk .sec-head { background: rgba(248,113,113,.12); color: #fca5a5; }
+      .sec-dec .sec-head { background: rgba(56,189,248,.12); color: #7dd3fc; }
+      .sec-sum .sec-head { background: rgba(167,139,250,.14); color: #c4b5fd; }
+
+      /* 看板 */
+      .board-stats { display: flex; gap: 12px; margin-bottom: 18px; }
+      .board-stat {
+        flex: 1; border-radius: 12px; padding: 12px 14px;
+        background: rgba(148,163,184,.07); border: 1px solid rgba(148,163,184,.12);
+      }
+      .board-stat .n { font-size: 26px; font-weight: 800; }
+      .board-stat .l { font-size: 14px; color: #8aa0b8; margin-top: 2px; }
+      .board { display: flex; gap: 12px; position: relative; }
+      .kanban-col {
+        flex: 1; border-radius: 13px; padding: 12px; min-height: 300px;
+        background: rgba(148,163,184,.05); border: 1px solid rgba(148,163,184,.1);
+      }
+      .kanban-col .col-head {
+        display: flex; align-items: center; gap: 8px; font-size: 16px;
+        font-weight: 700; margin-bottom: 12px; color: #cbd5e1;
+      }
+      .kanban-col .col-head .c-dot { width: 9px; height: 9px; border-radius: 50%; }
+      .kanban-card {
+        border-radius: 11px; padding: 12px 13px; margin-bottom: 10px;
+        background: rgba(17,28,51,.85); border: 1px solid rgba(148,163,184,.14);
+      }
+      .kanban-card .t { color: #e2e8f0; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+      .kanban-card .meta { display: flex; gap: 7px; align-items: center; }
+      .k-badge { font-size: 13px; padding: 3px 9px; border-radius: 7px; }
+      .k-badge.owner { background: rgba(45,212,191,.16); color: #67e8d9; }
+      .k-badge.due { background: rgba(148,163,184,.12); color: #a9b9cf; }
+      .k-badge.overdue { background: rgba(248,113,113,.18); color: #fca5a5; }
+      /* 状态流转轨道（卡片沿轨道移动，与下方看板垂直分隔，不重叠） */
+      .flow-track {
+        position: relative; height: 86px; margin-bottom: 16px;
+        border-radius: 13px;
+        background: rgba(148,163,184,.05); border: 1px solid rgba(148,163,184,.1);
+      }
+      .flow-line {
+        position: absolute; top: 28px; left: 111px; right: 111px; height: 3px;
+        background: rgba(148,163,184,.18); border-radius: 2px;
+      }
+      .flow-line-done {
+        position: absolute; top: 28px; left: 111px; height: 3px;
+        width: 0; border-radius: 2px;
+        background: linear-gradient(90deg, #2dd4bf, #38bdf8);
+      }
+      .flow-node {
+        position: absolute; top: 20px; width: 18px; height: 18px; border-radius: 50%;
+        background: #0f1a30; border: 2px solid #64748b;
+      }
+      .flow-node-label {
+        position: absolute; top: 60px; width: 190px; text-align: center;
+        color: #9db2c8; font-size: 15px; font-weight: 600;
+      }
+      .moving-card {
+        position: absolute; top: 6px; width: 196px; height: 48px; z-index: 20;
+        border-radius: 12px; padding: 7px 15px;
+        background: linear-gradient(135deg, #2dd4bf, #14b8a6);
+        color: #04201d; box-shadow: 0 12px 26px rgba(20,184,166,.4);
+      }
+      .moving-card .t { font-weight: 800; font-size: 15px; }
+      .moving-card .m { font-size: 12px; color: #04201d; margin-top: 1px; }
+
+      /* 复盘包 */
+      .pkg-wrap { display: flex; align-items: center; gap: 30px; padding: 10px 6px; }
+      .files-col { flex: 1; display: flex; flex-direction: column; gap: 13px; }
+      .file-item {
+        display: flex; align-items: center; gap: 14px;
+        background: rgba(148,163,184,.07); border: 1px solid rgba(148,163,184,.13);
+        border-radius: 13px; padding: 14px 18px;
+      }
+      .file-ic {
+        width: 42px; height: 48px; border-radius: 8px; flex: 0 0 42px;
+        background: linear-gradient(135deg, rgba(56,189,248,.3), rgba(56,189,248,.12));
+        border: 1px solid rgba(56,189,248,.35);
+        display: flex; align-items: center; justify-content: center;
+        color: #7dd3fc; font-size: 14px; font-weight: 700;
+      }
+      .file-item .fn { color: #dbe4f0; font-size: 19px; font-weight: 600; }
+      .file-item .fx { color: #6b7d96; font-size: 15px; }
+      .zip-box {
+        flex: 0 0 280px; height: 340px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+        border-radius: 20px;
+        background: radial-gradient(circle at 50% 30%, rgba(45,212,191,.18), rgba(148,163,184,.05));
+        border: 1px solid rgba(45,212,191,.3);
+      }
+      .zip-icon {
+        width: 130px; height: 116px; position: relative;
+      }
+      .zip-icon .body {
+        position: absolute; bottom: 0; left: 0; right: 0; height: 92px;
+        border-radius: 16px;
+        background: linear-gradient(160deg, #2dd4bf, #0d9488);
+        box-shadow: 0 16px 34px rgba(20,184,166,.45);
+      }
+      .zip-icon .cap {
+        position: absolute; top: 0; left: 18px; width: 58px; height: 34px;
+        border-radius: 12px 12px 0 0;
+        background: linear-gradient(160deg, #5eead4, #14b8a6);
+      }
+      .zip-icon .zipper {
+        position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+        width: 12px; height: 58px; background: #064e46; border-radius: 4px;
+      }
+      .zip-label { color: #67e8d9; font-weight: 800; font-size: 22px; }
+      .zip-sub { color: #8aa0b8; font-size: 16px; }
+
+      /* ---------- 开场 / 结尾 ---------- */
+      .hero {
+        position: absolute; inset: 0; z-index: 20;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center;
+      }
+      .hero-logo {
+        width: 130px; height: 130px; border-radius: 34px;
+        background: linear-gradient(135deg, #2dd4bf, #0ea5b7);
+        display: flex; align-items: center; justify-content: center;
+        color: #04201d; font-weight: 800; font-size: 76px;
+        box-shadow: 0 24px 60px rgba(20,184,166,.5);
+        margin-bottom: 36px;
+      }
+      .hero-name { color: #f8fafc; font-size: 88px; font-weight: 800;
+        letter-spacing: -.02em; margin-bottom: 18px; }
+      .hero-tag { color: #9fb1c7; font-size: 30px; margin-bottom: 8px; }
+      .hero-en { color: #8ea2bd; font-size: 22px; letter-spacing: .08em; margin-bottom: 40px; }
+      .hero-tags { display: flex; gap: 18px; }
+      .hero-tags .ht {
+        display: inline-flex; align-items: center; gap: 11px;
+        padding: 14px 28px; border-radius: 999px;
+        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.2);
+        color: #dbe4f0; font-size: 22px;
+      }
+      .hero-tags .ht .d { width: 10px; height: 10px; border-radius: 50%; background: #2dd4bf; }
+
+      .end-slogan { color: #f1f5f9; font-size: 62px; font-weight: 800;
+        letter-spacing: -.01em; margin-bottom: 20px; }
+      .end-slogan em { font-style: normal;
+        background: linear-gradient(120deg, #2dd4bf, #38bdf8);
+        -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .end-stack {
+        display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap;
+        justify-content: center; max-width: 1100px;
+      }
+      .end-stack .chip {
+        padding: 10px 22px; border-radius: 999px; font-size: 20px;
+        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.18);
+        color: #cbd5e1;
+      }
+      .end-gitee {
+        display: inline-flex; align-items: center; gap: 12px;
+        padding: 16px 34px; border-radius: 16px;
+        background: linear-gradient(135deg, rgba(45,212,191,.18), rgba(56,189,248,.12));
+        border: 1px solid rgba(45,212,191,.4);
+        color: #a7f3e9; font-size: 26px; font-weight: 700; margin-bottom: 26px;
+      }
+      .offline-badge {
+        display: inline-flex; align-items: center; gap: 11px;
+        color: #9fb1c7; font-size: 21px;
+      }
+      .offline-badge .d { width: 11px; height: 11px; border-radius: 50%;
+        background: #34d399; box-shadow: 0 0 12px rgba(52,211,153,.8); }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="42"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- 背景 -->
+      <div class="bg">
+        <div class="grad"></div>
+        <div class="grid-lines"></div>
+        <div class="orb a" data-layout-allow-overflow></div>
+        <div class="orb b" data-layout-allow-overflow></div>
+      </div>
+
+      <!-- 顶部进度 -->
+      <div class="topbar">
+        <div class="brand-mini">
+          <div class="logo-mark">M</div>
+          <div class="nm">Memora</div>
+          <div class="sub">端侧离线 · 对话 / 会议复盘</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+      </div>
+
+      <!-- 场景 0：开场 -->
+      <section class="scene" id="s0">
+        <div class="hero">
+          <div class="hero-logo reveal">M</div>
+          <div class="hero-name reveal">Memora</div>
+          <div class="hero-tag reveal">端侧离线 · 对话 / 会议智能复盘</div>
+          <div class="hero-en reveal">ON-DEVICE MEETING &amp; CONVERSATION REVIEW</div>
+          <div class="hero-tags reveal">
+            <div class="ht"><span class="d"></span>完全离线</div>
+            <div class="ht"><span class="d"></span>数据不出设备</div>
+            <div class="ht"><span class="d"></span>隐私优先</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 1：一键导入 -->
+      <section class="scene" id="s1">
+        <div class="scene-inner">
+          <div class="left">
+            <div class="step-badge reveal">
+              <div class="step-num">1</div>
+              <div class="step-kicker">IMPORT</div>
+            </div>
+            <div class="scene-title reveal">一键导入<br /><em>多平台适配</em></div>
+            <div class="scene-desc reveal">微信 / 钉钉 / 飞书聊天记录、纯语音文件，拖拽即解析，自动还原发言人。</div>
+            <div class="feat-tags reveal">
+              <div class="feat-tag"><span class="dot"></span>微信 txt</div>
+              <div class="feat-tag"><span class="dot"></span>钉钉 csv</div>
+              <div class="feat-tag"><span class="dot"></span>飞书 html</div>
+              <div class="feat-tag"><span class="dot"></span>语音 mp3 / wav</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="window reveal">
+              <div class="window-bar">
+                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
+                <span class="ttl">导入与复盘</span>
+              </div>
+              <div class="window-body">
+                <div class="chat-row">
+                  <div class="avatar teal">张</div>
+                  <div class="bubble"><span class="who">张伟</span>接口文档我今天写了一半，明天就能完成。</div>
+                </div>
+                <div class="chat-row">
+                  <div class="avatar blue">李</div>
+                  <div class="bubble"><span class="who">李娜</span>测试用例我在跟进，预计周五前完成。</div>
+                </div>
+                <div class="chat-row">
+                  <div class="avatar amber">王</div>
+                  <div class="bubble"><span class="who">王强</span>下周三前提交安全审计报告，注意保密。</div>
+                </div>
+                <div class="drop-hint">拖拽文件到此处，自动解析对话与发言人</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 2：PII 脱敏 -->
+      <section class="scene" id="s2">
+        <div class="scene-inner">
+          <div class="left">
+            <div class="step-badge reveal">
+              <div class="step-num">2</div>
+              <div class="step-kicker">PRIVACY</div>
+            </div>
+            <div class="scene-title reveal">PII 脱敏<br /><em>隐私可控</em></div>
+            <div class="scene-desc reveal">自动识别手机、身份证、姓名与卡号，一键脱敏；需要时可凭原始记录还原。</div>
+            <div class="feat-tags reveal">
+              <div class="feat-tag"><span class="dot"></span>手机 / 身份证</div>
+              <div class="feat-tag"><span class="dot"></span>姓名 / 银行卡</div>
+              <div class="feat-tag"><span class="dot"></span>一键还原</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="window reveal">
+              <div class="window-bar">
+                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
+                <span class="ttl">脱敏预览</span>
+              </div>
+              <div class="window-body">
+                <div class="pii-wrap">
+                  <div class="scan" id="scan"></div>
+                  <div class="pii-line">联系电话：<span class="mask">138****5678</span></div>
+                  <div class="pii-line">身份证号：<span class="mask">110***********1234</span></div>
+                  <div class="pii-line">银行卡号：<span class="mask">6222**********0123</span></div>
+                  <div class="pii-counter">
+                    <span class="lab">本地脱敏处理 · 敏感信息不上传</span>
+                    <span class="val">已脱敏 12 处</span>
+                  </div>
+                  <div class="pii-counter" style="background:transparent;border:none;justify-content:flex-end;margin-top:12px;">
+                    <div class="switch-pill"><span class="on">脱敏</span><span>还原</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 3：智能复盘 -->
+      <section class="scene" id="s3">
+        <div class="scene-inner">
+          <div class="left">
+            <div class="step-badge reveal">
+              <div class="step-num">3</div>
+              <div class="step-kicker">REVIEW</div>
+            </div>
+            <div class="scene-title reveal">智能复盘<br /><em>结构化纪要</em></div>
+            <div class="scene-desc reveal">待办、风险、决定、摘要四段式输出，流式生成；支持快速 / 深度思考切换。</div>
+            <div class="feat-tags reveal">
+              <div class="feat-tag"><span class="dot"></span>SSE 流式输出</div>
+              <div class="feat-tag"><span class="dot"></span>快速 / 深度思考</div>
+              <div class="feat-tag"><span class="dot"></span>引用可溯源</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="window reveal">
+              <div class="window-bar">
+                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
+                <span class="ttl">复盘报告</span>
+              </div>
+              <div class="window-body">
+                <div class="mode-row">
+                  <div class="mode-pill"><span class="on">快速模式</span><span>深度思考</span></div>
+                  <span style="color:#67e8d9;font-size:16px;">● 生成中</span>
+                </div>
+                <div class="report-sec sec-todo">
+                  <div class="sec-head">✓ 待办事项</div>
+                  <div class="sec-body">
+                    <div class="li"><span class="ic">▸</span>完成接口文档｜张伟</div>
+                    <div class="li"><span class="ic">▸</span>完善测试用例｜李娜</div>
+                  </div>
+                </div>
+                <div class="report-sec sec-risk">
+                  <div class="sec-head">⚠ 风险提示</div>
+                  <div class="sec-body"><div class="li"><span class="ic">▸</span>安全审计时间紧，需提前准备材料</div></div>
+                </div>
+                <div class="report-sec sec-dec">
+                  <div class="sec-head">◆ 会议决定</div>
+                  <div class="sec-body"><div class="li"><span class="ic">▸</span>下周三前提交安全审计报告</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 4：行动项追踪 -->
+      <section class="scene" id="s4">
+        <div class="scene-inner">
+          <div class="left">
+            <div class="step-badge reveal">
+              <div class="step-num">4</div>
+              <div class="step-kicker">TRACK</div>
+            </div>
+            <div class="scene-title reveal">跨会议<br /><em>行动项追踪</em></div>
+            <div class="scene-desc reveal">自动抽取待办，关联责任人与截止时间；后续会议一键回顾，状态自动更新。</div>
+            <div class="feat-tags reveal">
+              <div class="feat-tag"><span class="dot"></span>四状态闭环</div>
+              <div class="feat-tag"><span class="dot"></span>逾期提醒</div>
+              <div class="feat-tag"><span class="dot"></span>进展回顾</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="window reveal">
+              <div class="window-bar">
+                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
+                <span class="ttl">行动项追踪</span>
+              </div>
+              <div class="window-body">
+                <div class="board-stats">
+                  <div class="board-stat"><div class="n" style="color:#fca5a5;">8</div><div class="l">总数</div></div>
+                  <div class="board-stat"><div class="n" style="color:#fbbf24;">4</div><div class="l">待跟进</div></div>
+                  <div class="board-stat"><div class="n" style="color:#38bdf8;">2</div><div class="l">进行中</div></div>
+                  <div class="board-stat"><div class="n" style="color:#34d399;">1</div><div class="l">已完成</div></div>
+                </div>
+                <div class="flow-track" id="flowtrack">
+                  <div class="flow-line"></div>
+                  <div class="flow-line-done" id="linedone"></div>
+                  <div class="flow-node" style="left:102px"></div>
+                  <div class="flow-node-label" style="left:16px">待跟进</div>
+                  <div class="flow-node" style="left:324px"></div>
+                  <div class="flow-node-label" style="left:238px">进行中</div>
+                  <div class="flow-node" style="left:546px"></div>
+                  <div class="flow-node-label" style="left:460px">已完成</div>
+                  <div class="flow-node" style="left:768px"></div>
+                  <div class="flow-node-label" style="left:682px">已取消</div>
+                  <div class="moving-card" id="moving" style="left:13px">
+                    <div class="t">接口文档</div>
+                    <div class="m">张伟 · 跟进中</div>
+                  </div>
+                </div>
+                <div class="board" id="board">
+                  <div class="kanban-col">
+                    <div class="col-head"><span class="c-dot" style="background:#fbbf24;"></span>待跟进</div>
+                    <div class="kanban-card"><div class="t">安全审计报告</div><div class="meta"><span class="k-badge owner">王强</span></div></div>
+                    <div class="kanban-card"><div class="t">供应商报价</div><div class="meta"><span class="k-badge owner">李娜</span></div></div>
+                  </div>
+                  <div class="kanban-col">
+                    <div class="col-head"><span class="c-dot" style="background:#38bdf8;"></span>进行中</div>
+                    <div class="kanban-card"><div class="t">接口联调</div><div class="meta"><span class="k-badge owner">张伟</span></div></div>
+                  </div>
+                  <div class="kanban-col">
+                    <div class="col-head"><span class="c-dot" style="background:#34d399;"></span>已完成</div>
+                    <div class="kanban-card"><div class="t">部署测试环境</div><div class="meta"><span class="k-badge owner">赵六</span></div></div>
+                  </div>
+                  <div class="kanban-col">
+                    <div class="col-head"><span class="c-dot" style="background:#94a3b8;"></span>已取消</div>
+                    <div class="kanban-card"><div class="t">废弃旧接口</div><div class="meta"><span class="k-badge owner">赵六</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 5：复盘包 -->
+      <section class="scene" id="s5">
+        <div class="scene-inner">
+          <div class="left">
+            <div class="step-badge reveal">
+              <div class="step-num">5</div>
+              <div class="step-kicker">EXPORT</div>
+            </div>
+            <div class="scene-title reveal">一键导出<br /><em>项目复盘包</em></div>
+            <div class="scene-desc reveal">报告、行动项、记录、问答与原始对话，自动整理打包，一个压缩包完整归档。</div>
+            <div class="feat-tags reveal">
+              <div class="feat-tag"><span class="dot"></span>纯标准库打包</div>
+              <div class="feat-tag"><span class="dot"></span>行动项始终最新</div>
+              <div class="feat-tag"><span class="dot"></span>Markdown / zip</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="window reveal">
+              <div class="window-bar">
+                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
+                <span class="ttl">导出复盘包</span>
+              </div>
+              <div class="window-body">
+                <div class="pkg-wrap">
+                  <div class="files-col" id="files">
+                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">01_复盘报告.md</div></div></div>
+                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">02_行动项清单.md</div></div></div>
+                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">03_会议记录.md</div></div></div>
+                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">04_问答记录.md</div></div></div>
+                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">05_原始对话.md</div></div></div>
+                  </div>
+                  <div class="zip-box">
+                    <div class="zip-icon">
+                      <div class="cap"></div>
+                      <div class="body"></div>
+                      <div class="zipper"></div>
+                    </div>
+                    <div class="zip-label">Memora 复盘包</div>
+                    <div class="zip-sub">.zip · 一键下载</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 场景 6：结尾 -->
+      <section class="scene" id="s6">
+        <div class="hero">
+          <div class="end-slogan reveal">让每一次对话，<em>都有始有终</em></div>
+          <div class="end-stack reveal">
+            <span class="chip">Spark-X2.5 4B / 1.7B</span>
+            <span class="chip">bge-m3</span>
+            <span class="chip">FAISS</span>
+            <span class="chip">LangChain</span>
+            <span class="chip">FastAPI</span>
+          </div>
+          <div class="end-gitee reveal">
+            <span style="font-size:24px;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            </span>
+            gitee.com/FreeBlank/memora
+          </div>
+          <div class="offline-badge reveal"><span class="d"></span>完全离线 · 零上传 · 本地运行</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // 初始隐藏所有场景与 reveal
+      gsap.set(".scene", { opacity: 0 });
+      gsap.set(".reveal", { opacity: 0, y: 34 });
+
+      // 顶部进度条（42s）
+      tl.to("#prog", { scaleX: 1, ease: "none", duration: 42 }, 0);
+
+      // 通用场景编排：进入 / 内部 reveal 错峰 / 退出
+      function scene(id, start, dur, gap) {
+        tl.fromTo("#" + id, { opacity: 0 },
+          { opacity: 1, duration: 0.5, ease: "power2.out" }, start);
+        tl.to("#" + id + " .reveal",
+          { opacity: 1, y: 0, duration: 0.7, stagger: gap || 0.12, ease: "power3.out" },
+          start + 0.35);
+        tl.to("#" + id, { opacity: 0, duration: 0.5, ease: "power2.in" },
+          start + dur - 0.5);
+      }
+
+      // 0 开场
+      scene("s0", 0, 4, 0.16);
+      // 1 导入
+      scene("s1", 4, 7, 0.10);
+      // 2 PII
+      scene("s2", 11, 6, 0.12);
+      // 3 复盘
+      scene("s3", 17, 7, 0.10);
+      // 4 行动项
+      scene("s4", 24, 7, 0.10);
+      // 5 复盘包
+      scene("s5", 31, 6, 0.10);
+      // 6 结尾
+      scene("s6", 37, 5, 0.14);
+
+      // ---- 场景 2：扫描线扫过（用 transform y，逐帧平滑）----
+      tl.fromTo("#scan", { y: 0, opacity: 0 },
+        { opacity: 1, duration: 0.2 }, 11.6);
+      tl.to("#scan", { y: 210, ease: "power1.inOut", duration: 1.4 }, 11.8);
+      tl.to("#scan", { opacity: 0, duration: 0.2 }, 13.2);
+
+      // ---- 场景 4：卡片沿状态流转轨道 待跟进 -> 进行中 -> 已完成 ----
+      tl.set("#moving", { opacity: 0, x: 0 }, 24);
+      tl.to("#moving", { opacity: 1, duration: 0.3 }, 25.0);
+      // 节点1 -> 节点2（连接线同步推进）
+      tl.to("#moving", { x: 222, duration: 0.8, ease: "power2.inOut" }, 26.4);
+      tl.to("#linedone", { width: 222, duration: 0.8, ease: "power2.inOut" }, 26.4);
+      // 节点2 -> 节点3
+      tl.to("#moving", { x: 444, duration: 0.8, ease: "power2.inOut" }, 28.2);
+      tl.to("#linedone", { width: 444, duration: 0.8, ease: "power2.inOut" }, 28.2);
+      tl.to("#moving", { scale: 0.96, duration: 0.3, yoyo: true, repeat: 1 }, 29.2);
+
+      // ---- 场景 5：文件逐个飞入 zip ----
+      const files = gsap.utils.toArray("#files .file-item");
+      tl.set(files, { opacity: 0.15 }, 31);
+      files.forEach(function (f, i) {
+        const t = 32.2 + i * 0.55;
+        tl.to(f, { opacity: 1, duration: 0.25 }, t - 0.2);
+        tl.to(f, { x: 250, scale: 0.4, opacity: 0, duration: 0.55,
+          ease: "power2.in" }, t);
+      });
+      // zip 弹一下（最后一个文件进入后）
+      tl.to(".zip-box", { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1 }, 35.6);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -26,6 +26,20 @@
 
 ---
 
+<div align="center">
+
+🎬 <strong>项目介绍短片 · 42 秒看懂核心链路</strong>（<em>多平台导入 → PII 脱敏 → 智能复盘 → 跨会议行动项追踪 → 一键导出复盘包</em>）
+
+<a href="video/memora-intro/renders/memora-intro.mp4">
+<img src="docs/images/video_cover.png" alt="Memora 项目介绍短片" width="760">
+</a>
+
+▶️ 点击观看 / 下载：<a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a>（1920×1080 · MP4 · 完全离线可播）
+
+</div>
+
+---
+
 > 一个**完全离线、隐私优先**的对话智能复盘工具：把 **Spark-X2.5 端侧小模型 + 本地检索增强（RAG）**
 > 装进一台 **8GB 内存的普通 Windows PC**，**数据从不出本机**，即可把成百上千条工作群聊，
 > 一键凝练成**核心结论 / 待办事项 / 风险提示**结构化纪要，并支持基于全部对话的追问与溯源。

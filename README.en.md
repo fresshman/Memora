@@ -26,6 +26,20 @@
 
 ---
 
+<div align="center">
+
+🎬 <strong>Intro Video · See the core workflow in 42 seconds</strong> (<em>Multi-platform import → PII redaction → Smart review → Cross-meeting action tracking → One-click review package</em>)
+
+<a href="video/memora-intro/renders/memora-intro.mp4">
+<img src="docs/images/video_cover.png" alt="Memora intro video" width="760">
+</a>
+
+▶️ Watch / download: <a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a> (1920×1080 · MP4 · plays fully offline)
+
+</div>
+
+---
+
 > A **fully offline, privacy-first** tool that turns long work-group chats into structured meeting minutes.
 > It packs the **Spark-X2.5 on-device small model + local Retrieval-Augmented Generation (RAG)** onto an ordinary
 > **8GB-RAM Windows PC**. **Your data never leaves the machine** — yet hundreds or thousands of messages are distilled

@@ -66,3 +66,7 @@ evals/results/smoke/
 *.swp
 .DS_Store
 Thumbs.db
+
+# ================= HyperFrames 视频工程（依赖与中间缓存不入库，短片成品保留）=================
+video/**/node_modules/
+video/**/.hyperframes/

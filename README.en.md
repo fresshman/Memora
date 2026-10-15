@@ -6,7 +6,8 @@
 
 <p>
 <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&amp;logoColor=white">
-<img alt="Platform" src="https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&amp;logoColor=white">
+<img alt="Platform-Windows" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows&amp;logoColor=white">
+<img alt="Platform-Linux" src="https://img.shields.io/badge/Linux-Kylin%2F%20Ubuntu%20x64-FCC624?logo=linux&amp;logoColor=black">
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
@@ -324,14 +325,23 @@ pip install -r requirements.txt
 python scripts/doctor.py
 
 # 3) One-click start (doctor -> backend; single-port direct access when the static build exists)
-scripts\start.bat
-#   Then open http://127.0.0.1:8000
+scripts\start.bat            # Windows
+bash scripts/start.sh        # Linux / macOS / Termux (opens the browser)
+#   Then open http://127.0.0.1:8000 (override the port with MEMORA_PORT)
 ```
 
-**Prepare the inference engine (llama.cpp)**: download a Windows CPU build from the
+**Prepare the inference engine (llama.cpp)**: download a build matching your platform from the
 [llama.cpp official releases](https://github.com/ggml-org/llama.cpp/releases) **dated after 2026-09-07 that includes the
-Spark2_5 architecture** (e.g. `llama-b11046-bin-win-cpu-x64.zip`), and extract it into `tools/llamacpp/bin/`;
-or set `MEMORA_LLAMASERVER_PATH` to your `llama-server.exe`.
+Spark2_5 architecture**, and extract it into `tools/llamacpp/bin/`:
+
+| Platform | Build (example) |
+|---|---|
+| Windows x64 | `llama-b11046-bin-win-cpu-x64.zip` |
+| Linux x64 (Kylin/Ubuntu, Hygon/Zhaoxin x86 CPUs) | `llama-b11046-bin-ubuntu-x64.zip` |
+| Linux ARM (RK3588/Raspberry Pi, aarch64) | `llama-b11046-bin-ubuntu-arm64.zip` |
+| macOS (Apple Silicon) | `llama-b11046-bin-macos-arm64.zip` |
+
+You can also set `MEMORA_LLAMASERVER_PATH` to your `llama-server`; the doctor reports exactly which package your platform needs.
 
 **Prepare the models (network needed during setup)** — either:
 
@@ -385,6 +395,27 @@ start.bat             :: start and open http://127.0.0.1:8000
 **Air-gap acceptance checklist**: `python scripts/doctor.py` all green → physically unplug the network → complete one long-chat
 review and one Q&amp;A. The repo ships `scripts/e2e_offline_check.py` (24 end-to-end checks: static hosting, PII redaction &
 restoration, SSE streaming, automatic short/long context switching, and zero outbound connections during inference).
+
+### 🐧 Cross-platform & domestic-stack support (Linux / Kylin / Hygon / Android)
+
+The backend hardcodes no drive letters or `.exe`; every external binary is discovered per platform — the same code runs on
+Windows and Linux. **Offline packaging must be done on the target architecture** (pip wheels are platform/architecture-bound):
+
+```bash
+# Offline packaging for Kylin/UOS + Hygon/Zhaoxin x86_64 (or Ubuntu x64):
+python3 -m pip download -r requirements-runtime.txt -d wheelhouse
+# On the air-gapped machine:
+bash install.sh                      # install offline from the local wheelhouse
+bash scripts/start.sh                # start
+python3 scripts/linux_smoke.py       # 6 cross-platform smoke checks
+```
+
+- Verified: on WSL Ubuntu 24.04, compile/import/paths/ffmpeg discovery/data dir/binary discovery pass **6/6**;
+- Kylin + Hygon (x86_64) uses the `ubuntu-x64` llama.cpp build; ARM boards / Android (Termux) use the corresponding arm64 build;
+- On an Android phone, Termux + `bash scripts/start.sh` runs the 1.7B model — the closest form to an on-device phone app.
+
+> Note: the full end-to-end real-machine verification is currently done on **Windows**; the Linux/macOS paths pass compilation
+> and smoke checks, while complete inference latency numbers on Kylin/ARM/Termux are the next real-device step.
 
 ## 🏗️ Architecture
 

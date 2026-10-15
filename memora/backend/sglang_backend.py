@@ -11,8 +11,6 @@
 """
 from __future__ import annotations
 
-from langchain_core.messages import HumanMessage
-
 from .base import MemoraLLM, ModelNotReadyError, strip_thinking
 from .. import config
 from ..log import get_logger
@@ -80,6 +78,7 @@ class SGLangBackend(MemoraLLM):
         if temperature is not None:
             bind["temperature"] = temperature
         llm = self._llm.bind(**bind)
+        from langchain_core.messages import HumanMessage  # 懒加载，可选后端不拖累核心
         msg = llm.invoke([HumanMessage(content=prompt)])
         content = msg.content if isinstance(msg.content, str) else str(msg.content)
         return strip_thinking(content or "")

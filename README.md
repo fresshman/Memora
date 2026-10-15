@@ -6,7 +6,8 @@
 
 <p>
 <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&amp;logoColor=white">
-<img alt="Platform" src="https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&amp;logoColor=white">
+<img alt="Platform-Windows" src="https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows&amp;logoColor=white">
+<img alt="Platform-Linux" src="https://img.shields.io/badge/Linux-麒麟%2F%20Ubuntu%20x64-FCC624?logo=linux&amp;logoColor=black">
 <img alt="Model" src="https://img.shields.io/badge/Model-Spark%20X2.5%204B%2F1.7B-FF6B35">
 <img alt="Offline" src="https://img.shields.io/badge/Runs_100%25-Offline_%26_On__device-2ea44f">
 <img alt="No torch/GPU" src="https://img.shields.io/badge/No-torch_%2F_GPU-999999">
@@ -306,13 +307,22 @@ pip install -r requirements.txt
 python scripts/doctor.py
 
 # 3) 一键启动（自动自检 → 起后端；有静态前端时单端口直达）
-scripts\start.bat
-#   随后浏览器访问 http://127.0.0.1:8000
+scripts\start.bat            # Windows
+bash scripts/start.sh        # Linux / macOS / Termux（自动打开浏览器）
+#   随后浏览器访问 http://127.0.0.1:8000（可用 MEMORA_PORT 改端口）
 ```
 
 **准备推理引擎（llama.cpp）**：下载 [llama.cpp 官方每日构建](https://github.com/ggml-org/llama.cpp/releases)
-中 **2026-09-07 之后、含 Spark2_5 架构**的 Windows CPU 版（如 `llama-b11046-bin-win-cpu-x64.zip`），
-解压到 `tools/llamacpp/bin/`；或设置环境变量 `MEMORA_LLAMASERVER_PATH` 指向 `llama-server.exe`。
+中 **2026-09-07 之后、含 Spark2_5 架构**、与当前平台匹配的版本，解压到 `tools/llamacpp/bin/`：
+
+| 平台 | 二进制包（示例） |
+|---|---|
+| Windows x64 | `llama-b11046-bin-win-cpu-x64.zip` |
+| Linux x64（麒麟/Ubuntu，**海光/兆芯 x86 CPU**） | `llama-b11046-bin-ubuntu-x64.zip` |
+| Linux ARM（RK3588/树莓派等 aarch64） | `llama-b11046-bin-ubuntu-arm64.zip` |
+| macOS（Apple Silicon） | `llama-b11046-bin-macos-arm64.zip` |
+
+也可设置环境变量 `MEMORA_LLAMASERVER_PATH` 指向 `llama-server`；`doctor` 会直接告知当前平台该用哪个包。
 
 **准备模型（安装阶段需要网络）**：二选一——
 
@@ -363,6 +373,27 @@ start.bat             :: 启动，浏览器访问 http://127.0.0.1:8000
 
 **断网验收清单**：`python scripts/doctor.py` 全绿 → 物理断网 → 完成一次超长对话复盘与追问。
 仓库内置 `scripts/e2e_offline_check.py`（24 项端到端检查：静态托管、PII 脱敏与还原、SSE 流式、短/超长上下文自动切换、推理期零外联）。
+
+### 🐧 跨平台与国产化适配（Linux / 麒麟 / 海光 / Android）
+
+后端代码不写死盘符与 `.exe`，所有外部二进制按平台发现，Windows 与 Linux 同一套代码。
+**离线打包必须在目标同架构机器上进行**（pip wheel 与平台/架构绑定，不能跨平台复用）：
+
+```bash
+# 麒麟/统信 + 海光/兆芯 x86_64（或 Ubuntu x64）的离线打包：
+python3 -m pip download -r requirements-runtime.txt -d wheelhouse
+# 交付到断网机器后：
+bash install.sh           # 从本地 wheelhouse 纯离线安装
+bash scripts/start.sh     # 启动
+python3 scripts/linux_smoke.py   # 6 项跨平台冒烟自检
+```
+
+- 已验证：WSL Ubuntu 24.04 上编译/导入/路径/ffmpeg 发现/数据目录/二进制发现 **6/6 通过**；
+- 麒麟 + 海光（x86_64）用 `ubuntu-x64` 版 llama.cpp；ARM 开发板 / Android（Termux）用对应 arm64 包；
+- Android 手机可用 Termux + `bash scripts/start.sh` 跑 1.7B，是最贴近"手机端侧"的形态。
+
+> 说明：当前完整真机端到端实测在 **Windows** 完成；Linux/macOS 代码路径已通过编译与冒烟验证，
+> 在麒麟/ARM/Termux 上的完整推理时延数据为下一步真机核验项。
 
 ## 🏗️ 系统架构
 

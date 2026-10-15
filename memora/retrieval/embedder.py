@@ -23,7 +23,7 @@ import numpy as np
 from .. import config
 from ..log import get_logger
 from ..backend.llamacpp_backend import (
-    find_llama_server, pick_free_port, _assign_process_to_job,
+    find_llama_server, pick_free_port, _assign_process_to_job, posix_preexec,
 )
 
 log = get_logger(__name__)
@@ -119,6 +119,8 @@ class LlamaServerEmbedder:
         preexec_fn = None
         if sys.platform == "win32":
             creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        else:
+            preexec_fn = posix_preexec()
         log.info("启动 embedding server：%s -c %s（端口 %s）", exe.name, self.n_ctx, port)
         self._proc = subprocess.Popen(
             cmd, stdout=self._log_fh, stderr=subprocess.STDOUT,

@@ -66,7 +66,8 @@ def find_ffmpeg() -> Path | None:
     cands += [
         PROJECT_ROOT / "tools" / "ffmpeg" / "bin" / f"ffmpeg{_EXE_SUFFIX}",
         PROJECT_ROOT / "tools" / "ffmpeg" / f"ffmpeg{_EXE_SUFFIX}",
-        Path(sys.prefix) / "Library" / "bin" / f"ffmpeg{_EXE_SUFFIX}",
+        Path(sys.prefix) / "Library" / "bin" / f"ffmpeg{_EXE_SUFFIX}",  # Windows conda
+        Path(sys.prefix) / "bin" / f"ffmpeg{_EXE_SUFFIX}",              # Linux/mac conda
     ]
     for c in cands:
         if c.exists():

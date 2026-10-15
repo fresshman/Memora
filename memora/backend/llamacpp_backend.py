@@ -41,6 +41,29 @@ log = get_logger(__name__)
 _EXE = "llama-server.exe" if sys.platform == "win32" else "llama-server"
 
 
+def posix_preexec():
+    """POSIX 子进程钩子：父进程死亡时内核向子进程发 SIGTERM，避免孤儿。
+
+    与 Windows 作业对象等价；仅在非 win32 平台使用，失败静默（不影响启动）。
+    同时 setpgrp 使子进程独立成组，便于整组终止。
+    """
+    import ctypes as _ct
+    import signal as _sig
+
+    def _hook():  # pragma: no cover - 仅 POSIX 子进程内执行
+        try:
+            os.setpgrp()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            _libc = _ct.CDLL("libc.so.6", use_errno=True)
+            _libc.prctl(1, _sig.SIGTERM, 0, 0, 0)  # PR_SET_PDEATHSIG=1
+        except Exception:  # noqa: BLE001
+            pass
+
+    return _hook
+
+
 # ---------------------------------------------------------------------------
 # Windows 作业对象：父进程（后端）被强杀/崩溃时，作业内 llama-server 子进程
 # 由操作系统自动终止，避免孤儿推理进程常驻内存。句柄生命周期 = 本 Python 进程。
@@ -162,13 +185,23 @@ def pick_free_port() -> int:
 
 
 def _server_install_hint() -> str:
+    if sys.platform == "win32":
+        pkg = "llama-b11046-bin-win-cpu-x64.zip"
+        compile_hint = "cmake -B build; cmake --build build --config Release"
+    elif sys.platform == "darwin":
+        pkg = "llama-b11046-bin-macos-arm64.zip"
+        compile_hint = "cmake -B build; cmake --build build"
+    else:
+        pkg = "llama-b11046-bin-ubuntu-x64.zip"
+        compile_hint = "cmake -B build; cmake --build build"
     return (
         "未找到 llama-server 可执行文件。Spark2_5 架构需 2026-09-07 之后的 llama.cpp：\n"
         "  方式一（推荐，免编译）：到 https://github.com/ggml-org/llama.cpp/releases\n"
-        "  下载最新每日构建（如 llama-b11046-bin-win-cpu-x64.zip），解压到\n"
+        f"  下载当前平台最新每日构建（如 {pkg}），解压到\n"
         f"  {config.PROJECT_ROOT / 'tools' / 'llamacpp' / 'bin'}\n"
+        "  （国产麒麟/统信 + x86_64 海光/兆芯 CPU 用 ubuntu-x64 版；ARM Linux 用 *-arm64 版）\n"
         "  方式二：设置环境变量 MEMORA_LLAMASERVER_PATH 指向 llama-server 可执行文件。\n"
-        "  方式三：自行编译最新 llama.cpp 后放到项目同级 ../llama.cpp/build/bin。"
+        f"  方式三：自行编译最新 llama.cpp（{compile_hint}）后放到 ../llama.cpp/build/bin。"
     )
 
 
@@ -275,18 +308,8 @@ class LlamaCppBackend(MemoraLLM):
         if sys.platform == "win32":
             creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         else:
-            # Linux/mac：新会话；父进程死亡时子进程收到 SIGTERM，避免孤儿
-            def _die_with_parent():  # pragma: no cover - 仅 POSIX
-                import ctypes as _ct
-                import signal as _sig
-                try:
-                    _libc = _ct.CDLL("libc.so.6", use_errno=True)
-                    PR_SET_PDEATHSIG = 1
-                    _libc.prctl(PR_SET_PDEATHSIG, _sig.SIGTERM, 0, 0, 0)
-                except Exception:  # noqa: BLE001
-                    pass
-
-            preexec_fn = _die_with_parent
+            # Linux/mac：父进程死亡时子进程收到 SIGTERM，避免孤儿
+            preexec_fn = posix_preexec()
         log.info("启动本地 llama-server：%s（端口 %d，n_ctx=%d，KV=%s，GPU层=%d）",
                  exe.name, port, config.LLAMACPP_N_CTX,
                  config.LLAMACPP_KV_QUANT, config.LLAMACPP_N_GPU_LAYERS)

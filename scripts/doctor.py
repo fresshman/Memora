@@ -28,10 +28,40 @@ def check(level: str, item: str, status: str, advice: str = "") -> None:
     results.append((level, item, status, advice))
 
 
+def _linux_distro() -> str:
+    try:
+        for line in Path("/etc/os-release").read_text(encoding="utf-8").splitlines():
+            if line.startswith("PRETTY_NAME="):
+                return line.split("=", 1)[1].strip().strip('"')
+    except OSError:
+        pass
+    return ""
+
+
+def _llama_pkg_tag(system: str, machine: str) -> str:
+    if system == "Windows":
+        return "llama-b*-bin-win-cpu-x64.zip"
+    if system == "Darwin":
+        return ("llama-b*-bin-macos-arm64.zip" if machine == "arm64"
+                else "llama-b*-bin-macos-x64.zip")
+    if machine in ("aarch64", "arm64"):
+        return "llama-b*-bin-ubuntu-arm64.zip"
+    return "llama-b*-bin-ubuntu-x64.zip"
+
+
 def main() -> int:
     print("=" * 68)
     print("Memora 环境自检" + ("（强制离线模式）" if config.ENFORCE_OFFLINE else "（允许联网下载）"))
     print("=" * 68)
+
+    # 0) 平台 / 架构（端侧关键，决定该用哪个 llama.cpp 二进制）
+    sysname = platform.system()
+    machine = platform.machine()
+    distro = _linux_distro() if sysname == "Linux" else ""
+    print(f"操作系统：{sysname} {distro}".rstrip())
+    print(f"体系架构：{machine}（x86_64 含海光/兆芯；aarch64 为 ARM 端侧）")
+    print(f"匹配二进制：{_llama_pkg_tag(sysname, machine)}")
+    print("-" * 68)
 
     # 1) Python 版本
     pyver = platform.python_version()

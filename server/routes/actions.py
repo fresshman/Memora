@@ -51,6 +51,14 @@ def set_action_status(req: ActionStatusRequest):
     return _to_out(it)
 
 
+@router.delete("/actions/{aid}")
+def delete_action(aid: str):
+    """删除一条行动项（如误识别 / 废弃条目）。"""
+    if not action_mod.get_store().delete(aid):
+        raise HTTPException(404, "行动项不存在")
+    return {"deleted": aid}
+
+
 @router.post("/actions/track")
 def track_progress(req: TrackProgressRequest):
     """跨会议进展回顾：用会话 id 或直接传会议文本。"""

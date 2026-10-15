@@ -28,13 +28,13 @@
 
 <div align="center">
 
-🎬 <strong>项目介绍短片 · 42 秒看懂核心链路</strong>（<em>多平台导入 → PII 脱敏 → 智能复盘 → 跨会议行动项追踪 → 一键导出复盘包</em>）
+🎬 <strong>项目介绍短片 · 3 分 16 秒 · 全程真实操作录屏</strong>（<em>多平台导入 → PII 脱敏 → 流式复盘 → 对话问答 → 语音转写/声纹识别 → 跨会议行动项追踪 → 一键导出复盘包</em>）
 
 <a href="video/memora-intro/renders/memora-intro.mp4">
 <img src="docs/images/video_cover.png" alt="Memora 项目介绍短片" width="760">
 </a>
 
-▶️ 点击观看 / 下载：<a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a>（1920×1080 · MP4 · 完全离线可播）
+▶️ 点击观看 / 下载：<a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a>（1920×1080 · 30fps · MP4 · 约 23MB · 画面均为真实运行截图，无夸大演示）
 
 </div>
 

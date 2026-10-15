@@ -28,13 +28,13 @@
 
 <div align="center">
 
-🎬 <strong>Intro Video · See the core workflow in 42 seconds</strong> (<em>Multi-platform import → PII redaction → Smart review → Cross-meeting action tracking → One-click review package</em>)
+🎬 <strong>Intro Video · 3 min 16 sec · 100% real screen recording</strong> (<em>Multi-platform import → PII redaction → Streaming review → QA → Voice transcription/speaker recognition → Cross-meeting action tracking → One-click review package</em>)
 
 <a href="video/memora-intro/renders/memora-intro.mp4">
 <img src="docs/images/video_cover.png" alt="Memora intro video" width="760">
 </a>
 
-▶️ Watch / download: <a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a> (1920×1080 · MP4 · plays fully offline)
+▶️ Watch / download: <a href="video/memora-intro/renders/memora-intro.mp4"><strong>memora-intro.mp4</strong></a> (1920×1080 · 30fps · MP4 · ~23MB · every frame is a real screenshot, no staged demo)
 
 </div>
 

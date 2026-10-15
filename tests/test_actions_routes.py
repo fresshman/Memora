@@ -92,6 +92,24 @@ def test_set_status_bad_status_400(env):
 
 
 # ---------------------------------------------------------------------------
+# 删除
+# ---------------------------------------------------------------------------
+def test_delete_action_ok(env):
+    store = env[0]
+    aid = store.items[0].id
+    r = CLIENT.delete(f"/api/actions/{aid}")
+    assert r.status_code == 200, r.text
+    assert r.json()["deleted"] == aid
+    assert store.find_by_id(aid) is None
+    assert len(store.items) == 1
+
+
+def test_delete_action_unknown_id_404(env):
+    r = CLIENT.delete("/api/actions/nope")
+    assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
 # 思考档位
 # ---------------------------------------------------------------------------
 def test_thinking_get_set(env):

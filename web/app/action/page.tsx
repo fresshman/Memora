@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader, Button, Badge, cn } from "@/components/ui";
 import {
-  IconBrain, IconPackage, IconRefresh, IconCheck, IconClock,
+  IconBrain, IconPackage, IconRefresh, IconCheck, IconClock, IconTrash,
 } from "@/components/icons";
-import { getJSON, post, downloadZip } from "@/lib/api";
+import { getJSON, post, del, downloadZip } from "@/lib/api";
 
 type HistoryEntry = {
   time: string; from: string; to: string; note?: string; source?: string;
@@ -55,10 +55,11 @@ function StatCard({ label, value, tone }:
   );
 }
 
-function ActionCard({ item, busy, onStatus }: {
+function ActionCard({ item, busy, onStatus, onDelete }: {
   item: ActionItem;
   busy: boolean;
   onStatus: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const finalCol = item.status === "done" || item.status === "cancelled";
   return (
@@ -116,6 +117,14 @@ function ActionCard({ item, busy, onStatus }: {
             <IconCheck className="h-3.5 w-3.5" />完成
           </button>
         )}
+        <button
+          onClick={() => onDelete(item.id)}
+          disabled={busy}
+          title="删除"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+        >
+          <IconTrash className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -159,6 +168,19 @@ export default function ActionBoardPage() {
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "更新失败");
+    } finally {
+      setBusyId("");
+    }
+  }, [refresh]);
+
+  const onDelete = useCallback(async (id: string) => {
+    if (!window.confirm("确定删除这条行动项吗？")) return;
+    setBusyId(id);
+    try {
+      await del<{ deleted: string }>(`/api/actions/${id}`);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "删除失败");
     } finally {
       setBusyId("");
     }
@@ -272,6 +294,7 @@ export default function ActionBoardPage() {
                   <ActionCard
                     key={it.id} item={it}
                     busy={busyId === it.id} onStatus={onStatus}
+                    onDelete={onDelete}
                   />
                 ))
               )}

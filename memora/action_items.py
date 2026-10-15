@@ -94,6 +94,19 @@ _DUE_RE = re.compile(
 )
 _UNKNOWN = ("未明确", "待定", "无", "暂未明确", "未指定", "TBD", "N/A")
 
+# 整条待办其实在表达“没有待办”（模型在纪要里写「无明确待办事项」等），
+# 这类句子不得被当成一条行动项。
+_NO_TODO_RE = re.compile(
+    r"^(?:no action items?|no todos?|none|无|没有|暂无)\s*"
+    r"(?:明确|具体|其他|特别)?\s*"
+    r"(?:待办事项|行动事项|待办|行动项|任务|todo|action|items?)?\s*"
+    r"[.。!！]?\s*$",
+    re.IGNORECASE)
+
+
+def _is_no_todo(title: str) -> bool:
+    return bool(_NO_TODO_RE.match(title.strip()))
+
 
 def _clean_field(v: str) -> str:
     v = v.strip().strip("。.，,；; ")
@@ -140,7 +153,8 @@ def extract_action_candidates(report_md: str) -> list[dict]:
     out: list[dict] = []
     for raw in extract_list_items(todo_text):
         parsed = parse_todo_item(raw)
-        if len(parsed["title"]) >= 2:
+        title = parsed["title"]
+        if len(title) >= 2 and not _is_no_todo(title):
             out.append(parsed)
     return out
 
@@ -254,6 +268,15 @@ class ActionItemStore:
             it.updated_at = _now()
             self.save()
         return it
+
+    def delete(self, aid: str) -> bool:
+        """删除一条行动项（如误识别 / 废弃条目），返回是否删除成功。"""
+        it = self.find_by_id(aid)
+        if it is None:
+            return False
+        self.items = [x for x in self.items if x.id != aid]
+        self.save()
+        return True
 
     def ingest(self, candidates: list[dict], *, source_meeting: str,
                source_kind: str = "chat", source_session: str = "") -> dict:

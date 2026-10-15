@@ -55,6 +55,21 @@ def test_extract_candidates():
     assert A.parse_due_date(cands[2]["due"]) is None
 
 
+def test_extract_skips_no_todo():
+    """纪要里写「无明确待办事项」等，不得解析成行动项。"""
+    report = (
+        "## 待办\n"
+        "- 无明确待办事项。\n"
+        "- 完成限流问题的闭环 ｜ 责任人：成员C\n"
+    )
+    cands = A.extract_action_candidates(report)
+    assert len(cands) == 1
+    assert cands[0]["title"] == "完成限流问题的闭环"
+    assert A._is_no_todo("无明确待办事项")
+    assert A._is_no_todo("no action items")
+    assert not A._is_no_todo("完成接口文档")
+
+
 def test_norm_title():
     assert A.norm_title("完成接口文档！") == A.norm_title("完成接口文档")
     assert A.norm_title("Fix Bug-1") == "fixbug1"

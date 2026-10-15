@@ -10,754 +10,532 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body {
         width: 1920px; height: 1080px; overflow: hidden;
-        background: #070b16;
+        background: #070d1c;
         font-family: "Inter", "Microsoft YaHei", "PingFang SC", ui-sans-serif,
           system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-      #root { width: 1920px; height: 1080px; position: relative; }
+      #stage { width: 1920px; height: 1080px; position: relative; }
 
-      /* ---------- 背景 ---------- */
       .bg { position: absolute; inset: 0; z-index: 0; }
       .bg .grad {
         position: absolute; inset: 0;
         background:
-          radial-gradient(1100px 700px at 12% -10%, rgba(20,184,166,.20), transparent 60%),
-          radial-gradient(1000px 700px at 105% 110%, rgba(56,189,248,.16), transparent 60%),
-          linear-gradient(160deg, #0a1122 0%, #080d1a 55%, #0a1020 100%);
+          radial-gradient(1200px 760px at 10% -12%, rgba(20,184,166,.20), transparent 60%),
+          radial-gradient(1050px 760px at 108% 112%, rgba(56,189,248,.16), transparent 60%),
+          linear-gradient(160deg, #0a1326 0%, #080e1e 55%, #0a1224 100%);
       }
       .grid-lines {
-        position: absolute; inset: 0; opacity: .35;
+        position: absolute; inset: 0; opacity: .32;
         background-image:
-          linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px);
+          linear-gradient(rgba(148,163,184,.055) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(148,163,184,.055) 1px, transparent 1px);
         background-size: 64px 64px;
-        mask-image: radial-gradient(1200px 900px at 50% 45%, #000 40%, transparent 100%);
+        mask-image: radial-gradient(1300px 950px at 50% 42%, #000 40%, transparent 100%);
       }
-      .orb {
-        position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5;
-      }
-      .orb.a { width: 420px; height: 420px; left: -120px; top: 560px;
-        background: rgba(20,184,166,.35); }
-      .orb.b { width: 460px; height: 460px; right: -140px; top: -120px;
-        background: rgba(56,189,248,.28); }
+      .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .5; }
+      .orb.a { width: 440px; height: 440px; left: -130px; top: 580px;
+        background: rgba(20,184,166,.32); }
+      .orb.b { width: 460px; height: 460px; right: -140px; top: -130px;
+        background: rgba(56,189,248,.26); }
 
-      /* ---------- 顶部进度 ---------- */
-      .topbar {
-        position: absolute; top: 0; left: 0; right: 0; height: 64px; z-index: 40;
-        display: flex; align-items: center; padding: 0 64px;
+      .scene { position: absolute; inset: 0; z-index: 10; opacity: 0; }
+
+      .browser {
+        position: absolute; left: 50%; top: 46%;
+        width: 1600px; height: 1044px;
+        transform: translate(-50%, -50%) scale(.9);
+        border-radius: 18px; overflow: hidden;
+        background: #fff;
+        border: 1px solid rgba(148,163,184,.22);
+        box-shadow: 0 60px 120px rgba(0,0,0,.6),
+          0 0 0 1px rgba(45,212,191,.08);
       }
-      .brand-mini { display: flex; align-items: center; gap: 14px; }
-      .logo-mark {
-        width: 40px; height: 40px; border-radius: 12px;
+      .browser-bar {
+        height: 44px; flex: 0 0 44px; display: flex; align-items: center; gap: 8px;
+        padding: 0 18px;
+        background: linear-gradient(180deg, #eef2f7, #e4e9f0);
+        border-bottom: 1px solid #d7dde6;
+      }
+      .browser-bar .dot { width: 12px; height: 12px; border-radius: 50%; }
+      .browser-bar .d1 { background: #ff5f57; }
+      .browser-bar .d2 { background: #febc2e; }
+      .browser-bar .d3 { background: #28c840; }
+      .browser-bar .url {
+        margin-left: 16px; flex: 1; height: 26px; border-radius: 8px;
+        background: #fff; border: 1px solid #d3d9e2;
+        display: flex; align-items: center; padding: 0 14px;
+        color: #64748b; font-size: 13px;
+      }
+      .browser-body { position: relative; width: 1600px; height: 1000px; overflow: hidden; }
+
+      /* 图层：每个截图一层，随图片一起平移；宽1600，高=图片高 */
+      .layer { position: absolute; left: 0; top: 0; width: 1600px;
+        opacity: 0; will-change: transform; transform-origin: 50% 0%; }
+      .layer img { display: block; width: 1600px; height: auto; }
+      .seq-layer { position: absolute; inset: 0; width: 1600px; height: 1000px; }
+      .seq-layer img {
+        position: absolute; inset: 0; width: 1600px; height: 1000px;
+        object-fit: cover; opacity: 0; transform-origin: 50% 50%;
+        will-change: transform; }
+
+      .hl {
+        position: absolute; border: 2.5px solid #0ea5a4; border-radius: 12px;
+        box-shadow: 0 0 0 2px rgba(255,255,255,.55),
+          0 0 22px 4px rgba(20,184,166,.5),
+          inset 0 0 18px rgba(20,184,166,.14);
+        opacity: 0; pointer-events: none;
+      }
+      .hl.amber { border-color: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(255,255,255,.55),
+          0 0 22px 4px rgba(245,158,11,.5),
+          inset 0 0 18px rgba(245,158,11,.14); }
+      .hl-tag {
+        position: absolute; top: -34px; left: -2px;
+        padding: 5px 13px; border-radius: 9px;
+        background: #0ea5a4; color: #fff;
+        font-size: 15px; font-weight: 700; white-space: nowrap;
+      }
+      .hl.amber .hl-tag { background: #f59e0b; }
+
+      .mouse {
+        position: absolute; left: 0; top: 0; width: 34px; height: 34px;
+        margin: -3px 0 0 -4px; opacity: 0; z-index: 40;
+      }
+      .mouse svg { width: 30px; height: 30px; display: block;
+        filter: drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+      .click-ripple {
+        position: absolute; left: 0; top: 0; width: 24px; height: 24px;
+        border-radius: 50%; border: 2.5px solid #14b8a6; opacity: 0; z-index: 39;
+      }
+
+      .caption {
+        position: absolute; left: 140px; right: 140px; bottom: 18px;
+        display: flex; align-items: center; gap: 26px;
+        background: rgba(8,14,28,.74);
+        border: 1px solid rgba(148,163,184,.18);
+        border-radius: 16px; padding: 14px 30px;
+        backdrop-filter: blur(8px);
+        opacity: 0;
+      }
+      .cap-num {
+        flex: 0 0 60px; height: 60px; border-radius: 16px;
+        background: linear-gradient(135deg, #2dd4bf, #0ea5b7);
+        color: #04201d; font-weight: 800; font-size: 27px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .cap-text { flex: 1; }
+      .cap-title { color: #f1f5f9; font-size: 28px; font-weight: 800;
+        letter-spacing: -.01em; margin-bottom: 4px; }
+      .cap-desc { color: #aebdd0; font-size: 21px; line-height: 1.45; }
+
+      .title-scene { display: flex; flex-direction: column;
+        align-items: center; justify-content: center; height: 100%; }
+      .t-logo {
+        width: 118px; height: 118px; border-radius: 32px;
         background: linear-gradient(135deg, #2dd4bf, #0ea5b7);
         display: flex; align-items: center; justify-content: center;
-        color: #04201d; font-weight: 800; font-size: 24px;
-        box-shadow: 0 6px 20px rgba(20,184,166,.4);
-      }
-      .brand-mini .nm { color: #e2e8f0; font-weight: 700; font-size: 22px; }
-      .brand-mini .sub { color: #9fb1c7; font-size: 15px; margin-left: 4px; }
-      .progress-track {
-        position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
-        background: rgba(148,163,184,.14);
-      }
-      .progress-fill {
-        position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
-        transform: scaleX(0); transform-origin: left center;
-        background: linear-gradient(90deg, #2dd4bf, #38bdf8);
-      }
-
-      /* ---------- 场景容器 ---------- */
-      .scene { position: absolute; inset: 0; z-index: 10; }
-      .scene-inner {
-        width: 100%; height: 100%;
-        display: flex; align-items: center;
-        padding: 70px 110px 80px; gap: 70px;
-      }
-      .left { flex: 0 0 620px; }
-      .right { flex: 1; display: flex; align-items: center; justify-content: center; }
-
-      .step-badge {
-        display: inline-flex; align-items: center; gap: 12px;
-        margin-bottom: 26px;
-      }
-      .step-num {
-        width: 52px; height: 52px; border-radius: 16px;
-        background: rgba(45,212,191,.12); border: 1px solid rgba(45,212,191,.4);
-        color: #2dd4bf; font-weight: 800; font-size: 26px;
-        display: flex; align-items: center; justify-content: center;
-      }
-      .step-kicker { color: #67e8d9; font-size: 20px; font-weight: 600;
-        letter-spacing: .14em; }
-      .scene-title {
-        color: #f1f5f9; font-size: 58px; font-weight: 800;
-        letter-spacing: -.02em; line-height: 1.12; margin-bottom: 24px;
-      }
-      .scene-title em {
-        font-style: normal;
-        background: linear-gradient(120deg, #2dd4bf, #38bdf8);
-        -webkit-background-clip: text; background-clip: text; color: transparent;
-      }
-      .scene-desc { color: #9fb1c7; font-size: 25px; line-height: 1.6;
-        margin-bottom: 30px; }
-      .feat-tags { display: flex; flex-wrap: wrap; gap: 14px; }
-      .feat-tag {
-        display: inline-flex; align-items: center; gap: 9px;
-        padding: 11px 20px; border-radius: 999px;
-        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.18);
-        color: #cbd5e1; font-size: 19px;
-      }
-      .feat-tag .dot { width: 8px; height: 8px; border-radius: 50%;
-        background: #2dd4bf; }
-
-      /* ---------- 应用窗口 ---------- */
-      .window {
-        width: 100%; max-width: 940px;
-        border-radius: 20px; overflow: hidden;
-        background: linear-gradient(180deg, #0f1a30, #0c1526);
-        border: 1px solid rgba(148,163,184,.16);
-        box-shadow: 0 40px 90px rgba(0,0,0,.55),
-          0 0 0 1px rgba(45,212,191,.06);
-      }
-      .window-bar {
-        height: 52px; display: flex; align-items: center; gap: 9px;
-        padding: 0 22px;
-        background: rgba(148,163,184,.06);
-        border-bottom: 1px solid rgba(148,163,184,.12);
-      }
-      .window-bar .tl-dot { width: 12px; height: 12px; border-radius: 50%; }
-      .window-bar .d1 { background: #f87171; }
-      .window-bar .d2 { background: #fbbf24; }
-      .window-bar .d3 { background: #34d399; }
-      .window-bar .ttl {
-        margin-left: 14px; color: #7c8da5; font-size: 16px; font-weight: 500;
-      }
-      .window-body { padding: 26px; min-height: 470px; }
-
-      /* 对话气泡 */
-      .chat-row { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
-      .avatar {
-        flex: 0 0 44px; height: 44px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: #04201d; font-weight: 700; font-size: 17px;
-      }
-      .avatar.teal { background: linear-gradient(135deg, #2dd4bf, #14b8a6); }
-      .avatar.blue { background: linear-gradient(135deg, #38bdf8, #0ea5e9); }
-      .avatar.amber { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #3a2a05; }
-      .bubble {
-        background: rgba(148,163,184,.09); border: 1px solid rgba(148,163,184,.13);
-        border-radius: 14px; padding: 14px 18px;
-        color: #dbe4f0; font-size: 20px; line-height: 1.5;
-      }
-      .bubble .who { color: #67e8d9; font-weight: 700; margin-right: 10px; }
-      .drop-hint {
-        margin-top: 6px; border: 1.5px dashed rgba(45,212,191,.4);
-        border-radius: 14px; padding: 16px; text-align: center;
-        color: #7c8da5; font-size: 18px;
-      }
-
-      /* PII */
-      .pii-line {
-        background: rgba(148,163,184,.07); border-radius: 14px;
-        padding: 16px 20px; margin-bottom: 16px;
-        color: #d7e0ec; font-size: 20px; line-height: 1.7;
-      }
-      .mask {
-        display: inline-block; border-radius: 7px; padding: 1px 9px;
-        background: linear-gradient(135deg, rgba(248,113,113,.30), rgba(248,113,113,.16));
-        border: 1px solid rgba(248,113,113,.45);
-        color: #fecaca; font-weight: 700; letter-spacing: 1px;
-      }
-      .scan {
-        position: absolute; top: 20px; left: 0; right: 0; height: 3px; opacity: 0;
-        background: linear-gradient(90deg, transparent, #2dd4bf, transparent);
-        box-shadow: 0 0 18px rgba(45,212,191,.8);
-      }
-      .pii-wrap { position: relative; }
-      .pii-counter {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-top: 14px; padding: 14px 18px; border-radius: 12px;
-        background: rgba(45,212,191,.10); border: 1px solid rgba(45,212,191,.28);
-      }
-      .pii-counter .lab { color: #9fb1c7; font-size: 18px; }
-      .pii-counter .val { color: #2dd4bf; font-weight: 800; font-size: 26px; }
-      .switch-pill {
-        display: inline-flex; border-radius: 999px; overflow: hidden;
-        border: 1px solid rgba(148,163,184,.2);
-      }
-      .switch-pill span {
-        padding: 9px 18px; font-size: 16px; color: #9fb1c7;
-        background: rgba(148,163,184,.07);
-      }
-      .switch-pill span.on { background: rgba(45,212,191,.22); color: #67e8d9; font-weight: 700; }
-
-      /* 报告 */
-      .mode-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-      .mode-pill {
-        display: inline-flex; gap: 6px; border-radius: 999px; padding: 5px;
-        background: rgba(148,163,184,.09); border: 1px solid rgba(148,163,184,.18);
-      }
-      .mode-pill span { padding: 8px 18px; border-radius: 999px; font-size: 17px; color: #9fb1c7; }
-      .mode-pill span.on { background: linear-gradient(135deg, #2dd4bf, #14b8a6); color: #04201d; font-weight: 700; }
-      .report-sec {
-        border-radius: 13px; margin-bottom: 14px; overflow: hidden;
-        border: 1px solid rgba(148,163,184,.12);
-      }
-      .report-sec .sec-head {
-        display: flex; align-items: center; gap: 10px;
-        padding: 11px 16px; font-size: 18px; font-weight: 700;
-      }
-      .report-sec .sec-body { padding: 4px 16px 13px; color: #c3d0e0; font-size: 17px; line-height: 1.55; }
-      .report-sec .sec-body .li { display: flex; gap: 9px; margin-bottom: 6px; }
-      .report-sec .sec-body .li .ic { color: #2dd4bf; }
-      .sec-todo .sec-head { background: rgba(45,212,191,.12); color: #67e8d9; }
-      .sec-risk .sec-head { background: rgba(248,113,113,.12); color: #fca5a5; }
-      .sec-dec .sec-head { background: rgba(56,189,248,.12); color: #7dd3fc; }
-      .sec-sum .sec-head { background: rgba(167,139,250,.14); color: #c4b5fd; }
-
-      /* 看板 */
-      .board-stats { display: flex; gap: 12px; margin-bottom: 18px; }
-      .board-stat {
-        flex: 1; border-radius: 12px; padding: 12px 14px;
-        background: rgba(148,163,184,.07); border: 1px solid rgba(148,163,184,.12);
-      }
-      .board-stat .n { font-size: 26px; font-weight: 800; }
-      .board-stat .l { font-size: 14px; color: #8aa0b8; margin-top: 2px; }
-      .board { display: flex; gap: 12px; position: relative; }
-      .kanban-col {
-        flex: 1; border-radius: 13px; padding: 12px; min-height: 300px;
-        background: rgba(148,163,184,.05); border: 1px solid rgba(148,163,184,.1);
-      }
-      .kanban-col .col-head {
-        display: flex; align-items: center; gap: 8px; font-size: 16px;
-        font-weight: 700; margin-bottom: 12px; color: #cbd5e1;
-      }
-      .kanban-col .col-head .c-dot { width: 9px; height: 9px; border-radius: 50%; }
-      .kanban-card {
-        border-radius: 11px; padding: 12px 13px; margin-bottom: 10px;
-        background: rgba(17,28,51,.85); border: 1px solid rgba(148,163,184,.14);
-      }
-      .kanban-card .t { color: #e2e8f0; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-      .kanban-card .meta { display: flex; gap: 7px; align-items: center; }
-      .k-badge { font-size: 13px; padding: 3px 9px; border-radius: 7px; }
-      .k-badge.owner { background: rgba(45,212,191,.16); color: #67e8d9; }
-      .k-badge.due { background: rgba(148,163,184,.12); color: #a9b9cf; }
-      .k-badge.overdue { background: rgba(248,113,113,.18); color: #fca5a5; }
-      /* 状态流转轨道（卡片沿轨道移动，与下方看板垂直分隔，不重叠） */
-      .flow-track {
-        position: relative; height: 86px; margin-bottom: 16px;
-        border-radius: 13px;
-        background: rgba(148,163,184,.05); border: 1px solid rgba(148,163,184,.1);
-      }
-      .flow-line {
-        position: absolute; top: 28px; left: 111px; right: 111px; height: 3px;
-        background: rgba(148,163,184,.18); border-radius: 2px;
-      }
-      .flow-line-done {
-        position: absolute; top: 28px; left: 111px; height: 3px;
-        width: 0; border-radius: 2px;
-        background: linear-gradient(90deg, #2dd4bf, #38bdf8);
-      }
-      .flow-node {
-        position: absolute; top: 20px; width: 18px; height: 18px; border-radius: 50%;
-        background: #0f1a30; border: 2px solid #64748b;
-      }
-      .flow-node-label {
-        position: absolute; top: 60px; width: 190px; text-align: center;
-        color: #9db2c8; font-size: 15px; font-weight: 600;
-      }
-      .moving-card {
-        position: absolute; top: 6px; width: 196px; height: 48px; z-index: 20;
-        border-radius: 12px; padding: 7px 15px;
-        background: linear-gradient(135deg, #2dd4bf, #14b8a6);
-        color: #04201d; box-shadow: 0 12px 26px rgba(20,184,166,.4);
-      }
-      .moving-card .t { font-weight: 800; font-size: 15px; }
-      .moving-card .m { font-size: 12px; color: #04201d; margin-top: 1px; }
-
-      /* 复盘包 */
-      .pkg-wrap { display: flex; align-items: center; gap: 30px; padding: 10px 6px; }
-      .files-col { flex: 1; display: flex; flex-direction: column; gap: 13px; }
-      .file-item {
-        display: flex; align-items: center; gap: 14px;
-        background: rgba(148,163,184,.07); border: 1px solid rgba(148,163,184,.13);
-        border-radius: 13px; padding: 14px 18px;
-      }
-      .file-ic {
-        width: 42px; height: 48px; border-radius: 8px; flex: 0 0 42px;
-        background: linear-gradient(135deg, rgba(56,189,248,.3), rgba(56,189,248,.12));
-        border: 1px solid rgba(56,189,248,.35);
-        display: flex; align-items: center; justify-content: center;
-        color: #7dd3fc; font-size: 14px; font-weight: 700;
-      }
-      .file-item .fn { color: #dbe4f0; font-size: 19px; font-weight: 600; }
-      .file-item .fx { color: #6b7d96; font-size: 15px; }
-      .zip-box {
-        flex: 0 0 280px; height: 340px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-        border-radius: 20px;
-        background: radial-gradient(circle at 50% 30%, rgba(45,212,191,.18), rgba(148,163,184,.05));
-        border: 1px solid rgba(45,212,191,.3);
-      }
-      .zip-icon {
-        width: 130px; height: 116px; position: relative;
-      }
-      .zip-icon .body {
-        position: absolute; bottom: 0; left: 0; right: 0; height: 92px;
-        border-radius: 16px;
-        background: linear-gradient(160deg, #2dd4bf, #0d9488);
-        box-shadow: 0 16px 34px rgba(20,184,166,.45);
-      }
-      .zip-icon .cap {
-        position: absolute; top: 0; left: 18px; width: 58px; height: 34px;
-        border-radius: 12px 12px 0 0;
-        background: linear-gradient(160deg, #5eead4, #14b8a6);
-      }
-      .zip-icon .zipper {
-        position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
-        width: 12px; height: 58px; background: #064e46; border-radius: 4px;
-      }
-      .zip-label { color: #67e8d9; font-weight: 800; font-size: 22px; }
-      .zip-sub { color: #8aa0b8; font-size: 16px; }
-
-      /* ---------- 开场 / 结尾 ---------- */
-      .hero {
-        position: absolute; inset: 0; z-index: 20;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        text-align: center;
-      }
-      .hero-logo {
-        width: 130px; height: 130px; border-radius: 34px;
-        background: linear-gradient(135deg, #2dd4bf, #0ea5b7);
-        display: flex; align-items: center; justify-content: center;
-        color: #04201d; font-weight: 800; font-size: 76px;
-        box-shadow: 0 24px 60px rgba(20,184,166,.5);
+        color: #04201d; font-weight: 800; font-size: 66px;
+        box-shadow: 0 18px 50px rgba(20,184,166,.45);
         margin-bottom: 36px;
       }
-      .hero-name { color: #f8fafc; font-size: 88px; font-weight: 800;
-        letter-spacing: -.02em; margin-bottom: 18px; }
-      .hero-tag { color: #9fb1c7; font-size: 30px; margin-bottom: 8px; }
-      .hero-en { color: #8ea2bd; font-size: 22px; letter-spacing: .08em; margin-bottom: 40px; }
-      .hero-tags { display: flex; gap: 18px; }
-      .hero-tags .ht {
-        display: inline-flex; align-items: center; gap: 11px;
-        padding: 14px 28px; border-radius: 999px;
-        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.2);
-        color: #dbe4f0; font-size: 22px;
-      }
-      .hero-tags .ht .d { width: 10px; height: 10px; border-radius: 50%; background: #2dd4bf; }
-
-      .end-slogan { color: #f1f5f9; font-size: 62px; font-weight: 800;
-        letter-spacing: -.01em; margin-bottom: 20px; }
-      .end-slogan em { font-style: normal;
-        background: linear-gradient(120deg, #2dd4bf, #38bdf8);
+      .t-name { color: #f3f7fb; font-size: 92px; font-weight: 800;
+        letter-spacing: -.03em; line-height: 1; }
+      .t-sub { margin-top: 24px; font-size: 36px; font-weight: 600;
+        background: linear-gradient(120deg, #2dd4bf, #7dd3fc);
         -webkit-background-clip: text; background-clip: text; color: transparent; }
-      .end-stack {
-        display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap;
-        justify-content: center; max-width: 1100px;
+      .t-desc { margin-top: 30px; color: #aab9cc; font-size: 25px; max-width: 1200px;
+        text-align: center; line-height: 1.6; }
+      .t-chips { display: flex; gap: 16px; margin-top: 42px; }
+      .t-chip {
+        padding: 12px 26px; border-radius: 999px;
+        background: rgba(148,163,184,.09); border: 1px solid rgba(148,163,184,.2);
+        color: #d7e0ea; font-size: 22px; font-weight: 600;
       }
-      .end-stack .chip {
-        padding: 10px 22px; border-radius: 999px; font-size: 20px;
-        background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.18);
-        color: #cbd5e1;
+      .t-link { margin-top: 38px; color: #7dd3fc; font-size: 24px; font-weight: 600; }
+
+      .pkg-scene { display: flex; flex-direction: column; align-items: center;
+        justify-content: center; height: 100%; }
+      .pkg-head { text-align: center; margin-bottom: 38px; }
+      .pkg-head h2 { color: #f3f7fb; font-size: 52px; font-weight: 800; }
+      .pkg-head p { color: #aab9cc; font-size: 24px; margin-top: 14px; }
+      .pkg-grid { display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 24px; width: 1180px; }
+      .pkg-card {
+        border-radius: 18px; padding: 26px;
+        background: rgba(255,255,255,.045); border: 1px solid rgba(148,163,184,.18);
+        opacity: 0; transform: translateY(24px);
       }
-      .end-gitee {
-        display: inline-flex; align-items: center; gap: 12px;
-        padding: 16px 34px; border-radius: 16px;
-        background: linear-gradient(135deg, rgba(45,212,191,.18), rgba(56,189,248,.12));
+      .pkg-card .ico { width: 50px; height: 50px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(45,212,191,.22), rgba(56,189,248,.2));
         border: 1px solid rgba(45,212,191,.4);
-        color: #a7f3e9; font-size: 26px; font-weight: 700; margin-bottom: 26px;
-      }
-      .offline-badge {
-        display: inline-flex; align-items: center; gap: 11px;
-        color: #9fb1c7; font-size: 21px;
-      }
-      .offline-badge .d { width: 11px; height: 11px; border-radius: 50%;
-        background: #34d399; box-shadow: 0 0 12px rgba(52,211,153,.8); }
+        display: flex; align-items: center; justify-content: center;
+        color: #5eead4; font-size: 26px; font-weight: 800; margin-bottom: 18px; }
+      .pkg-card .fn { color: #eaf1f8; font-size: 23px; font-weight: 700; margin-bottom: 8px; }
+      .pkg-card .fd { color: #97a8bd; font-size: 18px; line-height: 1.5; }
     </style>
   </head>
   <body>
-    <div
-      id="root"
-      data-composition-id="main"
-      data-start="0"
-      data-duration="42"
-      data-width="1920"
-      data-height="1080"
-    >
-      <!-- 背景 -->
+    <div id="stage" data-composition-id="memora-intro" data-width="1920" data-height="1080">
       <div class="bg">
         <div class="grad"></div>
         <div class="grid-lines"></div>
-        <div class="orb a" data-layout-allow-overflow></div>
-        <div class="orb b" data-layout-allow-overflow></div>
+        <div class="orb a"></div>
+        <div class="orb b"></div>
       </div>
-
-      <!-- 顶部进度 -->
-      <div class="topbar">
-        <div class="brand-mini">
-          <div class="logo-mark">M</div>
-          <div class="nm">Memora</div>
-          <div class="sub">端侧离线 · 对话 / 会议复盘</div>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
-      </div>
-
-      <!-- 场景 0：开场 -->
-      <section class="scene" id="s0">
-        <div class="hero">
-          <div class="hero-logo reveal">M</div>
-          <div class="hero-name reveal">Memora</div>
-          <div class="hero-tag reveal">端侧离线 · 对话 / 会议智能复盘</div>
-          <div class="hero-en reveal">ON-DEVICE MEETING &amp; CONVERSATION REVIEW</div>
-          <div class="hero-tags reveal">
-            <div class="ht"><span class="d"></span>完全离线</div>
-            <div class="ht"><span class="d"></span>数据不出设备</div>
-            <div class="ht"><span class="d"></span>隐私优先</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 1：一键导入 -->
-      <section class="scene" id="s1">
-        <div class="scene-inner">
-          <div class="left">
-            <div class="step-badge reveal">
-              <div class="step-num">1</div>
-              <div class="step-kicker">IMPORT</div>
-            </div>
-            <div class="scene-title reveal">一键导入<br /><em>多平台适配</em></div>
-            <div class="scene-desc reveal">微信 / 钉钉 / 飞书聊天记录、纯语音文件，拖拽即解析，自动还原发言人。</div>
-            <div class="feat-tags reveal">
-              <div class="feat-tag"><span class="dot"></span>微信 txt</div>
-              <div class="feat-tag"><span class="dot"></span>钉钉 csv</div>
-              <div class="feat-tag"><span class="dot"></span>飞书 html</div>
-              <div class="feat-tag"><span class="dot"></span>语音 mp3 / wav</div>
-            </div>
-          </div>
-          <div class="right">
-            <div class="window reveal">
-              <div class="window-bar">
-                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
-                <span class="ttl">导入与复盘</span>
-              </div>
-              <div class="window-body">
-                <div class="chat-row">
-                  <div class="avatar teal">张</div>
-                  <div class="bubble"><span class="who">张伟</span>接口文档我今天写了一半，明天就能完成。</div>
-                </div>
-                <div class="chat-row">
-                  <div class="avatar blue">李</div>
-                  <div class="bubble"><span class="who">李娜</span>测试用例我在跟进，预计周五前完成。</div>
-                </div>
-                <div class="chat-row">
-                  <div class="avatar amber">王</div>
-                  <div class="bubble"><span class="who">王强</span>下周三前提交安全审计报告，注意保密。</div>
-                </div>
-                <div class="drop-hint">拖拽文件到此处，自动解析对话与发言人</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 2：PII 脱敏 -->
-      <section class="scene" id="s2">
-        <div class="scene-inner">
-          <div class="left">
-            <div class="step-badge reveal">
-              <div class="step-num">2</div>
-              <div class="step-kicker">PRIVACY</div>
-            </div>
-            <div class="scene-title reveal">PII 脱敏<br /><em>隐私可控</em></div>
-            <div class="scene-desc reveal">自动识别手机、身份证、姓名与卡号，一键脱敏；需要时可凭原始记录还原。</div>
-            <div class="feat-tags reveal">
-              <div class="feat-tag"><span class="dot"></span>手机 / 身份证</div>
-              <div class="feat-tag"><span class="dot"></span>姓名 / 银行卡</div>
-              <div class="feat-tag"><span class="dot"></span>一键还原</div>
-            </div>
-          </div>
-          <div class="right">
-            <div class="window reveal">
-              <div class="window-bar">
-                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
-                <span class="ttl">脱敏预览</span>
-              </div>
-              <div class="window-body">
-                <div class="pii-wrap">
-                  <div class="scan" id="scan"></div>
-                  <div class="pii-line">联系电话：<span class="mask">138****5678</span></div>
-                  <div class="pii-line">身份证号：<span class="mask">110***********1234</span></div>
-                  <div class="pii-line">银行卡号：<span class="mask">6222**********0123</span></div>
-                  <div class="pii-counter">
-                    <span class="lab">本地脱敏处理 · 敏感信息不上传</span>
-                    <span class="val">已脱敏 12 处</span>
-                  </div>
-                  <div class="pii-counter" style="background:transparent;border:none;justify-content:flex-end;margin-top:12px;">
-                    <div class="switch-pill"><span class="on">脱敏</span><span>还原</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 3：智能复盘 -->
-      <section class="scene" id="s3">
-        <div class="scene-inner">
-          <div class="left">
-            <div class="step-badge reveal">
-              <div class="step-num">3</div>
-              <div class="step-kicker">REVIEW</div>
-            </div>
-            <div class="scene-title reveal">智能复盘<br /><em>结构化纪要</em></div>
-            <div class="scene-desc reveal">待办、风险、决定、摘要四段式输出，流式生成；支持快速 / 深度思考切换。</div>
-            <div class="feat-tags reveal">
-              <div class="feat-tag"><span class="dot"></span>SSE 流式输出</div>
-              <div class="feat-tag"><span class="dot"></span>快速 / 深度思考</div>
-              <div class="feat-tag"><span class="dot"></span>引用可溯源</div>
-            </div>
-          </div>
-          <div class="right">
-            <div class="window reveal">
-              <div class="window-bar">
-                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
-                <span class="ttl">复盘报告</span>
-              </div>
-              <div class="window-body">
-                <div class="mode-row">
-                  <div class="mode-pill"><span class="on">快速模式</span><span>深度思考</span></div>
-                  <span style="color:#67e8d9;font-size:16px;">● 生成中</span>
-                </div>
-                <div class="report-sec sec-todo">
-                  <div class="sec-head">✓ 待办事项</div>
-                  <div class="sec-body">
-                    <div class="li"><span class="ic">▸</span>完成接口文档｜张伟</div>
-                    <div class="li"><span class="ic">▸</span>完善测试用例｜李娜</div>
-                  </div>
-                </div>
-                <div class="report-sec sec-risk">
-                  <div class="sec-head">⚠ 风险提示</div>
-                  <div class="sec-body"><div class="li"><span class="ic">▸</span>安全审计时间紧，需提前准备材料</div></div>
-                </div>
-                <div class="report-sec sec-dec">
-                  <div class="sec-head">◆ 会议决定</div>
-                  <div class="sec-body"><div class="li"><span class="ic">▸</span>下周三前提交安全审计报告</div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 4：行动项追踪 -->
-      <section class="scene" id="s4">
-        <div class="scene-inner">
-          <div class="left">
-            <div class="step-badge reveal">
-              <div class="step-num">4</div>
-              <div class="step-kicker">TRACK</div>
-            </div>
-            <div class="scene-title reveal">跨会议<br /><em>行动项追踪</em></div>
-            <div class="scene-desc reveal">自动抽取待办，关联责任人与截止时间；后续会议一键回顾，状态自动更新。</div>
-            <div class="feat-tags reveal">
-              <div class="feat-tag"><span class="dot"></span>四状态闭环</div>
-              <div class="feat-tag"><span class="dot"></span>逾期提醒</div>
-              <div class="feat-tag"><span class="dot"></span>进展回顾</div>
-            </div>
-          </div>
-          <div class="right">
-            <div class="window reveal">
-              <div class="window-bar">
-                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
-                <span class="ttl">行动项追踪</span>
-              </div>
-              <div class="window-body">
-                <div class="board-stats">
-                  <div class="board-stat"><div class="n" style="color:#fca5a5;">8</div><div class="l">总数</div></div>
-                  <div class="board-stat"><div class="n" style="color:#fbbf24;">4</div><div class="l">待跟进</div></div>
-                  <div class="board-stat"><div class="n" style="color:#38bdf8;">2</div><div class="l">进行中</div></div>
-                  <div class="board-stat"><div class="n" style="color:#34d399;">1</div><div class="l">已完成</div></div>
-                </div>
-                <div class="flow-track" id="flowtrack">
-                  <div class="flow-line"></div>
-                  <div class="flow-line-done" id="linedone"></div>
-                  <div class="flow-node" style="left:102px"></div>
-                  <div class="flow-node-label" style="left:16px">待跟进</div>
-                  <div class="flow-node" style="left:324px"></div>
-                  <div class="flow-node-label" style="left:238px">进行中</div>
-                  <div class="flow-node" style="left:546px"></div>
-                  <div class="flow-node-label" style="left:460px">已完成</div>
-                  <div class="flow-node" style="left:768px"></div>
-                  <div class="flow-node-label" style="left:682px">已取消</div>
-                  <div class="moving-card" id="moving" style="left:13px">
-                    <div class="t">接口文档</div>
-                    <div class="m">张伟 · 跟进中</div>
-                  </div>
-                </div>
-                <div class="board" id="board">
-                  <div class="kanban-col">
-                    <div class="col-head"><span class="c-dot" style="background:#fbbf24;"></span>待跟进</div>
-                    <div class="kanban-card"><div class="t">安全审计报告</div><div class="meta"><span class="k-badge owner">王强</span></div></div>
-                    <div class="kanban-card"><div class="t">供应商报价</div><div class="meta"><span class="k-badge owner">李娜</span></div></div>
-                  </div>
-                  <div class="kanban-col">
-                    <div class="col-head"><span class="c-dot" style="background:#38bdf8;"></span>进行中</div>
-                    <div class="kanban-card"><div class="t">接口联调</div><div class="meta"><span class="k-badge owner">张伟</span></div></div>
-                  </div>
-                  <div class="kanban-col">
-                    <div class="col-head"><span class="c-dot" style="background:#34d399;"></span>已完成</div>
-                    <div class="kanban-card"><div class="t">部署测试环境</div><div class="meta"><span class="k-badge owner">赵六</span></div></div>
-                  </div>
-                  <div class="kanban-col">
-                    <div class="col-head"><span class="c-dot" style="background:#94a3b8;"></span>已取消</div>
-                    <div class="kanban-card"><div class="t">废弃旧接口</div><div class="meta"><span class="k-badge owner">赵六</span></div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 5：复盘包 -->
-      <section class="scene" id="s5">
-        <div class="scene-inner">
-          <div class="left">
-            <div class="step-badge reveal">
-              <div class="step-num">5</div>
-              <div class="step-kicker">EXPORT</div>
-            </div>
-            <div class="scene-title reveal">一键导出<br /><em>项目复盘包</em></div>
-            <div class="scene-desc reveal">报告、行动项、记录、问答与原始对话，自动整理打包，一个压缩包完整归档。</div>
-            <div class="feat-tags reveal">
-              <div class="feat-tag"><span class="dot"></span>纯标准库打包</div>
-              <div class="feat-tag"><span class="dot"></span>行动项始终最新</div>
-              <div class="feat-tag"><span class="dot"></span>Markdown / zip</div>
-            </div>
-          </div>
-          <div class="right">
-            <div class="window reveal">
-              <div class="window-bar">
-                <span class="tl-dot d1"></span><span class="tl-dot d2"></span><span class="tl-dot d3"></span>
-                <span class="ttl">导出复盘包</span>
-              </div>
-              <div class="window-body">
-                <div class="pkg-wrap">
-                  <div class="files-col" id="files">
-                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">01_复盘报告.md</div></div></div>
-                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">02_行动项清单.md</div></div></div>
-                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">03_会议记录.md</div></div></div>
-                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">04_问答记录.md</div></div></div>
-                    <div class="file-item"><div class="file-ic">MD</div><div><div class="fn">05_原始对话.md</div></div></div>
-                  </div>
-                  <div class="zip-box">
-                    <div class="zip-icon">
-                      <div class="cap"></div>
-                      <div class="body"></div>
-                      <div class="zipper"></div>
-                    </div>
-                    <div class="zip-label">Memora 复盘包</div>
-                    <div class="zip-sub">.zip · 一键下载</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 场景 6：结尾 -->
-      <section class="scene" id="s6">
-        <div class="hero">
-          <div class="end-slogan reveal">让每一次对话，<em>都有始有终</em></div>
-          <div class="end-stack reveal">
-            <span class="chip">Spark-X2.5 4B / 1.7B</span>
-            <span class="chip">bge-m3</span>
-            <span class="chip">FAISS</span>
-            <span class="chip">LangChain</span>
-            <span class="chip">FastAPI</span>
-          </div>
-          <div class="end-gitee reveal">
-            <span style="font-size:24px;">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-            </span>
-            gitee.com/FreeBlank/memora
-          </div>
-          <div class="offline-badge reveal"><span class="d"></span>完全离线 · 零上传 · 本地运行</div>
-        </div>
-      </section>
     </div>
-
     <script>
-      const tl = gsap.timeline({ paused: true });
+    (function () {
+      var stage = document.getElementById('stage');
 
-      // 初始隐藏所有场景与 reveal
-      gsap.set(".scene", { opacity: 0 });
-      gsap.set(".reveal", { opacity: 0, y: 34 });
+      /* 帧：h=截图真实高度（宽1600）；全页 h>1000 自动向下平移 */
+      var SCENES = [
+        { t: 'title', s: 0, d: 5,
+          logo: 'M', name: 'Memora',
+          sub: '端侧离线 · 对话与会议复盘',
+          desc: '基于 Spark-X2.5 端侧模型，全程在本地运行，数据不出设备',
+          chips: ['完全离线', '隐私脱敏', '本地检索', '一键导出'] },
 
-      // 顶部进度条（42s）
-      tl.to("#prog", { scaleX: 1, ease: "none", duration: 42 }, 0);
+        { t: 'shots', s: 5, d: 6, n: 1,
+          frames: [ { img: 'assets/real_01_home.png', h: 1000 } ],
+          title: '导入与复盘',
+          desc: '上传聊天记录文件，或直接粘贴对话文本，本地解析',
+          hl: [ { at: 0.6, r: [470, 185, 820, 205], tag: '上传 / 粘贴' } ],
+          mouse: { at: 1.2, x: 680, y: 280 } },
 
-      // 通用场景编排：进入 / 内部 reveal 错峰 / 退出
-      function scene(id, start, dur, gap) {
-        tl.fromTo("#" + id, { opacity: 0 },
-          { opacity: 1, duration: 0.5, ease: "power2.out" }, start);
-        tl.to("#" + id + " .reveal",
-          { opacity: 1, y: 0, duration: 0.7, stagger: gap || 0.12, ease: "power3.out" },
-          start + 0.35);
-        tl.to("#" + id, { opacity: 0, duration: 0.5, ease: "power2.in" },
-          start + dur - 0.5);
+        { t: 'shots', s: 11, d: 11, n: 2,
+          frames: [ { img: 'assets/real_02_parsed.png', h: 1000 } ],
+          title: '本地解析 · 自动脱敏',
+          desc: '微信群聊解析为 7 条记录；人名等敏感信息在送入模型前本地脱敏',
+          hl: [
+            { at: 0.7, r: [565, 483, 770, 236], tag: '对话预览 · 7 条 · 136 字' },
+            { at: 5.0, r: [565, 733, 770, 70], tag: '本地脱敏 · 人名 4' } ] },
+
+        { t: 'seq', s: 22, d: 16, n: 3,
+          count: 19, title: '一键复盘 · 流式生成',
+          desc: '端侧模型通过 SSE 逐字流式输出报告' },
+
+        { t: 'shots', s: 38, d: 12, n: 4,
+          frames: [ { img: 'assets/grow_19.png', h: 1000 } ],
+          title: '结构化复盘报告',
+          desc: '核心结论、待办清单、关键信息、风险提示，四段呈现',
+          hl: [
+            { at: 0.5, r: [480, 163, 840, 180], tag: '核心结论' },
+            { at: 3.3, r: [480, 358, 840, 165], tag: '待办清单' },
+            { at: 6.1, r: [480, 537, 840, 210], tag: '关键信息' },
+            { at: 8.9, r: [480, 762, 840, 118], tag: '风险提示' } ] },
+
+        { t: 'shots', s: 50, d: 6, n: 5,
+          frames: [ { img: 'assets/review_restored.png', h: 1000 } ],
+          title: '一键还原真实信息',
+          desc: '报告生成后可还原真名，仅在本机显示，不写入加密库',
+          hl: [ { at: 0.7, r: [470, 920, 820, 40], tag: '仅本机显示' } ] },
+
+        { t: 'shots', s: 56, d: 6, n: 6,
+          frames: [ { img: 'assets/parse_dingtalk.png', h: 1000 } ],
+          title: '钉钉记录',
+          desc: '解析钉钉 CSV，4 条消息，本地脱敏 3 个人名',
+          hl: [ { at: 0.7, r: [565, 432, 770, 236], tag: '钉钉 · 4 条 · 52 字' } ] },
+
+        { t: 'shots', s: 62, d: 6, n: 7,
+          frames: [ { img: 'assets/parse_feishu.png', h: 1000 } ],
+          title: '飞书记录',
+          desc: '解析飞书 HTML，包含撤回消息，本地脱敏 2 个人名',
+          hl: [ { at: 0.7, r: [565, 432, 770, 192], tag: '飞书 · 2 条 · 32 字' } ] },
+
+        { t: 'shots', s: 68, d: 9, n: 8,
+          frames: [ { img: 'assets/batch_final_full.png', h: 1039 } ],
+          title: '批量复盘',
+          desc: '一次处理多个文件，汇总成功与失败，统一导出',
+          hl: [ { at: 0.7, r: [492, 468, 160, 40], tag: '共 3 份 · 成功 3 · 失败 0' } ] },
+
+        { t: 'shots', s: 77, d: 14, n: 9,
+          frames: [
+            { img: 'assets/qa_stream_01.png', h: 1000 },
+            { img: 'assets/qa_answer_full.png', h: 1000, at: 7 } ],
+          title: '对话问答',
+          desc: '基于已导入对话追问，模型引用原文与时间作答',
+          hl: [
+            { f: 0, at: 0.6, r: [475, 528, 760, 58], tag: '提问' },
+            { f: 1, at: 1.0, r: [478, 652, 806, 96], tag: '回答 · 引用原文', amber: true } ] },
+
+        { t: 'shots', s: 91, d: 12, n: 10,
+          frames: [
+            { img: 'assets/voice_proc_01.png', h: 1000 },
+            { img: 'assets/voice_record_full.png', h: 1173, at: 4 } ],
+          title: '会议录音转写',
+          desc: '本地转写并分离说话人，支持 MP3 / WAV 等多种音频格式',
+          hl: [
+            { f: 1, at: 1.0, r: [565, 352, 770, 32], tag: '多音频格式' },
+            { f: 1, at: 3.5, r: [565, 618, 770, 308], tag: '说话人分离 · 4 位' } ] },
+
+        { t: 'shots', s: 103, d: 10, n: 11,
+          frames: [ { img: 'assets/rename_typed_w1.png', h: 1000 } ],
+          title: '校对记录',
+          desc: '重命名说话人、直接修正每段转写文字',
+          hl: [
+            { at: 0.8, r: [600, 460, 110, 36], tag: '重命名为 王老师' },
+            { at: 5.0, r: [700, 458, 570, 282], tag: '逐段修正文字' } ] },
+
+        { t: 'shots', s: 113, d: 9, n: 12,
+          frames: [ { img: 'assets/voice_contacts_registered.png', h: 1000 } ],
+          title: '联系人声纹库',
+          desc: '重命名时自动注册声纹，纯本地存储，数据不出设备',
+          hl: [ { at: 0.7, r: [568, 372, 460, 254], tag: '声纹库 · 本地存储' } ] },
+
+        { t: 'shots', s: 122, d: 9, n: 13,
+          frames: [ { img: 'assets/voice_identified_full.png', h: 1194 } ],
+          title: '跨会议自动识别',
+          desc: '下一场会议，凭声纹自动认出同一人',
+          hl: [ { at: 0.8, r: [590, 645, 770, 135], tag: '王老师 / 李老师 · 已认出' } ] },
+
+        { t: 'shots', s: 131, d: 10, n: 14,
+          frames: [ { img: 'assets/voice_minutes_full.png', h: 1553 } ],
+          title: '会议纪要',
+          desc: '提炼结论、待办、关键信息与风险；无待办时如实标注',
+          hl: [ { at: 8.0, r: [565, 985, 775, 410], tag: '四段式会议纪要' } ] },
+
+        { t: 'shots', s: 141, d: 16, n: 15,
+          frames: [
+            { img: 'assets/board_final_01.png', h: 1401 },
+            { img: 'assets/board_final_02.png', h: 1255, at: 6 },
+            { img: 'assets/board_final_03.png', h: 1200, at: 11 } ],
+          title: '跨会议行动项追踪',
+          desc: '跟进责任人、时间节点与完成状态；逾期自动标红',
+          hl: [
+            { f: 2, at: 0.6, r: [298, 120, 1240, 82], tag: '状态统计' },
+            { f: 2, at: 2.4, r: [255, 268, 1210, 200], tag: '看板 · 四状态流转' } ] },
+
+        { t: 'shots', s: 157, d: 6, n: 16,
+          frames: [ { img: 'assets/board_deep.png', h: 1000 } ],
+          title: '思考档位',
+          desc: '快速模式与深度思考切换，Spark 模型的官方特色',
+          hl: [ { at: 0.7, r: [1195, 28, 140, 46], tag: '深度思考中' } ] },
+
+        { t: 'shots', s: 163, d: 7, n: 17,
+          frames: [ { img: 'assets/history_view_full.png', h: 1000 } ],
+          title: '历史记录',
+          desc: '纪要加密保存，可回看、导出或删除',
+          hl: [ { at: 0.7, r: [490, 205, 830, 470], tag: '本地加密 · 可回看' } ] },
+
+        { t: 'shots', s: 170, d: 8, n: 18,
+          frames: [ { img: 'assets/page_models.png', h: 1000 } ],
+          title: '模型管理',
+          desc: '推荐端侧模型，缺失时通过 ModelScope 一键下载 GGUF',
+          hl: [ { at: 0.7, r: [315, 325, 1010, 390], tag: '4B / 1.7B 模型卡' } ] },
+
+        { t: 'package', s: 178, d: 10, n: 19,
+          title: '项目复盘包',
+          desc: '一键导出，聚合报告、行动项、记录、问答与原始对话',
+          files: [
+            ['01', '01_复盘报告.md', '结构化复盘报告'],
+            ['02', '02_行动项清单.md', '跨会议行动项'],
+            ['03', '03_会议记录.md', '说话人 + 时间戳'],
+            ['04', '04_问答记录.md', '问答留痕'],
+            ['05', '05_原始对话.md', '原始文本'],
+            ['i', 'README.md', '目录与行动项概览'] ] },
+
+        { t: 'title', s: 188, d: 8,
+          logo: 'M', name: '完全离线 · 隐私安全',
+          sub: '数据不出设备 · 开源可自部署',
+          desc: '本地 RAG 检索、PII 脱敏、行动项闭环，全部在个人电脑完成',
+          chips: ['Windows 可离线部署', '无需安装 Torch', '内存友好'],
+          link: 'gitee.com/FreeBlank/memora' }
+      ];
+
+      var TOTAL = 196;
+
+      function el(tag, cls, parent) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (parent) parent.appendChild(e);
+        return e;
       }
 
-      // 0 开场
-      scene("s0", 0, 4, 0.16);
-      // 1 导入
-      scene("s1", 4, 7, 0.10);
-      // 2 PII
-      scene("s2", 11, 6, 0.12);
-      // 3 复盘
-      scene("s3", 17, 7, 0.10);
-      // 4 行动项
-      scene("s4", 24, 7, 0.10);
-      // 5 复盘包
-      scene("s5", 31, 6, 0.10);
-      // 6 结尾
-      scene("s6", 37, 5, 0.14);
+      function addScene(scene) {
+        var sc = el('div', 'scene', stage);
+        sc.setAttribute('data-start', scene.s);
+        sc.setAttribute('data-duration', scene.d);
+        sc.classList.add('clip');
+        scene._root = sc;
+        return sc;
+      }
+      function addHl(parent, h) {
+        var box = el('div', 'hl' + (h.amber ? ' amber' : ''), parent);
+        box.style.left = h.r[0] + 'px'; box.style.top = h.r[1] + 'px';
+        box.style.width = h.r[2] + 'px'; box.style.height = h.r[3] + 'px';
+        var tag = el('div', 'hl-tag', box); tag.textContent = h.tag;
+        return box;
+      }
+      function addCaption(scene, sc) {
+        var cap = el('div', 'caption', sc);
+        var num = el('div', 'cap-num', cap); num.textContent = String(scene.n);
+        var tx = el('div', 'cap-text', cap);
+        var tt = el('div', 'cap-title', tx); tt.textContent = scene.title;
+        var td = el('div', 'cap-desc', tx); td.textContent = scene.desc;
+        scene._cap = cap;
+      }
 
-      // ---- 场景 2：扫描线扫过（用 transform y，逐帧平滑）----
-      tl.fromTo("#scan", { y: 0, opacity: 0 },
-        { opacity: 1, duration: 0.2 }, 11.6);
-      tl.to("#scan", { y: 210, ease: "power1.inOut", duration: 1.4 }, 11.8);
-      tl.to("#scan", { opacity: 0, duration: 0.2 }, 13.2);
+      SCENES.forEach(function (scene) {
+        if (scene.t === 'title') {
+          var sc = addScene(scene);
+          var inner = el('div', 'title-scene', sc);
+          var logo = el('div', 't-logo', inner); logo.textContent = scene.logo;
+          var nm = el('div', 't-name', inner); nm.textContent = scene.name;
+          var sub = el('div', 't-sub', inner); sub.textContent = scene.sub;
+          var ds = el('div', 't-desc', inner); ds.textContent = scene.desc;
+          if (scene.chips) {
+            var cs = el('div', 't-chips', inner);
+            scene.chips.forEach(function (c) { var x = el('div', 't-chip', cs); x.textContent = c; });
+          }
+          if (scene.link) { var lk = el('div', 't-link', inner); lk.textContent = scene.link; }
+          return;
+        }
 
-      // ---- 场景 4：卡片沿状态流转轨道 待跟进 -> 进行中 -> 已完成 ----
-      tl.set("#moving", { opacity: 0, x: 0 }, 24);
-      tl.to("#moving", { opacity: 1, duration: 0.3 }, 25.0);
-      // 节点1 -> 节点2（连接线同步推进）
-      tl.to("#moving", { x: 222, duration: 0.8, ease: "power2.inOut" }, 26.4);
-      tl.to("#linedone", { width: 222, duration: 0.8, ease: "power2.inOut" }, 26.4);
-      // 节点2 -> 节点3
-      tl.to("#moving", { x: 444, duration: 0.8, ease: "power2.inOut" }, 28.2);
-      tl.to("#linedone", { width: 444, duration: 0.8, ease: "power2.inOut" }, 28.2);
-      tl.to("#moving", { scale: 0.96, duration: 0.3, yoyo: true, repeat: 1 }, 29.2);
+        if (scene.t === 'package') {
+          var pc = addScene(scene);
+          var pi = el('div', 'pkg-scene', pc);
+          var head = el('div', 'pkg-head', pi);
+          var h2 = el('h2', null, head); h2.textContent = scene.title;
+          var p = el('p', null, head); p.textContent = scene.desc;
+          var grid = el('div', 'pkg-grid', pi);
+          scene._cards = [];
+          scene.files.forEach(function (f) {
+            var card = el('div', 'pkg-card', grid);
+            var ico = el('div', 'ico', card); ico.textContent = f[0];
+            var fn = el('div', 'fn', card); fn.textContent = f[1];
+            var fd = el('div', 'fd', card); fd.textContent = f[2];
+            scene._cards.push(card);
+          });
+          return;
+        }
 
-      // ---- 场景 5：文件逐个飞入 zip ----
-      const files = gsap.utils.toArray("#files .file-item");
-      tl.set(files, { opacity: 0.15 }, 31);
-      files.forEach(function (f, i) {
-        const t = 32.2 + i * 0.55;
-        tl.to(f, { opacity: 1, duration: 0.25 }, t - 0.2);
-        tl.to(f, { x: 250, scale: 0.4, opacity: 0, duration: 0.55,
-          ease: "power2.in" }, t);
+        // shots / seq 浏览器窗口
+        var bsc = addScene(scene);
+        var br = el('div', 'browser', bsc);
+        var bar = el('div', 'browser-bar', br);
+        ['d1','d2','d3'].forEach(function (c) { el('div', 'dot ' + c, bar); });
+        var url = el('div', 'url', bar); url.textContent = 'Memora · 本地运行 · 127.0.0.1';
+        var body = el('div', 'browser-body', br);
+
+        if (scene.t === 'seq') {
+          var sl = el('div', 'seq-layer', body);
+          var imgs = [];
+          for (var i = 1; i <= scene.count; i++) {
+            var im = el('img', '', sl);
+            im.src = 'assets/grow_' + (i < 10 ? '0' + i : i) + '.png';
+            imgs.push(im);
+          }
+          scene._seqImgs = imgs;
+          scene._hls = (scene.hl || []).map(function (h) { return { el: addHl(sl, h), at: h.at }; });
+        } else {
+          scene._layers = [];
+          scene.frames.forEach(function (f) {
+            var layer = el('div', 'layer', body);
+            layer.style.height = f.h + 'px';
+            var img = el('img', '', layer); img.src = f.img;
+            var list = (scene.hl || []).filter(function (h) { return (h.f || 0) === scene.frames.indexOf(f); });
+            var hls = list.map(function (h) { return { el: addHl(layer, h), at: h.at }; });
+            scene._layers.push({ layer: layer, img: img, f: f, hls: hls });
+          });
+          if (scene.mouse) {
+            var m = el('div', 'mouse', body);
+            m.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 2l7 19 2.2-7.8L21 11z" fill="#0f172a" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+            var rp = el('div', 'click-ripple', body);
+            scene._mouse = { el: m, ripple: rp, at: scene.mouse.at, x: scene.mouse.x, y: scene.mouse.y };
+          }
+        }
+        addCaption(scene, bsc);
       });
-      // zip 弹一下（最后一个文件进入后）
-      tl.to(".zip-box", { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1 }, 35.6);
 
+      /* ================= 时间轴 ================= */
+      var tl = gsap.timeline({ paused: true });
       window.__timelines = window.__timelines || {};
-      window.__timelines["main"] = tl;
-      tl.seek(0);
+      window.__timelines['memora-intro'] = tl;
+
+      SCENES.forEach(function (scene) {
+        var s = scene.s, d = scene.d;
+
+        if (scene.t === 'title') {
+          tl.set(scene._root, { opacity: 1 }, s);
+          tl.from(scene._root.querySelectorAll('.title-scene > *'),
+            { opacity: 0, y: 26, duration: .7, stagger: .09, ease: 'power2.out' }, s + .15);
+          tl.to(scene._root, { opacity: 0, duration: .35 }, s + d - .35);
+          return;
+        }
+        if (scene.t === 'package') {
+          tl.set(scene._root, { opacity: 1 }, s);
+          scene._cards.forEach(function (card, i) {
+            tl.fromTo(card, { opacity: 0, y: 26 },
+              { opacity: 1, y: 0, duration: .55, ease: 'power2.out' }, s + .3 + i * .18);
+          });
+          tl.to(scene._root, { opacity: 0, duration: .35 }, s + d - .35);
+          return;
+        }
+
+        tl.set(scene._root, { opacity: 1 }, s);
+        tl.from(scene._root.querySelector('.browser'),
+          { opacity: 0, y: 34, duration: .6, ease: 'power2.out' }, s + .1);
+        tl.fromTo(scene._cap, { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: .5, ease: 'power2.out' }, s + .25);
+
+        if (scene.t === 'seq') {
+          var step = d / scene.count;
+          scene._seqImgs.forEach(function (im, i) {
+            if (i === 0) {
+              tl.set(im, { opacity: 1, scale: 1 }, s);
+            } else {
+              tl.set(im, { opacity: 1, scale: 1 }, s + i * step);
+              tl.set(scene._seqImgs[i - 1], { opacity: 0 }, s + i * step);
+            }
+          });
+        } else {
+          scene._layers.forEach(function (L, i) {
+            var at = s + (L.f.at || 0);
+            var dur = (i + 1 < scene._layers.length ? scene._layers[i + 1].f.at : d) - (L.f.at || 0);
+            tl.set(L.layer, { opacity: 1, y: 0 }, at);
+            if (i > 0) tl.set(scene._layers[i - 1].layer, { opacity: 0 }, at);
+            if (L.f.h <= 1000) {
+              // 视口截图：整个图层（含高亮）缓慢放大
+              tl.fromTo(L.layer, { scale: 1.03, y: 0 },
+                { scale: 1.075, y: 0, duration: dur, ease: 'power1.inOut' }, at);
+            } else {
+              // 全页截图：整个图层（含高亮）向下平移展示
+              var endY = 1000 - L.f.h;
+              tl.fromTo(L.layer, { y: 0, scale: 1.005 },
+                { y: endY, scale: 1.005, duration: Math.min(dur, dur * .92), ease: 'power1.inOut' }, at);
+            }
+          });
+          // 高亮：逐段切换，聚焦当前
+          var flatHl = [];
+          scene._layers.forEach(function (L) {
+            L.hls.forEach(function (h) {
+              flatHl.push({ el: h.el, time: s + (L.f.at || 0) + h.at });
+            });
+          });
+          flatHl.sort(function (a, b) { return a.time - b.time; });
+          flatHl.forEach(function (h, i) {
+            if (i > 0) tl.to(flatHl[i - 1].el, { opacity: 0, duration: .3 }, h.time);
+            tl.fromTo(h.el, { opacity: 0, scale: .85 },
+              { opacity: 1, scale: 1, duration: .45, ease: 'back.out(1.7)' }, h.time);
+          });
+          if (scene._mouse) {
+            var mm = scene._mouse;
+            tl.set(mm.el, { opacity: 1, x: mm.x - 120, y: mm.y - 80 }, s + mm.at - .8);
+            tl.to(mm.el, { x: mm.x, y: mm.y, duration: .7, ease: 'power2.inOut' }, s + mm.at - .8);
+            tl.set(mm.ripple, { x: mm.x, y: mm.y, scale: .5 }, s + mm.at);
+            tl.to(mm.ripple, { opacity: .9, duration: .08 }, s + mm.at);
+            tl.to(mm.ripple, { opacity: 0, scale: 2.2, duration: .6, ease: 'power2.out' }, s + mm.at + .08);
+            tl.to(mm.el, { opacity: 0, duration: .3 }, s + mm.at + 1.2);
+          }
+        }
+
+        tl.to(scene._cap, { opacity: 0, duration: .3 }, s + d - .35);
+        tl.to(scene._root, { opacity: 0, duration: .35 }, s + d - .35);
+      });
+
+      tl.set({}, {}, TOTAL);
+    })();
     </script>
   </body>
 </html>

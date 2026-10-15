@@ -82,7 +82,7 @@ and unstable structure. Memora solves this with an all-local, measurable and rep
   and edit each transcript line; export and "distill minutes" use the proofed content, and all edits can be undone in one click.
 - 🧬 **Cross-session contact voiceprint library**: renaming a speaker registers their voiceprint in a local contact library (plain JSON, data never leaves the device). In later meetings, high-confidence dominant speakers are **recognized as familiar people automatically** (dominant speakers show 0.90+ cross-day similarity on real multi-party meetings); uncertain ones stay "Speaker N" for you to name once — "rather miss than misidentify". View, rename or delete contacts in the library dialog.
 - 🔴 **Live recording & streaming transcription**: watch the transcript appear as you speak. AudioWorklet captures 16kHz audio and streams it over WebSocket for incremental transcription and speaker assignment; on stop, the whole session is re-transcribed and refined into a final record, reusing proofreading / export / minutes. Fully offline, low latency.
-- ✅ **Cross-meeting action-item tracking**: after a review/minutes, to-dos are automatically extracted into **structured action items** (title / owner / due date / source meeting / status), deduplicated, merged and matched to local contacts. A one-click **progress review** over a later meeting batch-checks items and **auto-updates their status** (open / in progress / done / cancelled), dynamically flagging overdue items — turning a single record into item-level follow-through.
+- ✅ **Cross-meeting action-item tracking**: after a review/minutes, to-dos are automatically extracted into **structured action items** (title / owner / due date / source meeting / status), semantically deduplicated and matched to local contacts (text similarity first; an on-device LLM confirms the fuzzy band, so close-but-different tasks like "staging vs production" are never merged). A one-click **progress review** over a later meeting batch-checks items and **auto-updates their status** (open / in progress / done / cancelled), dynamically flagging overdue items — turning a single record into item-level follow-through.
 - 🧠 **Spark thinking-mode switch**: exposes the **official Spark-X2.5 feature** — two modes, **Fast / Deep thinking**. Fast mode disables the reasoning chain for low-latency output; Deep mode enables it for complex reviews. Switching needs no rebuild.
 - 📦 **One-click project review package**: bundles the **review report + action-item list + meeting record + Q&A log + raw conversation** into a single zip (with an index README), always using the latest action items — handy for archiving, handover and sharing at review meetings.
 
@@ -211,11 +211,11 @@ Memora turns to-dos from every review into action items tracked across meetings,
 ```text
 Review / minutes generated
    │ to-dos in the report are deterministically extracted into structured action items
-   │ (no extra model call; a failure never blocks the review)
+   │ (extraction makes no model call; a failure never blocks the review)
    ▼
 Auto-ingest (title / owner / due date / source meeting)
-   │ ① similar to-dos are deduplicated & merged, filling owner/due date
-   │ ② an owner matching the local contact library -> link contact_id
+   │ ① dedupe & merge: text similarity first; the on-device LLM confirms the fuzzy band
+   │ ② fill owner/due date; an owner matching the local contact library -> contact_id
    ▼
 A later meeting (new record)
    │ one-click "progress review": a single LLM call batch-checks all open items

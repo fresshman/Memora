@@ -53,6 +53,11 @@ class MemoraAgent:
         self.last_context_mode: str | None = None
         # 最近一次行动项入库统计（供 UI 提示）
         self.last_action_ingest: dict = {"created": 0, "merged": 0}
+        # 给行动项库注入语义判断器（模糊区间用端侧 LLM 判定，失败保守不合并）
+        try:
+            action_mod.attach_semantic_merger(backend)
+        except Exception as e:  # noqa: BLE001
+            log.warning("语义去重未接入（不影响主流程）：%s", e)
 
     @classmethod
     def from_config(cls, backend: str | None = None,

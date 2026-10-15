@@ -21,6 +21,7 @@ import re
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from . import config
@@ -171,14 +172,110 @@ def norm_title(text: str) -> str:
     return _PUNCT_RE.sub("", text.lower())
 
 
+# 标题相似度阈值：
+#   >= HIGH：仅措辞微调，直接判为同一任务（危险反例「测试/生产」最高约 0.75）；
+#   <= LOW ：明显不同，直接判为不同任务；
+#   中间区间：字面上无法区分「同任务不同说法」与「差一个关键词的不同任务」，
+#             交给端侧 LLM 做语义判断；无 LLM 时保守判为不同（宁可重复，不误并）。
+SIMILAR_HIGH = 0.85
+SIMILAR_LOW = 0.45
+
+
+def _bigrams(s: str) -> set[str]:
+    return {s[i:i + 2] for i in range(len(s) - 1)}
+
+
+def title_similarity(a: str, b: str) -> float:
+    """归一化标题的字符相似度：取字符级 ratio 与二元组 Dice 的较大者。
+
+    归一化只保留中英文与数字，去标点、统一小写，与 norm_title 一致。
+    """
+    x, y = norm_title(a), norm_title(b)
+    if not x or not y:
+        return 0.0
+    ratio = SequenceMatcher(None, x, y).ratio()
+    bx, by = _bigrams(x), _bigrams(y)
+    dice = 2 * len(bx & by) / (len(bx) + len(by)) if bx and by else 0.0
+    return max(ratio, dice)
+
+
+def titles_match_by_text(a: str, b: str) -> bool | None:
+    """纯字符判定两个标题是否同一任务。
+
+    返回 True / False；落在模糊区间（无法靠字符区分）返回 None。
+    """
+    score = title_similarity(a, b)
+    if score >= SIMILAR_HIGH:
+        return True
+    if score <= SIMILAR_LOW:
+        return False
+    return None
+
+
+# 判断两个待办是否同一任务的 prompt（要求严格 JSON）。
+_DEDUP_SYSTEM = "你是一个严谨的任务比对助手，只输出 JSON，不输出多余内容。"
+_DEDUP_USER_TMPL = (
+    "下面两条待办事项，是否指向「同一个具体任务」？\n"
+    "判定标准：核心动作（如 编写 / 评审 / 部署 / 测试 / 联系）和作用对象"
+    "（如 测试环境 / 生产环境、接口 / 登录、需求文档 / 接口文档）必须一致。\n"
+    "若只是措辞或语序不同（如「完成测试环境部署」与「把测试环境部署好」），"
+    "应判为同一任务；若动作或对象有实质差异（即使只相差一个词，如「测试环境」"
+    "与「生产环境」、「编写」与「评审」），必须判为不同任务。\n\n"
+    "待办1：{a}\n待办2：{b}\n\n"
+    "只输出一个 JSON 对象：{{\"same\": true}} 或 {{\"same\": false}}"
+)
+_JSON_SAME_RE = re.compile(r'"same"\s*:\s*(true|false)', re.IGNORECASE)
+
+
+class SemanticMerger:
+    """用端侧 LLM 对「模糊区间」的标题做语义同一性判断。
+
+    LLM 仅在字符相似度处于 [LOW, HIGH] 时才被调用（高/低置信直接走规则），
+    控制推理次数；任何异常都保守判为「不同」，保证不误并。
+    """
+
+    def __init__(self, backend) -> None:
+        self.backend = backend
+
+    def same_task(self, a: str, b: str) -> bool:
+        try:
+            from .backend.base import build_chat_prompt, strip_thinking
+
+            prompt = build_chat_prompt(
+                _DEDUP_USER_TMPL.format(a=a, b=b),
+                system=_DEDUP_SYSTEM,
+                enable_thinking=False,
+            )
+            raw = strip_thinking(
+                self.backend.complete(
+                    prompt, max_tokens=64, temperature=0.0,
+                    enable_thinking=False,
+                )
+            )
+            m = _JSON_SAME_RE.search(raw)
+            if not m:
+                log.warning("去重语义判断未返回有效 JSON，保守不合并：%s", raw[:80])
+                return False
+            return m.group(1).lower() == "true"
+        except Exception as e:  # noqa: BLE001
+            log.warning("去重语义判断失败，保守不合并：%s", e)
+            return False
+
+
 # ---------------------------------------------------------------------------
 # 行动项持久化
 # ---------------------------------------------------------------------------
 class ActionItemStore:
-    def __init__(self, path: str = "") -> None:
+    def __init__(self, path: str = "", semantic: SemanticMerger | None = None) -> None:
         self.path = Path(path) if path else config.ACTION_ITEMS_FILE
+        # 语义判断器（可选）；为空时模糊区间保守不合并，纯数据层可独立测试
+        self.semantic = semantic
         self.items: list[ActionItem] = []
         self.load()
+
+    def set_semantic(self, semantic: SemanticMerger | None) -> None:
+        """注入 / 移除语义判断器（运行期接入 LLM 后调用）。"""
+        self.semantic = semantic
 
     def load(self) -> None:
         if not self.path.exists():
@@ -206,12 +303,26 @@ class ActionItemStore:
         return None
 
     def find_active_similar(self, title: str) -> ActionItem | None:
-        """归一化标题匹配「仍在追踪」的行动项（跨会议去重）。"""
+        """匹配「仍在追踪」的同一行动项（跨会议去重）。
+
+        顺序：精确归一化匹配（同标题，最高置信）→ 字符相似度三级判定；
+        模糊区间在有语义判断器时交给端侧 LLM，否则保守不合并。
+        """
         nt = norm_title(title)
         if not nt:
             return None
-        for it in self.items:
-            if it.status in ACTIVE_STATUSES and norm_title(it.title) == nt:
+        candidates = [it for it in self.items if it.status in ACTIVE_STATUSES]
+        # 1) 精确匹配
+        for it in candidates:
+            if norm_title(it.title) == nt:
+                return it
+        # 2) 字符相似度；模糊区间按需语义兜底
+        for it in candidates:
+            verdict = titles_match_by_text(title, it.title)
+            if verdict is True:
+                return it
+            if verdict is None and self.semantic is not None \
+                    and self.semantic.same_task(title, it.title):
                 return it
         return None
 
@@ -335,8 +446,27 @@ class ActionItemStore:
         return {"total": len(self.items), "counts": counts, "overdue": overdue}
 
 
+_STORE_SINGLETON: ActionItemStore | None = None
+
+
 def get_store(path: str = "") -> ActionItemStore:
-    return ActionItemStore(path)
+    """获取行动项库。
+
+    默认路径返回进程内单例（供服务端与智能体共享，含语义判断器）；
+    显式给出 path 时返回独立实例（测试 / 脚本隔离用）。
+    """
+    global _STORE_SINGLETON
+    if path:
+        return ActionItemStore(path)
+    if _STORE_SINGLETON is None:
+        _STORE_SINGLETON = ActionItemStore()
+    return _STORE_SINGLETON
+
+
+def attach_semantic_merger(backend) -> None:
+    """接入 LLM 后给默认行动项库注入语义判断器（离线端侧 LLM）。"""
+    get_store().set_semantic(SemanticMerger(backend))
+    log.info("行动项库已接入语义去重（端侧 LLM）")
 
 
 # ---------------------------------------------------------------------------

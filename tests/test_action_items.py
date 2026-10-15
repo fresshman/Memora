@@ -199,3 +199,102 @@ def test_render_action_items(tmp_path):
     st.set_status(it.id, "done")
     md = A.render_action_items(st.items)
     assert "行动项清单" in md and "任务A" in md and "已完成" in md
+
+
+# ---------------------------------------------------------------------------
+# 语义去重（相似度三级判定 + 端侧 LLM 语义判断器）
+# ---------------------------------------------------------------------------
+def test_title_similarity_bands():
+    # 高相似（措辞微调）-> True
+    assert A.titles_match_by_text("同步部署相关的风险项", "同步部署相关风险") is True
+    # 低相似（明显不同）-> False
+    assert A.titles_match_by_text("完成接口文档", "联系供应商报价") is False
+    # 模糊区间：字面无法区分「同任务不同说法」与「差一个关键词的不同任务」-> None
+    assert A.titles_match_by_text("完成测试环境部署", "完成生产环境部署") is None
+    assert A.titles_match_by_text("完成测试环境部署", "把测试环境部署好") is None
+
+
+def test_high_similarity_merges_without_semantic(tmp_path):
+    st = A.ActionItemStore(str(tmp_path / "a.json"))
+    st.add("同步部署相关的风险项")
+    _, is_new = st.add("同步部署相关风险")
+    assert is_new is False and len(st.items) == 1
+
+
+def test_fuzzy_without_semantic_does_not_merge(tmp_path):
+    """无 LLM 时模糊区间保守不合并：「测试/生产」不误并，同任务仅重复（可手动删）。"""
+    st = A.ActionItemStore(str(tmp_path / "a.json"))
+    st.add("完成测试环境部署")
+    _, is_new = st.add("完成生产环境部署")
+    assert is_new is True and len(st.items) == 2
+    _, is_new = st.add("把测试环境部署好")
+    assert is_new is True and len(st.items) == 3
+
+
+class _FakeSemantic:
+    """记录调用次数的假语义判断器。"""
+    def __init__(self, answer):
+        self.answer = answer
+        self.calls = []
+
+    def same_task(self, a, b):
+        self.calls.append((a, b))
+        return self.answer
+
+
+def test_fuzzy_merges_when_semantic_says_true(tmp_path):
+    st = A.ActionItemStore(str(tmp_path / "a.json"))
+    fake = _FakeSemantic(True)
+    st.set_semantic(fake)
+    st.add("完成测试环境部署")
+    _, is_new = st.add("把测试环境部署好")
+    assert is_new is False and len(st.items) == 1
+    assert len(fake.calls) == 1          # 仅模糊区间调用一次
+
+
+def test_fuzzy_keeps_when_semantic_says_false(tmp_path):
+    st = A.ActionItemStore(str(tmp_path / "a.json"))
+    fake = _FakeSemantic(False)
+    st.set_semantic(fake)
+    st.add("完成测试环境部署")
+    _, is_new = st.add("完成生产环境部署")
+    assert is_new is True and len(st.items) == 2
+    assert len(fake.calls) == 1
+
+
+def test_semantic_not_called_for_clear_bands(tmp_path):
+    """高 / 低置信直接走规则，不调用 LLM。"""
+    st = A.ActionItemStore(str(tmp_path / "a.json"))
+    fake = _FakeSemantic(True)
+    st.set_semantic(fake)
+    st.add("同步部署相关的风险项")
+    st.add("同步部署相关风险")          # 高相似 -> 规则合并
+    st.add("完成接口文档")
+    st.add("联系供应商报价")            # 低相似 -> 规则不合并
+    assert fake.calls == []
+
+
+class _FakeBackend:
+    def __init__(self, text):
+        self.text = text
+
+    def complete(self, prompt, **kwargs):
+        return self.text
+
+
+def test_semantic_merger_parses_json():
+    # 纯 JSON
+    assert A.SemanticMerger(_FakeBackend('{"same": true}')).same_task("a", "b") is True
+    assert A.SemanticMerger(_FakeBackend('{"same": false}')).same_task("a", "b") is False
+    # 带代码块与多余文字
+    wrapped = '判断如下：\n```json\n{"same": true}\n```\n'
+    assert A.SemanticMerger(_FakeBackend(wrapped)).same_task("a", "b") is True
+    # 大写
+    assert A.SemanticMerger(_FakeBackend('{"same": TRUE}')).same_task("a", "b") is True
+    # 无效输出 -> 保守 False
+    assert A.SemanticMerger(_FakeBackend('无法判断')).same_task("a", "b") is False
+    # 后端异常 -> 保守 False
+    class _Boom:
+        def complete(self, prompt, **kwargs):
+            raise RuntimeError("x")
+    assert A.SemanticMerger(_Boom()).same_task("a", "b") is False

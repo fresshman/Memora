@@ -17,6 +17,8 @@
 
 <p>Spark-X2.5 on-device LLM ・ llama.cpp ・ local bge-m3 + FAISS ・ FastAPI + Next.js</p>
 
+<p>🗓️ Last updated: 2026-10-23</p>
+
 <p>
 <strong>English</strong>
 &nbsp;|&nbsp;
@@ -50,6 +52,26 @@
 > (which force you to upload sensitive chats).
 
 ---
+
+## 📑 Table of Contents
+
+- [Why Memora](#why-memora)
+- [Evaluation & Ablation](#evaluation--ablation-measured-not-claimed)
+- [Voice Meeting Pipeline](#voice-meeting-pipeline-fully-on-device-pure-cpu)
+- [Cross-Meeting Action-Item Tracking](#cross-meeting-action-item-tracking-from-seeing-to-getting-done)
+- [Thinking Mode & Project Review Package](#thinking-mode--project-review-package)
+- [Pages](#pages)
+- [Screenshots](#screenshots)
+- [Quick Start](#quick-start)
+- [Fully Offline Deployment](#fully-offline-deployment-to-an-air-gapped-machine)
+- [Architecture](#architecture)
+- [Configuration](#configuration-env--environment-variables)
+- [Tests & Reproducing the Evaluation](#tests--reproducing-the-evaluation)
+- [Roadmap](#roadmap)
+- [FAQ](#faq)
+- [Contributing & Community](#contributing--community)
+- [Acknowledgements & Third-Party Notices](#acknowledgements--third-party-notices)
+- [License](#license)
 
 ## ✨ Why Memora
 
@@ -523,6 +545,30 @@ python scripts/eval_asr.py --textgrid <X.TextGrid> --clip <clip.wav> --t0 30 --t
 - [ ] PyInstaller / WebView desktop EXE installer
 - [ ] Parsers for more IM / meeting-platform exports
 - [ ] Configuration-matrix benchmarks (8GB/16GB, Intel/AMD, with/without GPU)
+
+## ❓ FAQ
+
+**Q1. Do my chat logs get uploaded to the cloud? How is privacy guaranteed?**
+A. No, and they never will. Memora defaults to `MEMORA_ENFORCE_OFFLINE=1`, which **blocks every outbound network request** while running; inference binds only to local `127.0.0.1`. Sensitive data — phone numbers, IDs, bank cards, emails, names — is **redacted on-device before reaching the model**; the mapping lives in memory only and is restorable with one click, while stored records are Fernet-encrypted. Your data never leaves the machine.
+
+**Q2. Can it run without a GPU or PyTorch?**
+A. Yes — and that is the default path. Inference runs through llama.cpp (`llama-server`), **pure CPU, no torch, no GPU** — the 4B model needs ~8GB RAM and 1.7B ~4GB. Only the optional SGLang backend (external GPU server) needs a GPU and torch.
+
+**Q3. Where do the model weights come from? Must I download them online on first run?**
+A. The repo **does not bundle** any model weights (license and size). On first use you download the official Q4_K_M GGUF from ModelScope with one click (4B ≈2.5GB / 1.7B ≈1.1GB); after that it runs offline indefinitely. You can also download on a connected machine and copy the model folder to the same relative path on an air-gapped target. The local-RAG embedding model bge-m3 is the same story.
+
+**Q4. Which chat-export formats and OSes are supported?**
+A. The parser auto-detects encoding and platform — WeChat (txt, incl. GBK), DingTalk (csv), Feishu/Lark (html). The backend hardcodes no drive letters or `.exe`, so the same code runs on Windows 10/11 and Linux (Kylin / Ubuntu x64, ARM boards, Termux). Offline packaging must be done on the same architecture.
+
+**Q5. When is voice transcription / speaker diarization most accurate?**
+A. The target scenario is **near-field phone/PC recordings, already-enhanced audio exported from online meeting platforms, and normal turn-taking meetings** — here DER is much lower (near-field FRONT segment measured at DER 0.115). For "small-aperture far-field arrays + high-overlap rapid crosstalk", multiple voiceprint/frontend approaches were verified to fail — a research-grade problem caused by hardware aperture and reverb, not a single algorithm issue. See the honest-boundary note in the Voice Meeting Pipeline section.
+
+## 🤝 Contributing & Community
+
+- **Issues / feature requests**: file them on Gitee at [Issues](https://gitee.com/FreeBlank/memora/issues);
+- **Code contributions**: fork and open a PR; please keep the 189 pytest cases in `tests/` green (no model loading, no network) and include reproduction notes for any evaluation change;
+- **Showcase page**: `qmuse-app/` in this repo is Memora's public showcase page (promotional only, no inference); its online version is <https://qmuse.cn/app/5624733245980345>;
+- **Third-party licenses**: Memora only uses the listed open-source components and models as dependencies or via download pointers; it claims, transfers or redistributes none of their rights. If you redistribute Memora, you are responsible for satisfying the respective licenses.
 
 ## 🙏 Acknowledgements & Third-Party Notices
 
